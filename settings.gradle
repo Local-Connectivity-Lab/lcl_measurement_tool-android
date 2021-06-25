@@ -1,0 +1,2 @@
+rootProject.name = "LCL Measurement Tool"
+include ':app'
