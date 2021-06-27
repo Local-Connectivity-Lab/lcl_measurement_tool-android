@@ -37,10 +37,12 @@
 
     <TextView
         android:id="@+id/signalStrengthStatus"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="21dp"
         android:layout_marginTop="152dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/signalStrengthLabel"
         app:layout_constraintTop_toTopOf="parent" />
 

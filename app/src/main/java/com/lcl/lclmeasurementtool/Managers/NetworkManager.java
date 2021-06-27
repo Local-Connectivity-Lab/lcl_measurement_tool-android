@@ -17,7 +17,7 @@ import androidx.annotation.RequiresApi;
  */
 public class NetworkManager {
 
-    private static final String TAG = "Network Manager Info";
+    private static final String LOG_TAG = "NETWORK_MANAGER_TAG";
 
     // TODO: finish comment
     private ConnectivityManager connectivityManager;
@@ -39,9 +39,5 @@ public class NetworkManager {
 
     public boolean isCellularConnected() {
         return isCellularConnected;
-    }
-
-    public int getNumericSignalStrength() {
-        return this.capabilities.getSignalStrength();
     }
 }

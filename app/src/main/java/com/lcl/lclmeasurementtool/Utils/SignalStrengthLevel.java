@@ -20,9 +20,10 @@ public enum SignalStrengthLevel {
     }
 
     /**
-     * TODO: finish comment
-     * @param levelCode
-     * @return
+     * Initialize a SignalStrengthLevel based on input levelCode
+     * @param levelCode the input abstract representation of the Signal Strength;
+     * @throws IllegalArgumentException if the input levelCode is less than 0 or greater than 4.
+     * @return a SignalStrengthLevel Enum associated with the input levelCode.
      */
     public static SignalStrengthLevel init(int levelCode) {
         switch (levelCode) {
@@ -36,7 +37,7 @@ public enum SignalStrengthLevel {
                 return SignalStrengthLevel.GOOD;
             case 4:
                 return SignalStrengthLevel.GREAT;
-            default: throw new IllegalArgumentException("Signal Strength levelCode should be >=0 and <= 4 ");
+            default: throw new IllegalArgumentException("Signal Strength levelCode should be >=0 and <= 4. Current value is " + levelCode);
         }
     }
 
@@ -50,9 +51,7 @@ public enum SignalStrengthLevel {
 
     @Override
     public String toString() {
-        return "SignalStrength{" +
-                this.name() + " " +
-                "levelCode=" + levelCode +
-                '}';
+        return this.name() + " " +
+                "levelCode=" + levelCode;
     }
 }
