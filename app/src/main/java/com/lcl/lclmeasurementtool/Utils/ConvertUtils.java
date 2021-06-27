@@ -14,7 +14,7 @@ public class ConvertUtils {
      */
     public static double toMbps(double MBps) {
         if (MBps < 0) {
-            throw new IllegalArgumentException("the input parameter MBps should be greater than 0");
+            throw new IllegalArgumentException("the input parameter MBps should be greater than or equal to 0");
         }
         return MBps * CONVERSION_RATE;
     }
@@ -28,7 +28,7 @@ public class ConvertUtils {
      */
     public static double toMBps(double Mbps) {
         if (Mbps < 0) {
-            throw new IllegalArgumentException("the input parameter Mbps should be greater than 0");
+            throw new IllegalArgumentException("the input parameter Mbps should be greater than or equal to 0");
         }
         return Mbps / CONVERSION_RATE;
     }
