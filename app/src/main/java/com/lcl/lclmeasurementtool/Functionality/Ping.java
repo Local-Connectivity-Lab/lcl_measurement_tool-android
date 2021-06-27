@@ -6,4 +6,5 @@ package com.lcl.lclmeasurementtool.Functionality;
  */
 
 public class Ping {
+
 }
