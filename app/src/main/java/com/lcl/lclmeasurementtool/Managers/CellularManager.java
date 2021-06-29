@@ -14,7 +14,7 @@ import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 
 /**
  * CellularManager monitors changes in device's signal strength and
- * report changes(callback) to front-end UI》
+ * report changes(callback) to front-end UI
  * @see <a href="https://developer.android.com/reference/android/telephony/CellSignalStrengthLte">CellSignalStrengthLte</a>
  */
 
@@ -66,7 +66,7 @@ public class CellularManager {
 
     /**
      * Retrieve the signalStrengthLevel Enum from current context.
-     * @return
+     * @return a corresponding signal strength level from the current context.
      */
     public SignalStrengthLevel getSignalStrengthLevel() {
         int level = report.getLevel();
