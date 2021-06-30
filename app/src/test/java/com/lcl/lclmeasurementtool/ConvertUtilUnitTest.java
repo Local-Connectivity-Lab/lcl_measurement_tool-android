@@ -16,28 +16,32 @@ import java.util.List;
 public class ConvertUtilUnitTest {
     @Test
     public void testUnitConversion() {
-        assertEquals(
-                ConvertUtils.convert(DataTransferRateUnit.Kilobit, DataTransferRateUnit.Kilobyte, 1000),
-                125, 0.1
-        );
-
-        assertEquals(
-                ConvertUtils.convert(DataTransferRateUnit.Kilobit, DataTransferRateUnit.Megabit, 1000),
-                1, 0.1
-        );
-
-        assertEquals(
-                ConvertUtils.convert(DataTransferRateUnit.Kilobit, DataTransferRateUnit.Megabit, 1000),
-                1, 0.1
-        );
+        double data = 100.0;
+        double[] actual = new double[] {
+                100, 12.5, 0.1, 0.0125, 0.0001, 0.0000125,          // kb to all other
+                800, 100, 0.8, 0.1, 0.0008, 0.0001,                 // kB to all other
+                100000, 12500, 100, 12.5, 0.1, 0.0125,              // mb to all other
+                800000, 100000, 800, 100, 0.8, 0.1,                 // mB to all other
+                100000000, 12500000, 100000, 12500, 100, 12.5,      // gb to all other
+                800000000, 100000000, 800000, 100000, 800, 100      // gB to all other
+        };
 
         List<List<DataTransferRateUnit>> res = findAllCombination();
 
-        for (List<DataTransferRateUnit> list : res) {
-            System.out.println(list);
+        for (int i = 0; i < res.size(); i++) {
+            List<DataTransferRateUnit> list = res.get(i);
+            assertEquals(
+                    ConvertUtils.convert(list.get(0), list.get(1), data),  actual[i], 0.001
+            );
         }
-
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidData() {
+        ConvertUtils.convert(DataTransferRateUnit.Kilobit, DataTransferRateUnit.Megabit, -100);
+    }
+
+    // TODO: should also include tests for very large/small numbers
 
     private List<List<DataTransferRateUnit>> findAllCombination() {
         List<List<DataTransferRateUnit>> res = new ArrayList<>();

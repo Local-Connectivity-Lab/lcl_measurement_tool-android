@@ -1,43 +1,25 @@
 package com.lcl.lclmeasurementtool.Utils;
 
+/**
+ * Utilities that will be used to convert units.
+ */
 public class ConvertUtils {
 
     /**
-     * the conversion rate between megabit and megabyte.
-     */
-    public static final int CONVERSION_RATE = 8;
-
-    /**
-     * Convert data in MBps to Mbps.
+     * Convert data from one unit to the other.
      *
-     * @param MBps the data to be converted in MBps.
-     * @throws IllegalArgumentException if MBps is less than 0.
-     * @return corresponding data in Mbps.
+     * @param from the base unit to be converted from.
+     * @param to   the destination unit to be converted to.
+     * @param data the data whose unit will be converted.
+     * @throws IllegalArgumentException if input data is less than 0.
+     * @return a double in the the destination unit.
      */
-    public static double toMbps(double MBps) {
-        if (MBps < 0) {
-            throw new IllegalArgumentException("the input parameter MBps should be greater than 0");
-        }
-        return MBps * CONVERSION_RATE;
-    }
-
-    /**
-     * Convert data in Mbps to MBps.
-     *
-     * @param Mbps the data to be converted in Mbps.
-     * @throws IllegalArgumentException if Mbps is less than 0.
-     * @return corresponding data in MBps.
-     */
-    public static double toMBps(double Mbps) {
-        if (Mbps < 0) {
-            throw new IllegalArgumentException("the input parameter Mbps should be greater than 0");
-        }
-        return Mbps / CONVERSION_RATE;
-    }
-
     public static double convert(DataTransferRateUnit from,
                                  DataTransferRateUnit to,
                                  double data) {
+        if (data < 0) {
+            throw new IllegalArgumentException("the input parameter Mbps should be greater than 0");
+        }
 
         double unitConversionRate = 1.0;
         if (!from.getUnit().equals(to.getUnit())) {
@@ -53,6 +35,5 @@ public class ConvertUtils {
         }
 
         return data * unitConversionRate * magnitudeConversionRate;
-
     }
 }
