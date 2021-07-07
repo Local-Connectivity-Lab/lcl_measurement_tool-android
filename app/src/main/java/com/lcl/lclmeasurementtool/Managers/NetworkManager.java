@@ -17,16 +17,23 @@ import androidx.annotation.RequiresApi;
  */
 public class NetworkManager {
 
+    // LOG TAG constant
     private static final String LOG_TAG = "NETWORK_MANAGER_TAG";
 
-    // TODO: finish comment
+    // the connectivity manager object that keeps track of all information
+    // related to phone's connectivyt states.
     private ConnectivityManager connectivityManager;
+
+    // the network capabilities object that stores everything that the
+    // current device supports with regards to networking.
     private NetworkCapabilities capabilities;
+
+    // boolean value that keeps track of the cellular connectivity state.
     private boolean isCellularConnected;
 
     /**
-     * TODO: finish comment
-     * @param context
+     * Initialize a Network Manager object following the context of current device.
+     * @param context the Context object of the current device
      */
     public NetworkManager(Context context) {
         this.connectivityManager =
@@ -37,6 +44,10 @@ public class NetworkManager {
         this.isCellularConnected = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
     }
 
+    /**
+     * Returns the cellular connectivity state of the current device.
+     * @return true if the current device is connected to the internet via cellular; false otherwise.
+     */
     public boolean isCellularConnected() {
         return isCellularConnected;
     }

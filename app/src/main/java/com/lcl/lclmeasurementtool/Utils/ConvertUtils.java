@@ -12,6 +12,7 @@ public class ConvertUtils {
      * @param to   the destination unit to be converted to.
      * @param data the data whose unit will be converted.
      * @throws IllegalArgumentException if input data is less than 0.
+     * @see DataTransferRateUnit
      * @return a double in the the destination unit.
      */
     public static double convert(DataTransferRateUnit from,

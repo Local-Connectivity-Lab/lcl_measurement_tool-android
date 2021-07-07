@@ -17,7 +17,6 @@ import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
  * report changes(callback) to front-end UI
  * @see <a href="https://developer.android.com/reference/android/telephony/CellSignalStrengthLte">CellSignalStrengthLte</a>
  */
-
 public class CellularManager {
 
     // LOG TAG constant
