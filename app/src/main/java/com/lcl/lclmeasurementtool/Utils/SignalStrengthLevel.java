@@ -1,5 +1,13 @@
 package com.lcl.lclmeasurementtool.Utils;
 
+import android.graphics.Color;
+import android.content.Context;
+
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.color.MaterialColors;
+import com.lcl.lclmeasurementtool.R;
+
 /**
  * The SignalStrength represents the cellular signal strength
  * received from the mobile network system.
@@ -53,5 +61,42 @@ public enum SignalStrengthLevel {
     public String toString() {
         return this.name() + " " +
                 "levelCode=" + levelCode;
+    }
+
+    public String getName() {
+        switch (this) {
+            case NONE:
+                return "No Signal";
+            case POOR:
+                return "Poor";
+            case MODERATE:
+                return "Moderate";
+            case GOOD:
+                return "Good";
+            case GREAT:
+                return "Great";
+            default:
+                break;
+        }
+
+        return "";
+    }
+
+    public int getColor(Context context) {
+        switch (this) {
+            case GREAT:
+                return Color.GREEN;
+            case GOOD:
+                return ContextCompat.getColor(context, R.color.light_green);
+            case MODERATE:
+                return ContextCompat.getColor(context, R.color.orange);
+            case POOR:
+                return Color.RED;
+            case NONE:
+                return ContextCompat.getColor(context, R.color.light_gray);
+            default:break;
+        }
+
+        return -1;
     }
 }

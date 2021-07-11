@@ -9,4 +9,11 @@ public interface AbstractDataTransferRate {
      * @return an numeric representation of the enumeration value.
      */
     int getLevel();
+
+    /**
+     * Retrieve the String representation of the unit.
+     * @return a string representation of the unit.
+     *         Null value will be returned if the enum mapping fails.
+     */
+    String getUnitString();
 }

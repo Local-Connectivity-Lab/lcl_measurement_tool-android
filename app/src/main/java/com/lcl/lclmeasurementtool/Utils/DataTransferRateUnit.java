@@ -37,6 +37,14 @@ public enum DataTransferRateUnit {
     }
 
     /**
+     * Retrieve the String representation of the data transfer rate unit.
+     * @return a string representation of the data transfer rate.
+     */
+    public String getUnitString() {
+        return magnitude.getUnitString() + unit.getUnitString() + "/s";
+    }
+
+    /**
      * Return the <code>Magnitude</code> of the enum value.
      * @return the corresponding magnitude of the enum value.
      */
@@ -74,6 +82,19 @@ public enum DataTransferRateUnit {
         public int getLevel() {
             return level;
         }
+
+        @Override
+        public String getUnitString() {
+            switch (this) {
+                case Kilo:
+                    return "K";
+                case Mega:
+                    return "M";
+                case Giga:
+                    return "G";
+            }
+            return null;
+        }
     }
 
     /**
@@ -104,6 +125,17 @@ public enum DataTransferRateUnit {
         @Override
         public int getLevel() {
             return level;
+        }
+
+        @Override
+        public String getUnitString() {
+            switch (this) {
+                case Bit:
+                    return "b";
+                case Byte:
+                    return "B";
+            }
+            return null;
         }
     }
 }

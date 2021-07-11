@@ -10,7 +10,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
+
+import java.util.List;
 
 /**
  * CellularManager monitors changes in device's signal strength and
@@ -20,7 +24,7 @@ import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 public class CellularManager {
 
     // LOG TAG constant
-    static final String LOG_TAG = "CELLULAR_MANAGER_TAG";
+    static final String TAG = "CELLULAR_MANAGER_TAG";
 
     private static CellularManager cellularManager = null;
 
@@ -41,17 +45,21 @@ public class CellularManager {
      * Construct a new CellularManager object based on current context.
      * @param context the context of the application.
      */
-    private CellularManager(Context context) {
+    private CellularManager(@NonNull Context context) {
         this.telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         this.signalStrength = this.telephonyManager.getSignalStrength();
-        this.report = this.signalStrength.getCellSignalStrengths(CellSignalStrengthLte.class).get(0);
+        if (this.signalStrength.getCellSignalStrengths(CellSignalStrengthLte.class).size() > 0) {
+            this.report = this.signalStrength.getCellSignalStrengths(CellSignalStrengthLte.class).get(0);
+        } else {
+            this.report = null;
+        }
     }
 
     /**
      * Retrieve the cellular manager object from current context.
      * @return a cellular manager
      */
-    public static CellularManager getManager(Context context) {
+    public static CellularManager getManager(@NonNull Context context) {
         return cellularManager == null ? new CellularManager(context) : cellularManager;
     }
 
@@ -68,14 +76,19 @@ public class CellularManager {
      * @return a corresponding signal strength level from the current context.
      */
     public SignalStrengthLevel getSignalStrengthLevel() {
-        int level = report.getLevel();
-        return SignalStrengthLevel.init(level);
+        if (report != null) {
+            int level = report.getLevel();
+            return SignalStrengthLevel.init(level);
+        }
+
+        return SignalStrengthLevel.NONE;
     }
 
     /**
      * Retrieve the CellSignalStrength report.
      * @return a CellSignalStrength object that
-     *         contains all information related to cellular signal strength
+     *         contains all information related to cellular signal strength.
+     *         report might be null if no cellular connection.
      */
     public CellSignalStrength getCellSignalStrength() {
         return report;
@@ -84,9 +97,10 @@ public class CellularManager {
     /**
      * Retrieve the signal Strength in dBm.
      * @return an integer of signal strength in dBm.
+     *         If no cellular connection, 0.
      */
     public int getDBM() {
-        return report.getDbm();
+        return report != null ? report.getDbm() : 0;
     }
 
     /**
@@ -105,10 +119,16 @@ public class CellularManager {
                     @Override
                     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                         super.onSignalStrengthsChanged(signalStrength);
-                        CellSignalStrengthLte report = signalStrength
-                                .getCellSignalStrengths(CellSignalStrengthLte.class)
-                                .get(0);
-                        String text = report.getDbm() + " " + report.getLevel();
+                        List<CellSignalStrengthLte> reports = signalStrength
+                                .getCellSignalStrengths(CellSignalStrengthLte.class);
+
+                        String text;
+                        if (reports.size() > 0) {
+                            CellSignalStrengthLte report = reports.get(0);
+                            text = report.getDbm() + " " + report.getLevel();
+                        } else {
+                            text = SignalStrengthLevel.NONE.getName();
+                        }
                         textView.setText(text);
 
                         if (stopListening) {
