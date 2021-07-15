@@ -63,7 +63,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/cellular_strength"
-                app:tint="@color/light_gray" />
+                app:tint="@color/white" />
 
             <TextView
                 android:id="@+id/SignalStrengthLabel"
@@ -86,7 +86,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="36dp"
                 android:fontFamily="monospace"
-                android:text="-76"
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -116,7 +115,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:fontFamily="monospace"
-                android:text="Moderate"
                 android:textColor="@color/white"
                 android:typeface="monospace"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -210,7 +208,7 @@
     </androidx.cardview.widget.CardView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floatingActionButton2"
+        android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="332dp"

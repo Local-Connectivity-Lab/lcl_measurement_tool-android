@@ -8,6 +8,7 @@ import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -106,9 +107,8 @@ public class CellularManager {
     /**
      * Start listen to signal strength change and display onto the corresponding TextView.
      *
-     * @param textView the text view that will be used to display the signal strength data.
      */
-    public void listenToSignalStrengthChange(TextView textView) {
+    public void listenToSignalStrengthChange(CellularChangeListener listener) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -122,14 +122,18 @@ public class CellularManager {
                         List<CellSignalStrengthLte> reports = signalStrength
                                 .getCellSignalStrengths(CellSignalStrengthLte.class);
 
-                        String text;
+                        int dBm;
+                        SignalStrengthLevel level;
                         if (reports.size() > 0) {
                             CellSignalStrengthLte report = reports.get(0);
-                            text = report.getDbm() + " " + report.getLevel();
+                            level = SignalStrengthLevel.init(report.getLevel());
+                            dBm = report.getDbm();
                         } else {
-                            text = SignalStrengthLevel.NONE.getName();
+                            level = SignalStrengthLevel.NONE;
+                            dBm = level.getLevelCode();
                         }
-                        textView.setText(text);
+
+                        listener.onChange(level, dBm);
 
                         if (stopListening) {
                             Looper.myLooper().quit();
