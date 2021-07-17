@@ -7,9 +7,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.lcl.lclmeasurementtool.Managers.CellularChangeListener;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
@@ -23,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
 
+    private boolean isTestStarted;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         context = this;
 
+        isTestStarted = false;
 
 
 //        LocationManager manager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -48,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         updateFAB(mNetworkManager.isCellularConnected());
+        setUpFAB();
 
         mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
             @Override
@@ -100,8 +104,25 @@ public class MainActivity extends AppCompatActivity {
             fab.setEnabled(state);
             fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
                     ContextCompat.getColor(this, R.color.light_gray));
+
+//             TODO: cancel ping and iperf if started
+//            isTestStarted = false;
         });
     }
+
+    private void setUpFAB() {
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(button -> {
+            ((FloatingActionButton) button).setImageResource( isTestStarted ? R.drawable.start : R.drawable.stop );
+            fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
+            // TODO: init/cancel ping and iperf
+            isTestStarted = !isTestStarted;
+            Toast.makeText(this, "test starts: " + isTestStarted, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    // TODO: update FAB Icon and State when tests are done
+
 
     @Override
     protected void onDestroy() {
