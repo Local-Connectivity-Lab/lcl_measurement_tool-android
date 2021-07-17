@@ -1,5 +1,13 @@
 package com.lcl.lclmeasurementtool.Utils;
 
+import android.graphics.Color;
+import android.content.Context;
+
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.color.MaterialColors;
+import com.lcl.lclmeasurementtool.R;
+
 /**
  * The SignalStrength represents the cellular signal strength
  * received from the mobile network system.
@@ -20,9 +28,10 @@ public enum SignalStrengthLevel {
     }
 
     /**
-     * TODO: finish comment
-     * @param levelCode
-     * @return
+     * Initialize a SignalStrengthLevel based on input levelCode
+     * @param levelCode the input abstract representation of the Signal Strength;
+     * @throws IllegalArgumentException if the input levelCode is less than 0 or greater than 4.
+     * @return a SignalStrengthLevel Enum associated with the input levelCode.
      */
     public static SignalStrengthLevel init(int levelCode) {
         switch (levelCode) {
@@ -36,7 +45,7 @@ public enum SignalStrengthLevel {
                 return SignalStrengthLevel.GOOD;
             case 4:
                 return SignalStrengthLevel.GREAT;
-            default: throw new IllegalArgumentException("Signal Strength levelCode should be >=0 and <= 4 ");
+            default: throw new IllegalArgumentException("Signal Strength levelCode should be >=0 and <= 4. Current value is " + levelCode);
         }
     }
 
@@ -50,9 +59,44 @@ public enum SignalStrengthLevel {
 
     @Override
     public String toString() {
-        return "SignalStrength{" +
-                this.name() + " " +
-                "levelCode=" + levelCode +
-                '}';
+        return this.name() + " " +
+                "levelCode=" + levelCode;
+    }
+
+    public String getName() {
+        switch (this) {
+            case NONE:
+                return "No Signal";
+            case POOR:
+                return "Poor";
+            case MODERATE:
+                return "Moderate";
+            case GOOD:
+                return "Good";
+            case GREAT:
+                return "Great";
+            default:
+                break;
+        }
+
+        return "";
+    }
+
+    public int getColor(Context context) {
+        switch (this) {
+            case GREAT:
+                return Color.GREEN;
+            case GOOD:
+                return ContextCompat.getColor(context, R.color.light_green);
+            case MODERATE:
+                return ContextCompat.getColor(context, R.color.orange);
+            case POOR:
+                return Color.RED;
+            case NONE:
+                return ContextCompat.getColor(context, R.color.light_gray);
+            default:break;
+        }
+
+        return -1;
     }
 }
