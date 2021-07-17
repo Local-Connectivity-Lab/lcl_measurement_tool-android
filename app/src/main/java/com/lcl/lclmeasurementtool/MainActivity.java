@@ -13,6 +13,7 @@ import com.lcl.lclmeasurementtool.Managers.CellularChangeListener;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
+import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,8 +45,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (!mNetworkManager.isCellularConnected()) {
             updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
-            updateFAB(false);
         }
+
+        updateFAB(mNetworkManager.isCellularConnected());
 
         mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
             @Override
@@ -83,8 +85,10 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             TextView signalStrengthValue = findViewById(R.id.SignalStrengthValue);
             TextView signalStrengthStatus = findViewById(R.id.SignalStrengthStatus);
+            TextView signalStrengthUnit = findViewById(R.id.SignalStrengthUnit);
             ImageView signalStrengthIndicator = findViewById(R.id.SignalStrengthIndicator);
             signalStrengthValue.setText(String.valueOf(dBm));
+            signalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
             signalStrengthStatus.setText(level.getName());
             signalStrengthIndicator.setColorFilter(level.getColor(context));
         });
@@ -94,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             FloatingActionButton fab = findViewById(R.id.fab);
             fab.setEnabled(state);
-            fab.setBackgroundColor(state ? ContextCompat.getColor(this, R.color.white) :
+            fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
                     ContextCompat.getColor(this, R.color.light_gray));
         });
     }

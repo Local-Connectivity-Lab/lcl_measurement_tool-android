@@ -99,7 +99,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
-                android:text="dBm"
                 android:textColor="@color/light_gray"
                 android:textSize="14sp"
                 android:typeface="monospace"
