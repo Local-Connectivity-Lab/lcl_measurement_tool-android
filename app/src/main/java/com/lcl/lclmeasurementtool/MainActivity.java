@@ -5,6 +5,7 @@ import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,12 +51,13 @@ public class MainActivity extends AppCompatActivity {
             updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
         }
 
-        updateFAB(mNetworkManager.isCellularConnected());
         setUpFAB();
+        updateFAB(mNetworkManager.isCellularConnected());
 
         mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
             @Override
             public void onAvailable() {
+                Log.i(TAG, "from call back on avaliable");
                 updateFAB(true);
                 mCellularManager.listenToSignalStrengthChange((level, dBm) ->
                                                                 updateSignalStrengthTexts(level, dBm));
@@ -98,28 +100,36 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void updateFAB(boolean state) {
-        runOnUiThread(() -> {
-            FloatingActionButton fab = findViewById(R.id.fab);
-            fab.setEnabled(state);
-            fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
-                    ContextCompat.getColor(this, R.color.light_gray));
-
-//             TODO: cancel ping and iperf if started
-//            isTestStarted = false;
-        });
-    }
-
     private void setUpFAB() {
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(button -> {
             ((FloatingActionButton) button).setImageResource( isTestStarted ? R.drawable.start : R.drawable.stop );
             fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
-            // TODO: init/cancel ping and iperf
+
+            // TODO: init/cancel ping and iperf based in iTestStart
+
             isTestStarted = !isTestStarted;
             Toast.makeText(this, "test starts: " + isTestStarted, Toast.LENGTH_SHORT).show();
         });
     }
+
+    private void updateFAB(boolean state) {
+        runOnUiThread(() -> {
+            FloatingActionButton fab = findViewById(R.id.fab);
+            fab.setEnabled(state);
+            fab.setImageResource(R.drawable.start);
+            fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
+                    ContextCompat.getColor(this, R.color.light_gray));
+
+//             TODO: cancel ping and iperf if started
+//            if (isTestStarted) {
+                // cancel test
+//            }
+
+            isTestStarted = false;
+        });
+    }
+
 
     // TODO: update FAB Icon and State when tests are done
 
