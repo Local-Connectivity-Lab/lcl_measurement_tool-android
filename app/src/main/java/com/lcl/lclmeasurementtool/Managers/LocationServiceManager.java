@@ -18,6 +18,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.lcl.lclmeasurementtool.R;
 
+import java.lang.ref.WeakReference;
+
 public class LocationServiceManager {
 
     private static final String TAG = "LOCATION_MANAGER";
@@ -26,18 +28,18 @@ public class LocationServiceManager {
     private FusedLocationProviderClient mFusedLocationClient;
 
     private LocationManager locationManager;
-    private Context context;
+    private WeakReference<Context> context;
     private Location mLastLocation;
 
-    private LocationServiceManager(Context context) {
-        this.context = context;
+    private LocationServiceManager(@NonNull Context context) {
+        this.context = new WeakReference<>(context);
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this.context.get());
     }
 
-    public static LocationServiceManager getManager(Context context) {
+    public static LocationServiceManager getManager(@NonNull Context context) {
         if (locationServiceManager == null) {
-            locationServiceManager = new LocationServiceManager(context);
+            locationServiceManager = new LocationServiceManager(context.getApplicationContext());
         }
         return locationServiceManager;
     }
@@ -46,8 +48,8 @@ public class LocationServiceManager {
         return locationManager.isLocationEnabled();
     }
 
-    public boolean isLocationServiceEnabled() {
-        int permissionState = ActivityCompat.checkSelfPermission(context,
+    public boolean isLocationPermissionGranted() {
+        int permissionState = ActivityCompat.checkSelfPermission(context.get(),
                 Manifest.permission.ACCESS_FINE_LOCATION);
         return permissionState == PackageManager.PERMISSION_GRANTED;
     }
@@ -62,7 +64,7 @@ public class LocationServiceManager {
     @SuppressWarnings("MissingPermission")
     public void getLastLocation() {
         mFusedLocationClient.getLastLocation()
-                .addOnCompleteListener((Activity) context, task -> {
+                .addOnCompleteListener((Activity) context.get(), task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         mLastLocation = task.getResult();
 
@@ -70,7 +72,7 @@ public class LocationServiceManager {
                         Log.i(TAG, String.valueOf(mLastLocation.getLongitude()));
                     } else {
                         Log.w(TAG, "getLastLocation:exception", task.getException());
-                        Toast.makeText(context, context.getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
