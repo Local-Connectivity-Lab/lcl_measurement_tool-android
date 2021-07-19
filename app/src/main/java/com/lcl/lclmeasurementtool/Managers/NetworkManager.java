@@ -137,14 +137,23 @@ public class NetworkManager {
      * @return true if the current device is connected to the internet via cellular; false otherwise.
      */
     public boolean isCellularConnected() {
-        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+        return capabilities != null &&
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
     }
 
     public int getLinkDownstreamBandwidthKbps() {
-        return this.capabilities.getLinkDownstreamBandwidthKbps();
+        if (capabilities != null) {
+            return capabilities.getLinkDownstreamBandwidthKbps();
+        }
+
+        return 0;
     }
 
     public int getLinkUpstreamBandwidthKbps() {
-        return this.capabilities.getLinkUpstreamBandwidthKbps();
+        if (capabilities != null) {
+            return this.capabilities.getLinkUpstreamBandwidthKbps();
+        }
+
+        return 0;
     }
 }
