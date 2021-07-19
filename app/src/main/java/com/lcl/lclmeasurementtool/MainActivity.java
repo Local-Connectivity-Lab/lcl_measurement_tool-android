@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        NetworkManager mNetworkManager = new NetworkManager(this);
+        mNetworkManager = new NetworkManager(this);
         mCellularManager = CellularManager.getManager(this);
 
         if (!mNetworkManager.isCellularConnected()) {
