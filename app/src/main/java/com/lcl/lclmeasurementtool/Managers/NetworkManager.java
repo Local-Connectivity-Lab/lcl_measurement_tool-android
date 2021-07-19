@@ -27,12 +27,7 @@ public class NetworkManager {
     // LOG TAG constant
     private static final String TAG = "NETWORK_MANAGER_TAG";
 
-    public interface NetworkChangeListener {
-        void onAvailable();
-        void onUnavailable();
-        void onLost();
-        void onCellularNetworkChanged(boolean isConnected);
-    }
+    private static NetworkManager networkManager = null;
 
     // A List of registered ColorChangeListeners
     private List<NetworkChangeListener> mNetworkChangeListeners;
@@ -55,13 +50,26 @@ public class NetworkManager {
      * Initialize a Network Manager object following the context of current device.
      * @param context the Context object of the current device
      */
-    public NetworkManager(@NonNull Context context) {
+    private NetworkManager(@NonNull Context context) {
         this.connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         this.network = this.connectivityManager.getActiveNetwork();
         this.capabilities = this.connectivityManager.getNetworkCapabilities(network);
         this.mNetworkChangeListeners = new ArrayList<>();
+    }
+
+    /**
+     * Retrieve the network manager object from current context.
+     * @return a network manager
+     */
+    public static NetworkManager getManager(@NonNull Context context) {
+
+        if (networkManager == null) {
+            networkManager = new NetworkManager(context);
+        }
+
+        return networkManager;
     }
 
     /**

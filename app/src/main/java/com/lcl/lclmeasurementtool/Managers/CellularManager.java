@@ -60,7 +60,11 @@ public class CellularManager {
      * @return a cellular manager
      */
     public static CellularManager getManager(@NonNull Context context) {
-        return cellularManager == null ? new CellularManager(context) : cellularManager;
+        if (cellularManager == null) {
+            cellularManager = new CellularManager(context);
+        }
+
+        return cellularManager;
     }
 
     /**
