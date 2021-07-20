@@ -6,8 +6,6 @@ import android.telephony.CellSignalStrengthLte;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;

@@ -5,7 +5,6 @@ import android.content.Context;
 
 import androidx.core.content.ContextCompat;
 
-import com.google.android.material.color.MaterialColors;
 import com.lcl.lclmeasurementtool.R;
 
 /**
