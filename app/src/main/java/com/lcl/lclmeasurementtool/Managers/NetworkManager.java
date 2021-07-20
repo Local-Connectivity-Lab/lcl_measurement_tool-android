@@ -4,9 +4,7 @@ import android.net.ConnectivityManager;
 import android.content.Context;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.NetworkRequest;
-import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -30,21 +28,17 @@ public class NetworkManager {
     private static NetworkManager networkManager = null;
 
     // A List of registered ColorChangeListeners
-    private List<NetworkChangeListener> mNetworkChangeListeners;
+    private final List<NetworkChangeListener> mNetworkChangeListeners;
 
     // A Network Callback object
     private ConnectivityManager.NetworkCallback networkCallback;
 
     // the connectivity manager object that keeps track of all information
     // related to phone's connectivyt states.
-    private ConnectivityManager connectivityManager;
+    private final ConnectivityManager connectivityManager;
 
-    // the network object that encapsulates all info regarding Network
-    private Network network;
-
-    // the network capabilities object that stores everything that the
     // current device supports with regards to networking.
-    private NetworkCapabilities capabilities;
+    private final NetworkCapabilities capabilities;
 
     /**
      * Initialize a Network Manager object following the context of current device.
@@ -54,7 +48,8 @@ public class NetworkManager {
         this.connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        this.network = this.connectivityManager.getActiveNetwork();
+        // the network object that encapsulates all info regarding Network
+        Network network = this.connectivityManager.getActiveNetwork();
         this.capabilities = this.connectivityManager.getNetworkCapabilities(network);
         this.mNetworkChangeListeners = new ArrayList<>();
     }

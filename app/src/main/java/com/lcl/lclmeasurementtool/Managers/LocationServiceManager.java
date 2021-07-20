@@ -14,8 +14,6 @@ import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.lcl.lclmeasurementtool.R;
 
 import java.lang.ref.WeakReference;
@@ -31,10 +29,10 @@ public class LocationServiceManager {
     private final FusedLocationProviderClient mFusedLocationClient;
 
     // the instance of the location manager
-    private LocationManager locationManager;
+    private final LocationManager locationManager;
 
     // the weak reference of the current context of the Application
-    private WeakReference<Context> context;
+    private final WeakReference<Context> context;
 
     // the location object that contains the information of user's location
     private Location mLastLocation;

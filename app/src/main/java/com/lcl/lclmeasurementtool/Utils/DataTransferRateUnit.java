@@ -13,10 +13,10 @@ public enum DataTransferRateUnit {
     Gigabyte(Unit.Byte, Magnitude.Giga);
 
     // the unit of the rate.
-    private Unit unit;
+    private final Unit unit;
 
     // the magnitude of the rate.
-    private Magnitude magnitude;
+    private final Magnitude magnitude;
 
     /**
      * Initialize a DataTransferRateUnit following the unit and magnitude of the rate.
