@@ -28,14 +28,21 @@ public class LocationServiceListener implements LifecycleObserver {
     // the context of the Application
     private final Context context;
 
+    // the life cycle object
+    private final Lifecycle lifecycle;
+
+    // the lock that controls the check on location mode
+    private boolean checkLocationModeLock = false;
+
     /**
      * Initialize a LocationService Listener using the current context of the Application
      *
      * @param context the context of the application
      */
-    public LocationServiceListener(@NonNull Context context) {
+    public LocationServiceListener(@NonNull Context context, Lifecycle lifecycle) {
         this.context = context;
         this.mLocationManager = LocationServiceManager.getManager(context);
+        this.lifecycle = lifecycle;
     }
 
 
@@ -54,12 +61,16 @@ public class LocationServiceListener implements LifecycleObserver {
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     void checkLocationMode() {
-        if (!mLocationManager.isLocationModeOn()) {
-
+        if (!mLocationManager.isLocationModeOn() && lifecycle.getCurrentState().equals(Lifecycle.State.RESUMED) && !checkLocationModeLock) {
+            System.out.println(1);
+            checkLocationModeLock = true;
             // TODO turn off start FAB if canceled
             UIUtils.showDialog(context, R.string.location_message_title, R.string.enable_location_message,
                     R.string.go_to_setting,
-                    (paramDialogInterface, paramInt) -> context.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)),
+                    (paramDialogInterface, paramInt) -> {
+                        context.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        checkLocationModeLock = false;
+                    },
                     android.R.string.cancel,
                     null);
         }

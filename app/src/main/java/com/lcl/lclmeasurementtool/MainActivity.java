@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         mCellularManager = CellularManager.getManager(this);
         mLocationManager = LocationServiceManager.getManager(this);
 
-        locationServiceListener = new LocationServiceListener(this);
+        locationServiceListener = new LocationServiceListener(this, getLifecycle());
         getLifecycle().addObserver(locationServiceListener);
 
         TextView tv = (TextView) findViewById(R.id.signalStrengthStatus);
