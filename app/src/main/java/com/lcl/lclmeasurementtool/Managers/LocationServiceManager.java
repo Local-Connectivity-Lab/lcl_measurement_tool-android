@@ -23,20 +23,39 @@ import java.lang.ref.WeakReference;
 public class LocationServiceManager {
 
     private static final String TAG = "LOCATION_MANAGER";
+
+    // the location service manager instance
     private static LocationServiceManager locationServiceManager = null;
 
-    private FusedLocationProviderClient mFusedLocationClient;
+    // the fused location client provided by Google Play Service
+    private final FusedLocationProviderClient mFusedLocationClient;
 
+    // the instance of the location manager
     private LocationManager locationManager;
+
+    // the weak reference of the current context of the Application
     private WeakReference<Context> context;
+
+    // the location object that contains the information of user's location
     private Location mLastLocation;
 
+    /**
+     * Initialize a Location Service Manager following the context
+     *
+     * @param context  the context of the current activity
+     */
     private LocationServiceManager(@NonNull Context context) {
         this.context = new WeakReference<>(context);
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this.context.get());
     }
 
+    /**
+     * Return a LocationService Manager instance following the given context.
+     *
+     * @param context  the context of the current activity
+     * @return a location service manager instance
+     */
     public static LocationServiceManager getManager(@NonNull Context context) {
         if (locationServiceManager == null) {
             locationServiceManager = new LocationServiceManager(context.getApplicationContext());
@@ -44,10 +63,19 @@ public class LocationServiceManager {
         return locationServiceManager;
     }
 
+    /**
+     * Return whether the device's location mode is on.
+     * @return whether the device's location mode is on.
+     */
     public boolean isLocationModeOn() {
         return locationManager.isLocationEnabled();
     }
 
+    /**
+     * Return whether the device's location permission is granted.
+     *
+     * @return whether the device's location permission is granted
+     */
     public boolean isLocationPermissionGranted() {
         int permissionState = ActivityCompat.checkSelfPermission(context.get(),
                 Manifest.permission.ACCESS_FINE_LOCATION);
@@ -55,11 +83,8 @@ public class LocationServiceManager {
     }
 
     /**
-     * Provides a simple way of getting a device's location and is well suited for
-     * applications that do not require a fine-grained location and that do not need location
-     * updates. Gets the best and most recent location currently available, which may be null
-     * in rare cases when a location is not available.
-     *
+     * Retrieve the last location from the device.
+     * If last location is null, a new location request will be initiated.
      */
     @SuppressWarnings("MissingPermission")
     public void getLastLocation() {
@@ -76,6 +101,4 @@ public class LocationServiceManager {
                     }
                 });
     }
-
-
 }

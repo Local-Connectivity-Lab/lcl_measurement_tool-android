@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.provider.Settings;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
@@ -18,17 +19,31 @@ import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
 public class LocationServiceListener implements LifecycleObserver {
 
+    private static final String TAG = "LOCATION_SERVICE_LISTENER";
 
+    // permission code
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
-    private LocationServiceManager mLocationManager;
-    private Context context;
 
-    public LocationServiceListener(Context context) {
+    // the Location service object
+    private final LocationServiceManager mLocationManager;
+
+    // the context of the Application
+    private final Context context;
+
+    /**
+     * Initialize a LocationService Listener using the current context of the Application
+     *
+     * @param context the context of the application
+     */
+    public LocationServiceListener(@NonNull Context context) {
         this.context = context;
         this.mLocationManager = LocationServiceManager.getManager(context);
     }
 
 
+    /**
+     * Check the location permission during on_resume in app's lifecycle
+     */
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     void checkLocationPermission() {
         if (!mLocationManager.isLocationPermissionGranted()) {
@@ -36,6 +51,9 @@ public class LocationServiceListener implements LifecycleObserver {
         }
     }
 
+    /**
+     * Check the location service during on_resume in app's lifecycle
+     */
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     void checkLocationMode() {
         if (!mLocationManager.isLocationModeOn()) {
@@ -49,6 +67,9 @@ public class LocationServiceListener implements LifecycleObserver {
         }
     }
 
+    /**
+     * Request location permission to users
+     */
     private void requestLocationPermission() {
         boolean shouldProvideRationale =
                 ActivityCompat.shouldShowRequestPermissionRationale((Activity) context,
@@ -64,6 +85,9 @@ public class LocationServiceListener implements LifecycleObserver {
         }
     }
 
+    /**
+     * Start the permission request
+     */
     private void startLocationPermissionRequest() {
         ActivityCompat.requestPermissions((Activity) context,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},

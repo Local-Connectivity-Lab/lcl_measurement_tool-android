@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         mNetworkManager = NetworkManager.getManager(this);
         mCellularManager = CellularManager.getManager(this);
         mLocationManager = LocationServiceManager.getManager(this);
+
         locationServiceListener = new LocationServiceListener(this);
         getLifecycle().addObserver(locationServiceListener);
 
@@ -73,12 +74,6 @@ public class MainActivity extends AppCompatActivity {
 //                Log.i(TAG, "The cellular network is connected? " + isConnected);
             }
         });
-
-//        if (mNetworkManager.isCellularConnected()) {
-//            mCellularManager.listenToSignalStrengthChange(tv);
-//        } else {
-//            Toast.makeText(this, "You are not connected via cellular", Toast.LENGTH_LONG).show();
-//        }
     }
 
 
@@ -92,37 +87,28 @@ public class MainActivity extends AppCompatActivity {
 
 
     ////////////////// HELPER FUNCTION ///////////////////////
-
-    /**
-     * Callback received when a permissions request has been completed.
-     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        Log.i(TAG, "onRequestPermissionResult");
         if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
             if (grantResults.length <= 0) {
-                // If user interaction was interrupted, the permission request is cancelled and you
+                // If user interaction was interrupted, the permission request is cancelled and we
                 // receive empty arrays.
-                Log.i(TAG, "User interaction was cancelled.");
+                Log.e(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
                 Log.i(TAG, "Location permission granted");
-//                getLastLocation();
             } else {
                 // Permission denied.
 
-                // Notify the user via a SnackBar that they have rejected a core permission for the
-                // app, which makes the Activity useless. In a real app, core permissions would
-                // typically be best requested during a welcome-screen flow.
-
-                // Additionally, it is important to remember that a permission might have been
-                // rejected without asking the user for permission (device policy or "Never ask
-                // again" prompts). Therefore, a user interface affordance is typically implemented
-                // when permissions are denied. Otherwise, your app could appear unresponsive to
-                // touches or interactions which have required permissions.
-                UIUtils.showDialog(this, R.string.location_message_title, R.string.permission_denied_explanation, R.string.settings,
+                // Notify the user via a dialog that they have rejected a core permission for the
+                // app, which makes the Activity useless.
+                UIUtils.showDialog(this,
+                        R.string.location_message_title,
+                        R.string.permission_denied_explanation,
+                        R.string.settings,
                         (dialogInterface, actionID) -> {
+
                     // Build intent that displays the App settings screen.
                     Intent intent = new Intent();
                     intent.setAction(
@@ -137,6 +123,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Fetch the last location from the device
+     */
     private void getLastLocation() {
         mLocationManager.getLastLocation();
     }
