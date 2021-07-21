@@ -33,7 +33,7 @@ public enum DataTransferRateUnit {
      * @return the corresponding unit of the enum value.
      */
     public Unit getUnit() {
-        return unit;
+        return this.unit;
     }
 
     /**
@@ -41,7 +41,7 @@ public enum DataTransferRateUnit {
      * @return a string representation of the data transfer rate.
      */
     public String getUnitString() {
-        return magnitude.getUnitString() + unit.getUnitString() + "/s";
+        return this.magnitude.getUnitString() + this.unit.getUnitString() + "/s";
     }
 
     /**
@@ -49,7 +49,7 @@ public enum DataTransferRateUnit {
      * @return the corresponding magnitude of the enum value.
      */
     public Magnitude getMagnitude() {
-        return magnitude;
+        return this.magnitude;
     }
 
     /**
@@ -80,7 +80,7 @@ public enum DataTransferRateUnit {
 
         @Override
         public int getLevel() {
-            return level;
+            return this.level;
         }
 
         @Override
@@ -124,7 +124,7 @@ public enum DataTransferRateUnit {
 
         @Override
         public int getLevel() {
-            return level;
+            return this.level;
         }
 
         @Override

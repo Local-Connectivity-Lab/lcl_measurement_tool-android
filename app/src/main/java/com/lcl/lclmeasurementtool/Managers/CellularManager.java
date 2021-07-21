@@ -61,7 +61,10 @@ public class CellularManager {
      * @return a cellular manager
      */
     public static CellularManager getManager(@NonNull Context context) {
-        return cellularManager == null ? new CellularManager(context) : cellularManager;
+        if (cellularManager == null) {
+            cellularManager = new CellularManager(context);
+        }
+        return cellularManager;
     }
 
     /**
@@ -77,8 +80,8 @@ public class CellularManager {
      * @return a corresponding signal strength level from the current context.
      */
     public SignalStrengthLevel getSignalStrengthLevel() {
-        if (report != null) {
-            int level = report.getLevel();
+        if (this.report != null) {
+            int level = this.report.getLevel();
             return SignalStrengthLevel.init(level);
         }
 
@@ -92,7 +95,7 @@ public class CellularManager {
      *         report might be null if no cellular connection.
      */
     public CellSignalStrength getCellSignalStrength() {
-        return report;
+        return this.report;
     }
 
     /**
@@ -101,7 +104,7 @@ public class CellularManager {
      *         If no cellular connection, 0.
      */
     public int getDBM() {
-        return report != null ? report.getDbm() : 0;
+        return this.report != null ? this.report.getDbm() : 0;
     }
 
     /**

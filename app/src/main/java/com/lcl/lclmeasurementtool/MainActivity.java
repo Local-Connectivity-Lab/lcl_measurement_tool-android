@@ -31,9 +31,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        context = this;
+        this.context = this;
 
-        isTestStarted = false;
+        this.isTestStarted = false;
 
 
 //        LocationManager manager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -44,17 +44,17 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        mNetworkManager = new NetworkManager(this);
-        mCellularManager = CellularManager.getManager(this);
+        this.mNetworkManager = new NetworkManager(this);
+        this.mCellularManager = CellularManager.getManager(this);
 
-        if (!mNetworkManager.isCellularConnected()) {
+        if (!this.mNetworkManager.isCellularConnected()) {
             updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
         }
 
         setUpFAB();
-        updateFAB(mNetworkManager.isCellularConnected());
+        updateFAB(this.mNetworkManager.isCellularConnected());
 
-        mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
+        this.mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
             @Override
             public void onAvailable() {
                 Log.i(TAG, "from call back on avaliable");
@@ -103,13 +103,13 @@ public class MainActivity extends AppCompatActivity {
     private void setUpFAB() {
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(button -> {
-            ((FloatingActionButton) button).setImageResource( isTestStarted ? R.drawable.start : R.drawable.stop );
+            ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
             fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
 
             // TODO: init/cancel ping and iperf based in iTestStart
 
-            isTestStarted = !isTestStarted;
-            Toast.makeText(this, "test starts: " + isTestStarted, Toast.LENGTH_SHORT).show();
+            this.isTestStarted = !isTestStarted;
+            Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 // cancel test
 //            }
 
-            isTestStarted = false;
+            this.isTestStarted = false;
         });
     }
 
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mCellularManager.stopListening();
-        mNetworkManager.removeAllNetworkChangeListeners();
+        this.mCellularManager.stopListening();
+        this.mNetworkManager.removeAllNetworkChangeListeners();
     }
 }
