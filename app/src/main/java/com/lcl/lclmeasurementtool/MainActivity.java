@@ -33,11 +33,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mNetworkManager = NetworkManager.getManager(this);
-        mCellularManager = CellularManager.getManager(this);
-        mLocationManager = LocationServiceManager.getManager(this);
+        mNetworkManager = NetworkManager.getManager(this.getApplicationContext());
+        mCellularManager = CellularManager.getManager(this.getApplicationContext());
+        mLocationManager = LocationServiceManager.getManager(this.getApplicationContext());
 
-        locationServiceListener = new LocationServiceListener(this, getLifecycle());
+        locationServiceListener = new LocationServiceListener(this.getApplicationContext(), getLifecycle());
         getLifecycle().addObserver(locationServiceListener);
 
         TextView tv = (TextView) findViewById(R.id.signalStrengthStatus);

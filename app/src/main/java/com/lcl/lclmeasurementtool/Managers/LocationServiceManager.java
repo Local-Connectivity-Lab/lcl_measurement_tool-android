@@ -56,7 +56,7 @@ public class LocationServiceManager {
      */
     public static LocationServiceManager getManager(@NonNull Context context) {
         if (locationServiceManager == null) {
-            locationServiceManager = new LocationServiceManager(context.getApplicationContext());
+            locationServiceManager = new LocationServiceManager(context);
         }
         return locationServiceManager;
     }
