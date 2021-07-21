@@ -34,7 +34,7 @@ public class NetworkManager {
     private ConnectivityManager.NetworkCallback networkCallback;
 
     // the connectivity manager object that keeps track of all information
-    // related to phone's connectivyt states.
+    // related to phone's connectivity states.
     private final ConnectivityManager connectivityManager;
 
     // current device supports with regards to networking.
@@ -59,7 +59,6 @@ public class NetworkManager {
      * @return a network manager
      */
     public static NetworkManager getManager(@NonNull Context context) {
-
         if (networkManager == null) {
             networkManager = new NetworkManager(context);
         }
@@ -121,7 +120,7 @@ public class NetworkManager {
      *
      * @param networkChangeListener the listener to be removed (should not be null)
      */
-    public void removeNetworokChangeListener(@NonNull NetworkChangeListener networkChangeListener) {
+    public void removeNetworkChangeListener(@NonNull NetworkChangeListener networkChangeListener) {
         mNetworkChangeListeners.remove(networkChangeListener);
     }
 
