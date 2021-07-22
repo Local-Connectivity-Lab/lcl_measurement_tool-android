@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +20,8 @@ import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
+import java.util.UUID;
+
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MAIN_ACTIVITY";
@@ -33,6 +36,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        if (!preferences.contains(getString(R.string.USER_UUID))) {
+            String uuid = UUID.randomUUID().toString();
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString(getString(R.string.USER_UUID), uuid);
+            editor.apply();
+        }
+
         mNetworkManager = NetworkManager.getManager(this.getApplicationContext());
         mCellularManager = CellularManager.getManager(this.getApplicationContext());
         mLocationManager = LocationServiceManager.getManager(this.getApplicationContext());
