@@ -16,4 +16,5 @@
     <string name="go_to_setting">Settings</string>
     <string name="location_message_title">Using Location Service</string>
     <string name="permission_denied_explanation">"We use Location Service to provide core functionalities in this measurement tool. Disabling location service will result in missing in functionality."</string>
+    <string name="USER_UUID">uuid</string>
 </resources>
