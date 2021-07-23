@@ -72,7 +72,7 @@ public class NetworkManager {
      * @param networkChangeListener a new listener (should not be null).
      */
     public void addNetworkChangeListener(@NonNull NetworkChangeListener networkChangeListener) {
-        mNetworkChangeListeners.add(networkChangeListener);
+        this.mNetworkChangeListeners.add(networkChangeListener);
 
         NetworkRequest request = new NetworkRequest
                 .Builder()
@@ -112,7 +112,7 @@ public class NetworkManager {
             }
         };
 
-        this.connectivityManager.registerNetworkCallback(request, networkCallback);
+        this.connectivityManager.registerNetworkCallback(request, this.networkCallback);
     }
 
     /**
@@ -121,14 +121,14 @@ public class NetworkManager {
      * @param networkChangeListener the listener to be removed (should not be null)
      */
     public void removeNetworkChangeListener(@NonNull NetworkChangeListener networkChangeListener) {
-        mNetworkChangeListeners.remove(networkChangeListener);
+        this.mNetworkChangeListeners.remove(networkChangeListener);
     }
 
     /**
      * Remove all registered listeners
      */
     public void removeAllNetworkChangeListeners() {
-        mNetworkChangeListeners.clear();
+        this.mNetworkChangeListeners.clear();
         this.connectivityManager.unregisterNetworkCallback(this.networkCallback);
     }
 
@@ -137,14 +137,23 @@ public class NetworkManager {
      * @return true if the current device is connected to the internet via cellular; false otherwise.
      */
     public boolean isCellularConnected() {
-        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+        return this.capabilities != null &&
+                this.capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
     }
 
     public int getLinkDownstreamBandwidthKbps() {
-        return this.capabilities.getLinkDownstreamBandwidthKbps();
+        if (this.capabilities != null) {
+            return this.capabilities.getLinkDownstreamBandwidthKbps();
+        }
+
+        return 0;
     }
 
     public int getLinkUpstreamBandwidthKbps() {
-        return this.capabilities.getLinkUpstreamBandwidthKbps();
+        if (this.capabilities != null) {
+            return this.capabilities.getLinkUpstreamBandwidthKbps();
+        }
+
+        return 0;
     }
 }
