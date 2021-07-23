@@ -8,6 +8,7 @@ import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -60,7 +61,10 @@ public class CellularManager {
      * @return a cellular manager
      */
     public static CellularManager getManager(@NonNull Context context) {
-        return cellularManager == null ? new CellularManager(context) : cellularManager;
+        if (cellularManager == null) {
+            cellularManager = new CellularManager(context);
+        }
+        return cellularManager;
     }
 
     /**
@@ -76,8 +80,8 @@ public class CellularManager {
      * @return a corresponding signal strength level from the current context.
      */
     public SignalStrengthLevel getSignalStrengthLevel() {
-        if (report != null) {
-            int level = report.getLevel();
+        if (this.report != null) {
+            int level = this.report.getLevel();
             return SignalStrengthLevel.init(level);
         }
 
@@ -91,7 +95,7 @@ public class CellularManager {
      *         report might be null if no cellular connection.
      */
     public CellSignalStrength getCellSignalStrength() {
-        return report;
+        return this.report;
     }
 
     /**
@@ -100,15 +104,14 @@ public class CellularManager {
      *         If no cellular connection, 0.
      */
     public int getDBM() {
-        return report != null ? report.getDbm() : 0;
+        return this.report != null ? this.report.getDbm() : 0;
     }
 
     /**
      * Start listen to signal strength change and display onto the corresponding TextView.
      *
-     * @param textView the text view that will be used to display the signal strength data.
      */
-    public void listenToSignalStrengthChange(TextView textView) {
+    public void listenToSignalStrengthChange(CellularChangeListener listener) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -122,14 +125,18 @@ public class CellularManager {
                         List<CellSignalStrengthLte> reports = signalStrength
                                 .getCellSignalStrengths(CellSignalStrengthLte.class);
 
-                        String text;
+                        int dBm;
+                        SignalStrengthLevel level;
                         if (reports.size() > 0) {
                             CellSignalStrengthLte report = reports.get(0);
-                            text = report.getDbm() + " " + report.getLevel();
+                            level = SignalStrengthLevel.init(report.getLevel());
+                            dBm = report.getDbm();
                         } else {
-                            text = SignalStrengthLevel.NONE.getName();
+                            level = SignalStrengthLevel.NONE;
+                            dBm = level.getLevelCode();
                         }
-                        textView.setText(text);
+
+                        listener.onChange(level, dBm);
 
                         if (stopListening) {
                             Looper.myLooper().quit();

@@ -1,72 +1,143 @@
 package com.lcl.lclmeasurementtool;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
-import android.net.Network;
-import android.net.NetworkCapabilities;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
+import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MAIN_ACTIVITY";
 
+    private Context context;
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
+
+    private boolean isTestStarted;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        NetworkManager mNetworkManager = new NetworkManager(this);
-        mCellularManager = CellularManager.getManager(this);
+        this.context = this;
 
-        TextView tv = (TextView) findViewById(R.id.signalStrengthStatus);
+        this.isTestStarted = false;
 
-        mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
+
+//        LocationManager manager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+//        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+//            Toast.makeText(this, "Enable location services for accurate data", Toast.LENGTH_SHORT).show();
+//        }
+
+
+
+
+        this.mNetworkManager = new NetworkManager(this);
+        this.mCellularManager = CellularManager.getManager(this);
+
+        if (!this.mNetworkManager.isCellularConnected()) {
+            updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+        }
+
+        setUpFAB();
+        updateFAB(this.mNetworkManager.isCellularConnected());
+
+        this.mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
             @Override
             public void onAvailable() {
-//                Log.i(TAG, "The cellular network is now available");
-                mCellularManager.listenToSignalStrengthChange(tv);
+                Log.i(TAG, "from call back on avaliable");
+                updateFAB(true);
+                mCellularManager.listenToSignalStrengthChange((level, dBm) ->
+                                                                updateSignalStrengthTexts(level, dBm));
             }
 
             @Override
             public void onLost() {
-//                Log.i(TAG, "The cellular network is now lost");
                 mCellularManager.stopListening();
-                tv.setText(SignalStrengthLevel.NONE.getName());
+                updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+                updateFAB(false);
             }
 
             @Override
             public void onUnavailable() {
-//                Log.i(TAG, "The cellular network is unavailable");
+                updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+                updateFAB(false);
             }
 
             @Override
             public void onCellularNetworkChanged(boolean isConnected) {
-//                Log.i(TAG, "The cellular network is connected? " + isConnected);
+                if (!isConnected) {
+                    updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+                    updateFAB(isConnected);
+                }
             }
         });
 
-//        if (mNetworkManager.isCellularConnected()) {
-//            mCellularManager.listenToSignalStrengthChange(tv);
-//        } else {
-//            Toast.makeText(this, "You are not connected via cellular", Toast.LENGTH_LONG).show();
-//        }
     }
+
+    private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
+        runOnUiThread(() -> {
+            TextView signalStrengthValue = findViewById(R.id.SignalStrengthValue);
+            TextView signalStrengthStatus = findViewById(R.id.SignalStrengthStatus);
+            TextView signalStrengthUnit = findViewById(R.id.SignalStrengthUnit);
+            ImageView signalStrengthIndicator = findViewById(R.id.SignalStrengthIndicator);
+            signalStrengthValue.setText(String.valueOf(dBm));
+            signalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
+            signalStrengthStatus.setText(level.getName());
+            signalStrengthIndicator.setColorFilter(level.getColor(context));
+        });
+    }
+
+    private void setUpFAB() {
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(button -> {
+            ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
+            fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
+
+            // TODO: init/cancel ping and iperf based in iTestStart
+
+            this.isTestStarted = !isTestStarted;
+            Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void updateFAB(boolean state) {
+        runOnUiThread(() -> {
+            FloatingActionButton fab = findViewById(R.id.fab);
+            fab.setEnabled(state);
+            fab.setImageResource(R.drawable.start);
+            fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
+                    ContextCompat.getColor(this, R.color.light_gray));
+
+//             TODO: cancel ping and iperf if started
+//            if (isTestStarted) {
+                // cancel test
+//            }
+
+            this.isTestStarted = false;
+        });
+    }
+
+
+    // TODO: update FAB Icon and State when tests are done
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mCellularManager.stopListening();
-        mNetworkManager.removeAllNetworkChangeListeners();
+        this.mCellularManager.stopListening();
+        this.mNetworkManager.removeAllNetworkChangeListeners();
     }
 }
