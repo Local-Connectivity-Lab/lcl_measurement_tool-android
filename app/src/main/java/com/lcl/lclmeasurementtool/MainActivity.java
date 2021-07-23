@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -13,6 +14,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
@@ -52,21 +54,13 @@ public class MainActivity extends AppCompatActivity {
             editor.apply();
         }
 
-        mNetworkManager = NetworkManager.getManager(this.getApplicationContext());
-        mCellularManager = CellularManager.getManager(this.getApplicationContext());
+        mNetworkManager = NetworkManager.getManager(this);
+        mCellularManager = CellularManager.getManager(this);
         mLocationManager = LocationServiceManager.getManager(this.getApplicationContext());
-
-        locationServiceListener = new LocationServiceListener(this.getApplicationContext(), getLifecycle());
+        locationServiceListener = new LocationServiceListener(this, getLifecycle());
         getLifecycle().addObserver(locationServiceListener);
         this.context = this;
-
         this.isTestStarted = false;
-
-
-
-
-        this.mNetworkManager = new NetworkManager(this);
-        this.mCellularManager = CellularManager.getManager(this);
 
         if (!this.mNetworkManager.isCellularConnected()) {
             updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
@@ -75,10 +69,10 @@ public class MainActivity extends AppCompatActivity {
         setUpFAB();
         updateFAB(this.mNetworkManager.isCellularConnected());
 
-        this.mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
+        this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
             @Override
             public void onAvailable() {
-                Log.i(TAG, "from call back on avaliable");
+                Log.i(TAG, "from call back on available");
                 updateFAB(true);
                 mCellularManager.listenToSignalStrengthChange((level, dBm) ->
                                                                 updateSignalStrengthTexts(level, dBm));
@@ -87,18 +81,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLost() {
                 mCellularManager.stopListening();
+                Log.e(TAG, "on lost");
                 updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
                 updateFAB(false);
             }
 
             @Override
             public void onUnavailable() {
+                Log.e(TAG, "on unavailable");
                 updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
                 updateFAB(false);
             }
 
             @Override
             public void onCellularNetworkChanged(boolean isConnected) {
+                Log.e(TAG, "on connection lost");
                 if (!isConnected) {
                     updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
                     updateFAB(isConnected);
