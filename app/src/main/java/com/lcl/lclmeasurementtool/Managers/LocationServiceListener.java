@@ -12,6 +12,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.OnLifecycleEvent;
 
+import com.lcl.lclmeasurementtool.MainActivity;
 import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
@@ -62,7 +63,6 @@ public class LocationServiceListener implements LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     void checkLocationMode() {
         if (!mLocationManager.isLocationModeOn() && lifecycle.getCurrentState().equals(Lifecycle.State.RESUMED) && !checkLocationModeLock) {
-            System.out.println(1);
             checkLocationModeLock = true;
             // TODO turn off start FAB if canceled
             UIUtils.showDialog(context, R.string.location_message_title, R.string.enable_location_message,

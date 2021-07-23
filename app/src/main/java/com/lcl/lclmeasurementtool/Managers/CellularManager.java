@@ -2,6 +2,7 @@ package com.lcl.lclmeasurementtool.Managers;
 import android.content.Context;
 import android.os.Looper;
 import android.telephony.CellSignalStrength;
+import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
@@ -37,7 +38,7 @@ public class CellularManager {
     private final SignalStrength signalStrength;
 
     // the LTE signal strength report that consists of all cellular signal strength information.
-    private final CellSignalStrengthLte report;
+    private final CellSignalStrength report;
 
     // the flag that controls when to stop listening to signal strength change.
     private boolean stopListening;
@@ -49,8 +50,8 @@ public class CellularManager {
     private CellularManager(@NonNull Context context) {
         this.telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         this.signalStrength = this.telephonyManager.getSignalStrength();
-        if (this.signalStrength.getCellSignalStrengths(CellSignalStrengthLte.class).size() > 0) {
-            this.report = this.signalStrength.getCellSignalStrengths(CellSignalStrengthLte.class).get(0);
+        if (this.signalStrength.getCellSignalStrengths().size() > 0) {
+            this.report = this.signalStrength.getCellSignalStrengths().get(0);
         } else {
             this.report = null;
         }
@@ -123,13 +124,13 @@ public class CellularManager {
                     @Override
                     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                         super.onSignalStrengthsChanged(signalStrength);
-                        List<CellSignalStrengthLte> reports = signalStrength
-                                .getCellSignalStrengths(CellSignalStrengthLte.class);
+                        List<CellSignalStrength> reports = signalStrength.getCellSignalStrengths();
+
 
                         int dBm;
                         SignalStrengthLevel level;
                         if (reports.size() > 0) {
-                            CellSignalStrengthLte report = reports.get(0);
+                            CellSignalStrength report = reports.get(0);
                             level = SignalStrengthLevel.init(report.getLevel());
                             dBm = report.getDbm();
                         } else {
