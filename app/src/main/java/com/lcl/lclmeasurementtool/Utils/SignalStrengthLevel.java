@@ -62,6 +62,11 @@ public enum SignalStrengthLevel {
                 "levelCode=" + levelCode;
     }
 
+    /**
+     * Retrieve the name of the signal strength.
+     *
+     * @return the string representation of the signal strength level.
+     */
     public String getName() {
         switch (this) {
             case NONE:
@@ -81,6 +86,11 @@ public enum SignalStrengthLevel {
         return "";
     }
 
+    /**
+     * Retrieve the color representation of the signal strength.
+     * @param context the context of the application/activity
+     * @return the color representation of the signal strength.
+     */
     public int getColor(Context context) {
         switch (this) {
             case GREAT:
