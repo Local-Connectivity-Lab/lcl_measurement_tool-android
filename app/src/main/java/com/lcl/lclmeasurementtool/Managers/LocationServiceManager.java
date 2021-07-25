@@ -26,10 +26,10 @@ public class LocationServiceManager {
     private static LocationServiceManager locationServiceManager = null;
 
     // the fused location client provided by Google Play Service
-    private final FusedLocationProviderClient mFusedLocationClient;
+    private FusedLocationProviderClient mFusedLocationClient;
 
     // the instance of the location manager
-    private final LocationManager locationManager;
+    private LocationManager locationManager;
 
     // the weak reference of the current context of the Application
     private final WeakReference<Context> context;
@@ -99,5 +99,13 @@ public class LocationServiceManager {
                         Toast.makeText(context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    /**
+     * Stop receiving location information.
+     */
+    public void stop() {
+        this.locationManager = null;
+        this.mFusedLocationClient = null;
     }
 }

@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.content.Context;
 import android.os.Bundle;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // set up UUID
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         if (!preferences.contains(getString(R.string.USER_UUID))) {
             String uuid = UUID.randomUUID().toString();
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
             editor.apply();
         }
 
+        // prepare necessary information managers
         mNetworkManager = NetworkManager.getManager(this);
         mCellularManager = CellularManager.getManager(this);
         mLocationManager = LocationServiceManager.getManager(this.getApplicationContext());
@@ -62,46 +65,68 @@ public class MainActivity extends AppCompatActivity {
         this.context = this;
         this.isTestStarted = false;
 
-        if (!this.mNetworkManager.isCellularConnected()) {
-            updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
-        }
+        // update and listen to signal strength changes
+        updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
+        mCellularManager.listenToSignalStrengthChange(this::updateSignalStrengthTexts);
 
+        // set up FAB
         setUpFAB();
         updateFAB(this.mNetworkManager.isCellularConnected());
 
         this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
+
             @Override
             public void onAvailable() {
-                Log.i(TAG, "from call back on available");
+                Log.i(TAG, "from call back on cellular available");
                 updateFAB(true);
-                mCellularManager.listenToSignalStrengthChange((level, dBm) ->
-                                                                updateSignalStrengthTexts(level, dBm));
             }
 
             @Override
             public void onLost() {
                 mCellularManager.stopListening();
-                Log.e(TAG, "on lost");
-                updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+                Log.e(TAG, "on cellular lost");
+                // TODO cancel test
                 updateFAB(false);
             }
 
             @Override
             public void onUnavailable() {
-                Log.e(TAG, "on unavailable");
-                updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+                Log.e(TAG, "on cellular unavailable");
+                // TODO cancel test
                 updateFAB(false);
             }
 
             @Override
-            public void onCellularNetworkChanged(boolean isConnected) {
-                Log.e(TAG, "on connection lost");
-                if (!isConnected) {
-                    updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
-                    updateFAB(false);
-                }
+            public void onCellularNetworkChanged(NetworkCapabilities capabilities) {
+//                Log.i(TAG, "on cellular network change" + capabilities.toString());
+//                updateFAB(true);
             }
+        }, new NetworkChangeListener() {
+            @Override
+            public void onAvailable() {
+                Log.i(TAG, "from call back on wifi available");
+
+                // TODO: cancel test
+                updateFAB(false);
+            }
+
+            @Override
+            public void onUnavailable() { }
+
+            @Override
+            public void onLost() { }
+
+            @Override
+            public void onCellularNetworkChanged(NetworkCapabilities capabilities) { }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        this.mLocationManager.stop();
+        this.mCellularManager.stopListening();
+        this.mNetworkManager.stopListenToNetworkChanges();
     }
 
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
@@ -119,44 +144,46 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUpFAB() {
         FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
         fab.setOnClickListener(button -> {
-            ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
-            fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
 
-            // TODO: init/cancel ping and iperf based in iTestStart
+            if (!this.mNetworkManager.isCellularConnected()) {
+                // raise alert telling user to enable cellular data
+                Log.e(TAG, "not connected to cellular network");
+            } else {
+                ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
+                fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
 
-            this.isTestStarted = !isTestStarted;
-            Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
+                // TODO: init/cancel ping and iperf based in iTestStart
+
+                this.isTestStarted = !isTestStarted;
+                Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
     private void updateFAB(boolean state) {
         runOnUiThread(() -> {
             FloatingActionButton fab = findViewById(R.id.fab);
-            fab.setEnabled(state);
-            fab.setImageResource(R.drawable.start);
-            fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
-                    ContextCompat.getColor(this, R.color.light_gray));
+
+            if (state != fab.isEnabled()) {
+                fab.setEnabled(state);
+                fab.setImageResource(R.drawable.start);
+                fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
+                        ContextCompat.getColor(this, R.color.light_gray));
 
 //             TODO: cancel ping and iperf if started
 //            if (isTestStarted) {
                 // cancel test
 //            }
 
-            this.isTestStarted = false;
+                this.isTestStarted = false;
+            }
         });
     }
 
 
     // TODO: update FAB Icon and State when tests are done
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        this.mCellularManager.stopListening();
-        this.mNetworkManager.removeAllNetworkChangeListeners();
-    }
 
 
     ////////////////// HELPER FUNCTION ///////////////////////

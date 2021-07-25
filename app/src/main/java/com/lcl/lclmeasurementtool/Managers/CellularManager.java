@@ -2,15 +2,12 @@ package com.lcl.lclmeasurementtool.Managers;
 import android.content.Context;
 import android.os.Looper;
 import android.telephony.CellSignalStrength;
+import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.util.Log;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
@@ -86,7 +83,7 @@ public class CellularManager {
             return SignalStrengthLevel.init(level);
         }
 
-        return SignalStrengthLevel.NONE;
+        return SignalStrengthLevel.POOR;
     }
 
     /**
@@ -123,8 +120,8 @@ public class CellularManager {
                     @Override
                     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                         super.onSignalStrengthsChanged(signalStrength);
-                        List<CellSignalStrength> reports = signalStrength.getCellSignalStrengths();
-
+                        List<CellSignalStrength> reports = signalStrength.
+                                                                getCellSignalStrengths();
 
                         int dBm;
                         SignalStrengthLevel level;
@@ -133,7 +130,7 @@ public class CellularManager {
                             level = SignalStrengthLevel.init(report.getLevel());
                             dBm = report.getDbm();
                         } else {
-                            level = SignalStrengthLevel.NONE;
+                            level = SignalStrengthLevel.POOR;
                             dBm = level.getLevelCode();
                         }
 

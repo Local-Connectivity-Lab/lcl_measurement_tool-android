@@ -7,9 +7,6 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 
 
@@ -27,11 +24,14 @@ public class NetworkManager {
 
     private static NetworkManager networkManager = null;
 
-    // A List of registered ColorChangeListeners
-    private final List<NetworkChangeListener> mNetworkChangeListeners;
+    // Registered NetworkChangeListener for cellular and WIFI
+    private NetworkChangeListener mCellularNetworkChangeListener;
+    private NetworkChangeListener mDefaultNetworkChangeListener;
 
-    // A Network Callback object
-    private ConnectivityManager.NetworkCallback networkCallback;
+
+    // Network Callback object
+    private ConnectivityManager.NetworkCallback cellularNetworkCallback;
+    private ConnectivityManager.NetworkCallback defaultNetworkCallback;
 
     // the connectivity manager object that keeps track of all information
     // related to phone's connectivity states.
@@ -51,7 +51,7 @@ public class NetworkManager {
         // the network object that encapsulates all info regarding Network
         Network network = this.connectivityManager.getActiveNetwork();
         this.capabilities = this.connectivityManager.getNetworkCapabilities(network);
-        this.mNetworkChangeListeners = new ArrayList<>();
+        mCellularNetworkChangeListener = null;
     }
 
     /**
@@ -67,69 +67,83 @@ public class NetworkManager {
     }
 
     /**
-     * Registers a new listener
+     * Registers new listeners
      *
-     * @param networkChangeListener a new listener (should not be null).
+     * @param cellularNetworkChangeListener    a new listener (should not be null) listens to cellular network changes.
+     * @param defaultNetworkChangeListener     a new listener (should not be null) listens to default network changes.
      */
-    public void addNetworkChangeListener(@NonNull NetworkChangeListener networkChangeListener) {
-        this.mNetworkChangeListeners.add(networkChangeListener);
+    public void addNetworkChangeListener(@NonNull NetworkChangeListener cellularNetworkChangeListener, @NonNull NetworkChangeListener defaultNetworkChangeListener) {
+        this.mCellularNetworkChangeListener = cellularNetworkChangeListener;
+        this.mDefaultNetworkChangeListener = defaultNetworkChangeListener;
 
-        NetworkRequest request = new NetworkRequest
+        NetworkRequest cellularRequest = new NetworkRequest
                 .Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
                 .build();
 
-        this.networkCallback = new ConnectivityManager.NetworkCallback() {
+        this.cellularNetworkCallback = new ConnectivityManager.NetworkCallback() {
+
             @Override
             public void onAvailable(@NonNull Network network) {
                 super.onAvailable(network);
-                Log.i(TAG, "current network is " + network);
-                mNetworkChangeListeners.forEach(NetworkChangeListener::onAvailable);
+                mCellularNetworkChangeListener.onAvailable();
             }
 
             @Override
             public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
                 super.onCapabilitiesChanged(network, networkCapabilities);
-                Log.e(TAG, "The default network changed capabilities: " + networkCapabilities);
-                mNetworkChangeListeners.forEach(l -> l.onCellularNetworkChanged(
-                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-                ));
+                mCellularNetworkChangeListener.onCellularNetworkChanged(capabilities);
             }
 
             @Override
             public void onLost(@NonNull Network network) {
                 super.onLost(network);
-                Log.e(TAG, "The default network lost. Previous one is " + network);
-                mNetworkChangeListeners.forEach(NetworkChangeListener::onLost);
+                mCellularNetworkChangeListener.onLost();
             }
 
             @Override
             public void onUnavailable() {
                 super.onUnavailable();
-                Log.e(TAG, "The default network is unavailable");
-                mNetworkChangeListeners.forEach(NetworkChangeListener::onUnavailable);
+                mCellularNetworkChangeListener.onUnavailable();
             }
         };
 
-        this.connectivityManager.registerNetworkCallback(request, this.networkCallback);
+        this.defaultNetworkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
+                super.onCapabilitiesChanged(network, networkCapabilities);
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    Log.e(TAG, "wifi is on");
+                    mDefaultNetworkChangeListener.onAvailable();
+                } else {
+                    Log.i(TAG, "cellular is on");
+                    mCellularNetworkChangeListener.onAvailable();
+                }
+            }
+        };
+
+        this.connectivityManager.registerNetworkCallback(cellularRequest, this.cellularNetworkCallback);
+        this.connectivityManager.registerDefaultNetworkCallback(this.defaultNetworkCallback);
     }
 
     /**
      * Remove a specified listener
-     *
-     * @param networkChangeListener the listener to be removed (should not be null)
      */
-    public void removeNetworkChangeListener(@NonNull NetworkChangeListener networkChangeListener) {
-        this.mNetworkChangeListeners.remove(networkChangeListener);
+    public void removeNetworkChangeListener() {
+        this.mCellularNetworkChangeListener = null;
+        this.mDefaultNetworkChangeListener = null;
+
     }
 
     /**
-     * Remove all registered listeners
+     * Remove all registered listeners and unregister callbacks
      */
-    public void removeAllNetworkChangeListeners() {
-        this.mNetworkChangeListeners.clear();
-        this.connectivityManager.unregisterNetworkCallback(this.networkCallback);
+    public void stopListenToNetworkChanges() {
+        this.mCellularNetworkChangeListener = null;
+        this.mDefaultNetworkChangeListener = null;
+        this.connectivityManager.unregisterNetworkCallback(this.cellularNetworkCallback);
+        this.connectivityManager.unregisterNetworkCallback(this.defaultNetworkCallback);
     }
 
     /**
