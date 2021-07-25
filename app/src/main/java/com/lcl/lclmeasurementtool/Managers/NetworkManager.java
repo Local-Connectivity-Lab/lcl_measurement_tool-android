@@ -141,6 +141,11 @@ public class NetworkManager {
                 this.capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
     }
 
+    /**
+     * Retrieve the downstream bandwidth in Kbps
+     *
+     * @return the downstream bandwidth in Kbps as an integer. If no cellular capability, return 0.
+     */
     public int getLinkDownstreamBandwidthKbps() {
         if (this.capabilities != null) {
             return this.capabilities.getLinkDownstreamBandwidthKbps();
@@ -149,6 +154,11 @@ public class NetworkManager {
         return 0;
     }
 
+    /**
+     * Retrieve the upstream bandwidth in Kbps
+     *
+     * @return the upstream bandwidth in Kbps as an integer. If no cellular capability, return 0.
+     */
     public int getLinkUpstreamBandwidthKbps() {
         if (this.capabilities != null) {
             return this.capabilities.getLinkUpstreamBandwidthKbps();

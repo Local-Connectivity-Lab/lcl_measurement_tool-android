@@ -91,6 +91,7 @@ public class LocationServiceManager {
                     if (task.isSuccessful() && task.getResult() != null) {
                         mLastLocation = task.getResult();
 
+                        // TODO: log the location latitude and longitude
                         Log.i(TAG, String.valueOf(mLastLocation.getLatitude()));
                         Log.i(TAG, String.valueOf(mLastLocation.getLongitude()));
                     } else {

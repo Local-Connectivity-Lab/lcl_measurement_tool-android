@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "on connection lost");
                 if (!isConnected) {
                     updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
-                    updateFAB(isConnected);
+                    updateFAB(false);
                 }
             }
         });
