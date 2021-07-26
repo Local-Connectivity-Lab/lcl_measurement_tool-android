@@ -17,4 +17,6 @@
     <string name="location_message_title">Using Location Service</string>
     <string name="permission_denied_explanation">"We use Location Service to provide core functionalities in this measurement tool. Disabling location service will result in missing in functionality."</string>
     <string name="USER_UUID">uuid</string>
+    <string name="cellular_on_title">Turn Cellular Data On?</string>
+    <string name="cellular_on_message">The tests rely on a cellular network with good connection. Please enable cellular data and then proceed the tests.</string>
 </resources>

@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     LocationServiceListener locationServiceListener;
 
     private boolean isTestStarted;
+    private boolean isCellularConnected;
 
 
     @Override
@@ -64,20 +66,22 @@ public class MainActivity extends AppCompatActivity {
         getLifecycle().addObserver(locationServiceListener);
         this.context = this;
         this.isTestStarted = false;
+        this.isCellularConnected = false;
 
         // update and listen to signal strength changes
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
         mCellularManager.listenToSignalStrengthChange(this::updateSignalStrengthTexts);
-
+        isCellularConnected = this.mNetworkManager.isCellularConnected();
         // set up FAB
         setUpFAB();
-        updateFAB(this.mNetworkManager.isCellularConnected());
+        updateFAB(isCellularConnected);
 
         this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
 
             @Override
             public void onAvailable() {
                 Log.i(TAG, "from call back on cellular available");
+                isCellularConnected = true;
                 updateFAB(true);
             }
 
@@ -85,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
             public void onLost() {
                 mCellularManager.stopListening();
                 Log.e(TAG, "on cellular lost");
+                isCellularConnected = false;
                 // TODO cancel test
                 updateFAB(false);
             }
@@ -92,20 +97,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onUnavailable() {
                 Log.e(TAG, "on cellular unavailable");
+                isCellularConnected = false;
                 // TODO cancel test
                 updateFAB(false);
             }
 
             @Override
-            public void onCellularNetworkChanged(NetworkCapabilities capabilities) {
-//                Log.i(TAG, "on cellular network change" + capabilities.toString());
-//                updateFAB(true);
-            }
+            public void onCellularNetworkChanged(NetworkCapabilities capabilities) { }
+
         }, new NetworkChangeListener() {
             @Override
             public void onAvailable() {
                 Log.i(TAG, "from call back on wifi available");
-
+                isCellularConnected = false;
                 // TODO: cancel test
                 updateFAB(false);
             }
@@ -147,9 +151,17 @@ public class MainActivity extends AppCompatActivity {
         fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
         fab.setOnClickListener(button -> {
 
-            if (!this.mNetworkManager.isCellularConnected()) {
+            if (!this.isCellularConnected) {
                 // raise alert telling user to enable cellular data
                 Log.e(TAG, "not connected to cellular network");
+
+                UIUtils.showDialog(this,
+                        R.string.cellular_on_title,
+                        R.string.cellular_on_message,
+                        R.string.settings,
+                        (dialog, which) -> context.startActivity(new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS)),
+                        android.R.string.cancel, null);
+
             } else {
                 ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
                 fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
@@ -166,8 +178,8 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             FloatingActionButton fab = findViewById(R.id.fab);
 
-            if (state != fab.isEnabled()) {
-                fab.setEnabled(state);
+            if (state != fab.isSelected()) {
+                fab.setSelected(state);
                 fab.setImageResource(R.drawable.start);
                 fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
                         ContextCompat.getColor(this, R.color.light_gray));
