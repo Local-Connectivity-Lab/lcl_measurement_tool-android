@@ -14,11 +14,13 @@ import android.content.Context;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
@@ -61,10 +63,10 @@ public class MainActivity extends AppCompatActivity {
         // prepare necessary information managers
         mNetworkManager = NetworkManager.getManager(this);
         mCellularManager = CellularManager.getManager(this);
-        mLocationManager = LocationServiceManager.getManager(this.getApplicationContext());
+        mLocationManager = LocationServiceManager.getManager(this);
         locationServiceListener = new LocationServiceListener(this, getLifecycle());
         getLifecycle().addObserver(locationServiceListener);
-        this.context = this;
+        this.context = this.getApplicationContext();
         this.isTestStarted = false;
         this.isCellularConnected = false;
 
@@ -148,6 +150,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUpFAB() {
         FloatingActionButton fab = findViewById(R.id.fab);
+        CircularProgressIndicator progressIndicator = findViewById(R.id.progress_indicator);
+        progressIndicator.setVisibility(View.INVISIBLE);
         fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
         fab.setOnClickListener(button -> {
 
@@ -165,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
                 fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
+                progressIndicator.setVisibility(this.isTestStarted ? View.INVISIBLE : View.VISIBLE);
 
                 // TODO: init/cancel ping and iperf based in iTestStart
 

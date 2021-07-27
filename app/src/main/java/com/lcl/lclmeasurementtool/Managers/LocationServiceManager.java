@@ -45,7 +45,7 @@ public class LocationServiceManager {
     private LocationServiceManager(@NonNull Context context) {
         this.context = new WeakReference<>(context);
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this.context.get());
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
     }
 
     /**
@@ -66,7 +66,10 @@ public class LocationServiceManager {
      * @return whether the device's location mode is on.
      */
     public boolean isLocationModeOn() {
-        return locationManager.isLocationEnabled();
+        if (locationManager != null) {
+            return locationManager.isLocationEnabled();
+        }
+        return false;
     }
 
     /**
@@ -87,7 +90,7 @@ public class LocationServiceManager {
     @SuppressWarnings("MissingPermission")
     public void getLastLocation() {
         mFusedLocationClient.getLastLocation()
-                .addOnCompleteListener((Activity) context.get(), task -> {
+                .addOnCompleteListener((Activity) this.context.get(), task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         mLastLocation = task.getResult();
 
@@ -96,7 +99,7 @@ public class LocationServiceManager {
                         Log.i(TAG, String.valueOf(mLastLocation.getLongitude()));
                     } else {
                         Log.w(TAG, "getLastLocation:exception", task.getException());
-                        Toast.makeText(context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this.context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
