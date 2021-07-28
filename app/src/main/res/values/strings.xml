@@ -6,7 +6,8 @@
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-
+    <string name="sim_missing">Missing SIM card?</string>
+    <string name="sim_missing_message">The measurement requires a SCN-labeled SIM card. Please insert your SIM card before proceed.</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="permission_rationale">"We use Location Service to provide more accurate core network measurement and other related service. Granting the permission of the location service will help us improve our service. We will upload anonymized and fused location data to our encrypted server for post-analysis to better network experience."</string>

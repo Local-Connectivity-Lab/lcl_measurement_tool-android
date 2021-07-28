@@ -17,20 +17,23 @@ public class UIUtils {
      * @param messageID             the ID of the message string in string.xml
      * @param positiveMessageID     the ID of the string of the positive action
      * @param positiveListener      the listener when the positive action is triggered
-     * @param negativeMessageID     the ID of the string of the negative action
-     * @param negativeListener      the listener when the negative action is triggered
+     * @param negativeMessageID     the ID of the string of the negative action; -1 if no negative messages
+     * @param negativeListener      the listener when the negative action is triggered; null if no negative action listener
      */
     public static void showDialog(Context context, int titleID, final int messageID,
                                   final int positiveMessageID,
                                   DialogInterface.OnClickListener positiveListener,
                                   final int negativeMessageID,
                                   DialogInterface.OnClickListener negativeListener) {
-        new AlertDialog.Builder(context)
+        AlertDialog.Builder alert = new AlertDialog.Builder(context)
                 .setTitle(titleID)
                 .setMessage(messageID)
-                .setPositiveButton(positiveMessageID, positiveListener)
-                .setNegativeButton(negativeMessageID, negativeListener)
-                .show();
+                .setPositiveButton(positiveMessageID, positiveListener);
+        if (negativeMessageID != -1) {
+            alert.setNegativeButton(negativeMessageID, negativeListener);
+        }
+
+        alert.show();
     }
 
     /**

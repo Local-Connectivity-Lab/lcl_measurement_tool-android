@@ -110,6 +110,18 @@ public class CellularManager {
     }
 
     /**
+     * Return the state of sim card in the phone
+     * @return true if the sim card is absent; otherwise false;
+     */
+    public boolean isSimCardAbsence() {
+        if (this.telephonyManager != null) {
+            return this.telephonyManager.getSimState() == TelephonyManager.SIM_STATE_ABSENT;
+        }
+
+        return true;
+    }
+
+    /**
      * Start listen to signal strength change and display onto the corresponding TextView.
      *
      */

@@ -130,6 +130,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mCellularManager.isSimCardAbsence()) {
+            UIUtils.showDialog(this,
+                    R.string.sim_missing,
+                    R.string.sim_missing_message,
+                    android.R.string.ok,
+                    (dialog, which) -> {
+                        finish();
+                    },
+                    -1,
+                    null
+            );
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         this.mLocationManager.stop();
