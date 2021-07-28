@@ -102,7 +102,11 @@ public class CellularManager {
      *         If no cellular connection, 0.
      */
     public int getDBM() {
-        return this.report != null ? this.report.getDbm() : 0;
+        if (this.report != null) {
+            return this.report.getDbm() == Integer.MAX_VALUE ? 0 : this.report.getDbm();
+        }
+
+        return 0;
     }
 
     /**

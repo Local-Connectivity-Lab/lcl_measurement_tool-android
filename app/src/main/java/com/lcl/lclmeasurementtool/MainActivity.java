@@ -1,9 +1,11 @@
 package com.lcl.lclmeasurementtool;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +13,7 @@ import android.content.pm.PackageManager;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.context = this.getApplicationContext();
 
         // set up UUID
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -66,14 +70,12 @@ public class MainActivity extends AppCompatActivity {
         mLocationManager = LocationServiceManager.getManager(this);
         locationServiceListener = new LocationServiceListener(this, getLifecycle());
         getLifecycle().addObserver(locationServiceListener);
-        this.context = this.getApplicationContext();
         this.isTestStarted = false;
         this.isCellularConnected = false;
 
         // update and listen to signal strength changes
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
         mCellularManager.listenToSignalStrengthChange(this::updateSignalStrengthTexts);
-        isCellularConnected = this.mNetworkManager.isCellularConnected();
         // set up FAB
         setUpFAB();
         updateFAB(isCellularConnected);
@@ -159,11 +161,16 @@ public class MainActivity extends AppCompatActivity {
                 // raise alert telling user to enable cellular data
                 Log.e(TAG, "not connected to cellular network");
 
+
                 UIUtils.showDialog(this,
                         R.string.cellular_on_title,
                         R.string.cellular_on_message,
                         R.string.settings,
-                        (dialog, which) -> context.startActivity(new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS)),
+                        (dialog, which) -> {
+                            Intent networkSettings = new Intent(Settings.ACTION_SETTINGS);
+                            networkSettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(networkSettings);
+                        },
                         android.R.string.cancel, null);
 
             } else {
@@ -182,12 +189,10 @@ public class MainActivity extends AppCompatActivity {
     private void updateFAB(boolean state) {
         runOnUiThread(() -> {
             FloatingActionButton fab = findViewById(R.id.fab);
-
-            if (state != fab.isSelected()) {
-                fab.setSelected(state);
-                fab.setImageResource(R.drawable.start);
-                fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
-                        ContextCompat.getColor(this, R.color.light_gray));
+            fab.setSelected(state);
+            fab.setImageResource(R.drawable.start);
+            fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
+                    ContextCompat.getColor(this, R.color.light_gray));
 
 //             TODO: cancel ping and iperf if started
 //            if (isTestStarted) {
@@ -195,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
 //            }
 
                 this.isTestStarted = false;
-            }
         });
     }
 
