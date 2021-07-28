@@ -139,7 +139,8 @@ public class MainActivity extends AppCompatActivity {
                     R.string.sim_missing_message,
                     android.R.string.ok,
                     (dialog, which) -> {
-                        finish();
+                        finishAndRemoveTask();
+                        System.exit(0);
                     },
                     -1,
                     null
