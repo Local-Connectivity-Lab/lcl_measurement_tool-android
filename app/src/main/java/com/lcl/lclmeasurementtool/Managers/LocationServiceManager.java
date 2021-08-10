@@ -1,11 +1,15 @@
 package com.lcl.lclmeasurementtool.Managers;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -13,10 +17,15 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.lcl.lclmeasurementtool.R;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 public class LocationServiceManager {
 
@@ -36,6 +45,8 @@ public class LocationServiceManager {
 
     // the location object that contains the information of user's location
     private Location mLastLocation;
+
+    private LocationCallback callback;
 
     /**
      * Initialize a Location Service Manager following the context
@@ -104,10 +115,57 @@ public class LocationServiceManager {
                 });
     }
 
+    @SuppressWarnings("MissingPermission")
+    public void requestLocationUpdates(LocationUpdatesListener listener) {
+        Criteria locationUpdateCriteria = new Criteria();
+        locationUpdateCriteria.setPowerRequirement(Criteria.POWER_MEDIUM);
+        locationUpdateCriteria.setAccuracy(Criteria.ACCURACY_FINE);
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                listener.onUpdate(location);
+            }
+
+            @Override
+            public void onProviderDisabled(@NonNull String provider) {
+                Log.e(TAG, provider + " has been disabled");
+            }
+        };
+        new Thread(() -> {
+            Looper.prepare();
+//            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, (float) 10.0, locationListener, Looper.myLooper());
+          locationManager.requestLocationUpdates(5000, 10, locationUpdateCriteria, locationListener, Looper.myLooper());
+            Looper.loop();
+        }).start();
+    }
+
+    @SuppressLint("MissingPermission")
+    public void startLocationUpdates(LocationUpdatesListener listener) {
+        LocationRequest locationRequest = LocationRequest
+                .create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setFastestInterval(5000)
+                .setInterval(20000)
+                .setSmallestDisplacement(5);
+        callback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                for (Location location : locationResult.getLocations()) {
+                    // update the map
+                    listener.onUpdate(location);
+                }
+            }
+        };
+
+        mFusedLocationClient.requestLocationUpdates(locationRequest, callback, Looper.myLooper());
+    }
+
     /**
      * Stop receiving location information.
      */
     public void stop() {
+        mFusedLocationClient.removeLocationUpdates(callback);
         this.locationManager = null;
         this.mFusedLocationClient = null;
     }

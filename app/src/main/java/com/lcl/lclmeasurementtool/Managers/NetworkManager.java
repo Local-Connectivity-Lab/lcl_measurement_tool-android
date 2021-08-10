@@ -133,7 +133,6 @@ public class NetworkManager {
     public void removeNetworkChangeListener() {
         this.mCellularNetworkChangeListener = null;
         this.mDefaultNetworkChangeListener = null;
-
     }
 
     /**

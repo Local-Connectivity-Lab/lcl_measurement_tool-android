@@ -1,20 +1,20 @@
 package com.lcl.lclmeasurementtool;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import android.app.Activity;
-import android.content.DialogInterface;
+import android.app.UiAutomation;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.location.Location;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -22,11 +22,22 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
+import com.lcl.lclmeasurementtool.Managers.LocationUpdatesListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
@@ -34,7 +45,7 @@ import com.lcl.lclmeasurementtool.Utils.UIUtils;
 import java.util.UUID;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     public static final String TAG = "MAIN_ACTIVITY";
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
@@ -44,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     NetworkManager mNetworkManager;
     LocationServiceManager mLocationManager;
     LocationServiceListener locationServiceListener;
+    Circle mapCircle;
 
     private boolean isTestStarted;
     private boolean isCellularConnected;
@@ -76,6 +88,16 @@ public class MainActivity extends AppCompatActivity {
         // update and listen to signal strength changes
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
         mCellularManager.listenToSignalStrengthChange(this::updateSignalStrengthTexts);
+
+        // enable map
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        } else {
+            Log.e(TAG, "Map Fragment is null");
+        }
+
         // set up FAB
         setUpFAB();
         updateFAB(isCellularConnected);
@@ -263,11 +285,54 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Fetch the last location from the device
-     */
-    private void getLastLocation() {
-        mLocationManager.getLastLocation();
-    }
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        Log.i(TAG, "Map ready");
 
+        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        googleMap.setMaxZoomPreference(20.0f);
+        googleMap.setMinZoomPreference(6.0f);
+        CircleOptions circleOption = new CircleOptions()
+                                        .radius(10)
+                                        .strokeWidth(4)
+                                        .strokeColor(Color.WHITE)
+                                        .fillColor(R.color.purple_500);
+
+        mLocationManager.requestLocationUpdates(location -> {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i(TAG, "location updates starts");
+                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                    googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.fromLatLngZoom(latLng, 17f)));
+                    if (mapCircle != null) {
+                        mapCircle.setCenter(latLng);
+//                        mapCircle.remove();
+//                        mapCircle = googleMap.addCircle(circleOption.center(latLng));
+                    }
+                    mapCircle = googleMap.addCircle(circleOption.center(latLng));
+                }
+            });
+        });
+
+//        runOnUiThread(() -> mLocationManager.requestLocationUpdates(location -> {
+//            Log.i(TAG, "location updates starts");
+//            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+//            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.fromLatLngZoom(latLng, 18f)));
+//            mapCircle = googleMap.addCircle(circleOption.center(latLng));
+//        }));
+//        mLocationManager.startLocationUpdates(location -> {
+//            Log.i(TAG, "location updates starts");
+//            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+////            Log.i(TAG, latLng.toString());
+//            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.fromLatLngZoom(latLng, 18f)));
+//            mapCircle = googleMap.addCircle(circleOption.center(latLng));
+////            if (mapCircle != null) {
+////                mapCircle.setCenter(latLng);
+////            } else {
+////                circleOption.center(latLng);
+////                mapCircle = googleMap.addCircle(circleOption);
+////            }
+//        });
+    }
 }
