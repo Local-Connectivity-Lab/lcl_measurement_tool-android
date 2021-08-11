@@ -18,6 +18,16 @@ import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+
 public class MainActivity<mCellularManager> extends AppCompatActivity {
 
     public static final String TAG = "MAIN_ACTIVITY";
@@ -26,35 +36,70 @@ public class MainActivity<mCellularManager> extends AppCompatActivity {
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = this;
 
-       Iperf iperf = new Iperf();
-       iperf.setServerIPAddress("192.168.1.30");
-       iperf.setNumSecondsForTest(60);
-       iperf.start(new IperfListener() {
-           @Override
-           public void onError(Exception e) {
-               Log.e(TAG, e.getMessage());
-           }
+        String appFileDirectory = getCacheDir().getAbsolutePath();
+        String executableFilePath = appFileDirectory + "/iperf3";
 
-           @Override
-           public void onStart() {
-               Log.i(TAG, "iperf starts");
+        File cmdFile = new File(executableFilePath);
+        if (cmdFile.exists()) {
+            cmdFile.setExecutable(true, true);
+        } else {
 
-           }
+            try {
+                OutputStream out = new FileOutputStream(cmdFile);
+                FileUtils.copyToFile(getAssets().open("iperf3"), cmdFile);
+                cmdFile.setExecutable(true, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
-           @Override
-           public void onFinished(IperfStats stats) {
-               Log.i(TAG, "iperf finishes");
-               Log.i(TAG, stats.getFullOutput());
+        try {
+            Process process = Runtime.getRuntime().exec(executableFilePath + " -version");
+            process.waitFor();
+            int exitVal = process.exitValue();
+            if (exitVal == 0) {
+                InputStreamReader reader = new InputStreamReader(process.getInputStream());
+                BufferedReader buffer = new BufferedReader(reader);
+                String output;
 
-           }
-       });
+                while ((output = buffer.readLine()) != null) {
+                    Log.i(TAG, output);
+                }
+            } else {
+                Log.e(TAG, "failed");
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+//        Iperf iperf = new Iperf();
+//       iperf.setServerIPAddress("192.168.1.30");
+//       iperf.setNumSecondsForTest(60);
+//       iperf.start(new IperfListener() {
+//           @Override
+//           public void onError(Exception e) {
+//               Log.e(TAG, e.getMessage());
+//           }
+//
+//           @Override
+//           public void onStart() {
+//               Log.i(TAG, "iperf starts");
+//
+//           }
+//
+//           @Override
+//           public void onFinished(IperfStats stats) {
+//               Log.i(TAG, "iperf finishes");
+//               Log.i(TAG, stats.getFullOutput());
+//
+//           }
+//       });
     }
 
 
