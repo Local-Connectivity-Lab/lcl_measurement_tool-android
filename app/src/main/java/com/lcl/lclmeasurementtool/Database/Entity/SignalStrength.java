@@ -5,10 +5,12 @@ import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import androidx.room.TypeConverters;
 
 import com.google.android.gms.maps.model.LatLng;
 
 @Entity(tableName = "signal_strength_table")
+@TypeConverters({Converters.class})
 public class SignalStrength {
 
     @PrimaryKey

@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
                 mLocationManager.getLastLocation(location -> {
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode(), latLng));
+//                    db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode(), latLng));
                 });
             }
         });

@@ -32,7 +32,7 @@ public abstract class MeasurementResultDatabase extends RoomDatabase {
                 if (instance == null) {
                     instance = Room.databaseBuilder(context.getApplicationContext(),
                                                     MeasurementResultDatabase.class,
-                            "measurement_result_db").addTypeConverter(new Converters()).build();
+                            "measurement_result_db").build();
                 }
             }
         }

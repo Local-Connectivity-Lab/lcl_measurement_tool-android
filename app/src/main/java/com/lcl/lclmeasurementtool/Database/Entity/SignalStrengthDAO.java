@@ -5,12 +5,14 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.RawQuery;
+import androidx.room.TypeConverters;
 import androidx.room.Update;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
 import java.util.List;
 
 @Dao
+@TypeConverters({Converters.class})
 public interface SignalStrengthDAO {
 
     // CREATE

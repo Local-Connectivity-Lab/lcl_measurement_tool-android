@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.Database.Entity;
 
 import androidx.annotation.NonNull;
+import androidx.room.ProvidedTypeConverter;
 import androidx.room.TypeConverter;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -8,6 +9,7 @@ import com.google.android.gms.maps.model.LatLng;
 import java.time.Instant;
 import java.time.ZoneId;
 
+@ProvidedTypeConverter
 public class Converters {
 
     @TypeConverter
