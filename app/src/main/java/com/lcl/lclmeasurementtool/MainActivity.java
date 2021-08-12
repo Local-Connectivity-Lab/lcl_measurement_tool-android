@@ -34,6 +34,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
+import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
+import com.lcl.lclmeasurementtool.Managers.CellularChangeListener;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
@@ -41,7 +44,11 @@ import com.lcl.lclmeasurementtool.Managers.LocationUpdatesListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
+import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
+
+import java.sql.Time;
+import java.time.ZoneId;
 import java.util.UUID;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 
@@ -67,6 +74,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         this.context = this.getApplicationContext();
 
+        // set up DB
+        MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
+
         // set up UUID
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         if (!preferences.contains(getString(R.string.USER_UUID))) {
@@ -87,7 +97,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // update and listen to signal strength changes
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
-        mCellularManager.listenToSignalStrengthChange(this::updateSignalStrengthTexts);
+        mCellularManager.listenToSignalStrengthChange(new CellularChangeListener() {
+            @Override
+            public void onChange(SignalStrengthLevel level, int dBm) {
+                updateSignalStrengthTexts(level, dBm);
+                String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
+                db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode()));
+            }
+        });
 
         // enable map
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
