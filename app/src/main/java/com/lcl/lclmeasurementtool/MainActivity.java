@@ -102,7 +102,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onChange(SignalStrengthLevel level, int dBm) {
                 updateSignalStrengthTexts(level, dBm);
                 String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
-                db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode()));
+                mLocationManager.getLastLocation(location -> {
+                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                    db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode(), latLng));
+                });
             }
         });
 

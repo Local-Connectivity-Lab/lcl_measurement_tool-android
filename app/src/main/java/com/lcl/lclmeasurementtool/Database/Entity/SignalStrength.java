@@ -1,9 +1,12 @@
 package com.lcl.lclmeasurementtool.Database.Entity;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+
+import com.google.android.gms.maps.model.LatLng;
 
 @Entity(tableName = "signal_strength_table")
 public class SignalStrength {
@@ -19,14 +22,14 @@ public class SignalStrength {
     @ColumnInfo(name = "signal_strength_level")
     public int level;
 
-//    @Nullable
-//    public LatLng location;
+    @Nullable
+    public LatLng location;
 
-    public SignalStrength(@NonNull String timestamp, int signalStrength, int level) {
+    public SignalStrength(@NonNull String timestamp, int signalStrength, int level, LatLng location) {
         this.timestamp = timestamp;
         this.signalStrength = signalStrength;
         this.level = level;
-//        this.location = location;
+        this.location = location;
     }
 
     public int getSignalStrength() {
@@ -42,8 +45,8 @@ public class SignalStrength {
         return level;
     }
 
-    //    @NonNull
-//    public LatLng getLocation() {
-//        return location;
-//    }
+    @Nullable
+    public LatLng getLocation() {
+        return location;
+    }
 }

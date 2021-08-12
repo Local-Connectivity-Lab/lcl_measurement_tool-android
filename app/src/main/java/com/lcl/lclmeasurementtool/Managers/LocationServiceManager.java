@@ -102,15 +102,15 @@ public class LocationServiceManager {
      * If last location is null, a new location request will be initiated.
      */
     @SuppressWarnings("MissingPermission")
-    public void getLastLocation() {
+    public void getLastLocation(LocationUpdatesListener listener) {
         mFusedLocationClient.getLastLocation()
                 .addOnCompleteListener((Activity) this.context.get(), task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         mLastLocation = task.getResult();
-
+                        listener.onUpdate(mLastLocation);
                         // TODO: log the location latitude and longitude
-                        Log.i(TAG, String.valueOf(mLastLocation.getLatitude()));
-                        Log.i(TAG, String.valueOf(mLastLocation.getLongitude()));
+//                        Log.i(TAG, String.valueOf(mLastLocation.getLatitude()));
+//                        Log.i(TAG, String.valueOf(mLastLocation.getLongitude()));
                     } else {
                         Log.w(TAG, "getLastLocation:exception", task.getException());
                         Toast.makeText(this.context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
