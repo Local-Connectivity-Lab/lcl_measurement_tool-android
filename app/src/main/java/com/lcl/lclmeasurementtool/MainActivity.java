@@ -4,17 +4,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import android.app.UiAutomation;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -22,34 +19,28 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
-import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Managers.CellularChangeListener;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
-import com.lcl.lclmeasurementtool.Managers.LocationUpdatesListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
+import com.lcl.lclmeasurementtool.Utils.LocationUtils;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
-import java.sql.Time;
 import java.time.ZoneId;
 import java.util.UUID;
+
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -62,7 +53,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     NetworkManager mNetworkManager;
     LocationServiceManager mLocationManager;
     LocationServiceListener locationServiceListener;
-    Circle mapCircle;
+    Location testLocation;
+    GoogleMap map;
 
     private boolean isTestStarted;
     private boolean isCellularConnected;
@@ -74,8 +66,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         this.context = this.getApplicationContext();
 
-        // set up DB
-        MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
 
         // set up UUID
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -92,6 +82,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mLocationManager = LocationServiceManager.getManager(this);
         locationServiceListener = new LocationServiceListener(this, getLifecycle());
         getLifecycle().addObserver(locationServiceListener);
+
+        // set up DB
+        MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
+
         this.isTestStarted = false;
         this.isCellularConnected = false;
 
@@ -103,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 updateSignalStrengthTexts(level, dBm);
                 String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
                 mLocationManager.getLastLocation(location -> {
-                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                    LatLng latLng = LocationUtils.toLatLng(location);
 //                    db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode(), latLng));
                 });
             }
@@ -237,9 +231,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             } else {
                 ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
                 fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
+                progressIndicator.setActivated(this.isTestStarted);
                 progressIndicator.setVisibility(this.isTestStarted ? View.INVISIBLE : View.VISIBLE);
 
                 // TODO: init/cancel ping and iperf based in iTestStart
+                this.mLocationManager.getLastLocation(testLocation::set);
+                LatLng testLatLng = LocationUtils.toLatLng(testLocation);
+                this.map.addMarker(new MarkerOptions().position(testLatLng).draggable(false));
 
                 this.isTestStarted = !isTestStarted;
                 Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
@@ -308,51 +306,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.i(TAG, "Map ready");
-
+        this.map = googleMap;
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         googleMap.setMaxZoomPreference(20.0f);
         googleMap.setMinZoomPreference(6.0f);
-        CircleOptions circleOption = new CircleOptions()
-                                        .radius(10)
-                                        .strokeWidth(4)
-                                        .strokeColor(Color.WHITE)
-                                        .fillColor(R.color.purple_500);
-
-        mLocationManager.requestLocationUpdates(location -> {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.i(TAG, "location updates starts");
-                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.fromLatLngZoom(latLng, 17f)));
-                    if (mapCircle != null) {
-                        mapCircle.setCenter(latLng);
-//                        mapCircle.remove();
-//                        mapCircle = googleMap.addCircle(circleOption.center(latLng));
-                    }
-                    mapCircle = googleMap.addCircle(circleOption.center(latLng));
-                }
-            });
-        });
-
-//        runOnUiThread(() -> mLocationManager.requestLocationUpdates(location -> {
-//            Log.i(TAG, "location updates starts");
-//            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-//            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.fromLatLngZoom(latLng, 18f)));
-//            mapCircle = googleMap.addCircle(circleOption.center(latLng));
-//        }));
-//        mLocationManager.startLocationUpdates(location -> {
-//            Log.i(TAG, "location updates starts");
-//            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-////            Log.i(TAG, latLng.toString());
-//            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.fromLatLngZoom(latLng, 18f)));
-//            mapCircle = googleMap.addCircle(circleOption.center(latLng));
-////            if (mapCircle != null) {
-////                mapCircle.setCenter(latLng);
-////            } else {
-////                circleOption.center(latLng);
-////                mapCircle = googleMap.addCircle(circleOption);
-////            }
-//        });
     }
 }
