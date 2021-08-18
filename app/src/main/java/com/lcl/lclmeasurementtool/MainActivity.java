@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
+// https://blog.csdn.net/China_Style/article/details/109660170
 public class MainActivity<mCellularManager> extends AppCompatActivity {
 
     public static final String TAG = "MAIN_ACTIVITY";
@@ -42,7 +43,7 @@ public class MainActivity<mCellularManager> extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         context = this;
 
-        String appFileDirectory = getCacheDir().getAbsolutePath();
+        String appFileDirectory = getFilesDir().getAbsolutePath();
         String executableFilePath = appFileDirectory + "/iperf3";
 
         File cmdFile = new File(executableFilePath);
@@ -51,7 +52,7 @@ public class MainActivity<mCellularManager> extends AppCompatActivity {
         } else {
 
             try {
-                OutputStream out = new FileOutputStream(cmdFile);
+//                OutputStream out = new FileOutputStream(cmdFile);
                 FileUtils.copyToFile(getAssets().open("iperf3"), cmdFile);
                 cmdFile.setExecutable(true, true);
             } catch (IOException e) {
