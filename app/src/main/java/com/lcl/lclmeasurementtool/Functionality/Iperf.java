@@ -30,7 +30,7 @@ public class Iperf {
         this.stopped = true;
 
     }
-    public void start (@NonNull IperfListener listener) {
+    public void start (@NonNull IperfListener listener, String iperfPath) {
         Log.i(TAG, "Entered start");
         new Thread(() -> {
             Log.i(TAG, "entering new thread");
@@ -46,7 +46,7 @@ public class Iperf {
             IperfStats stats = new IperfStats();
             try {
                 listener.onStart();
-                stats = IperfUtils.launch(serverIPAddress,numSecondsForTest,stats.getBandwidth());
+                stats = IperfUtils.launch(iperfPath, serverIPAddress,numSecondsForTest,stats.getBandwidth());
             }
             catch (IOException | InterruptedException ex) {
                 listener.onError(ex);

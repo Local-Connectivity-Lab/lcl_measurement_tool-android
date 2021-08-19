@@ -4,12 +4,16 @@ import android.renderscript.ScriptGroup;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 
 
 public class IperfUtils {
     public static String TAG = "LCL_Iperf_IperfUtils";
+
 
 
     /**
@@ -20,7 +24,7 @@ public class IperfUtils {
      * 1M means 1 Megabit per second
      * 1G means 1 Gigabit per second
      */
-    public static IperfStats launch(String host, double time, String bandwidth) throws IOException, InterruptedException {
+    public static IperfStats launch(String iperfPath, String host, double time, String bandwidth) throws IOException, InterruptedException {
 
         if (host == null) {
             throw new IllegalArgumentException("host should not be null");
@@ -36,7 +40,7 @@ public class IperfUtils {
         IperfStats iperfStats = new IperfStats();
         StringBuilder result = new StringBuilder();
         Runtime runtime = Runtime.getRuntime();
-        String command = "/system/bin/iperf3 -c "+ host + " -b " + bandwidth;
+        String command = iperfPath + " -c "+ host + " -b " + bandwidth;
         //String command = "/system/bin/ping -c 1  192.168.1.30";
         Log.i(TAG,"Starting process " + command);
         Process process = runtime.exec(command);
@@ -85,28 +89,31 @@ public class IperfUtils {
 
         //We are getting the different lines of the output in separate strings, one for sender stats, one for receiver stats
         String[] finalStats = split[1].split("\n");
+        final int spacesBack = 2;
+        String bytes = "Bytes";
+        final int lengthOfBytesString = bytes.length();
 
         //parsing the output line for sender and receiver bandwidths
-        int finalSpace = finalStats[1].indexOf("bits/sec") - 2;
-        int initialSpace = finalStats[1].indexOf("Bytes") + 5;
+        int finalSpace = finalStats[1].indexOf("bits/sec") - spacesBack;
+        int initialSpace = finalStats[1].indexOf("Bytes") + lengthOfBytesString;
         String senderBandwidth = finalStats[1].substring(initialSpace, finalSpace);
         Log.i(TAG,"senderBandwidth = " + senderBandwidth);
         iperfStats.setSenderBandwidth(Double.parseDouble(senderBandwidth));
-        int finalSpace2 = finalStats[2].indexOf("bits/sec") - 2;
-        int initialSpace2 = finalStats[2].indexOf("Bytes") + 5;
+        int finalSpace2 = finalStats[2].indexOf("bits/sec") - spacesBack;
+        int initialSpace2 = finalStats[2].indexOf("Bytes") + lengthOfBytesString;
         String receiverBandwidth = finalStats[2].substring(initialSpace2, finalSpace2);
         Log.i(TAG, "receiverBandwidth = " + receiverBandwidth);
         iperfStats.setReceiverBandwidth(Double.parseDouble(receiverBandwidth));
 
         //parsing the output for sender and receiver bandwidth units
+        String mbitsPerSec = "mbits/sec";
+        final int lengthOfMBitsPerSecondPlusOne = mbitsPerSec.length() + 1;
         int firstIndexOfSenderUnits = finalSpace + 1;
-        int lastIndexOfSenderUnits = finalSpace + 10;
+        int lastIndexOfSenderUnits = finalSpace + lengthOfMBitsPerSecondPlusOne;
         iperfStats.setSenderBandwidthUnits(finalStats[1].substring(firstIndexOfSenderUnits,
                 lastIndexOfSenderUnits));
         int firstIndexOfReceiverUnits = finalSpace2 + 1;
-        int lastIndexOfReceiverUnits = finalSpace2 + 10;
+        int lastIndexOfReceiverUnits = finalSpace2 + lengthOfMBitsPerSecondPlusOne;
         iperfStats.setReceiverBandwidthUnits(finalStats[2].substring(firstIndexOfReceiverUnits, lastIndexOfReceiverUnits));
-
-
     }
 }

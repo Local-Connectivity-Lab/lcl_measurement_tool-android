@@ -43,25 +43,12 @@ public class MainActivity<mCellularManager> extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         context = this;
 
-        String appFileDirectory = getFilesDir().getAbsolutePath();
-        String executableFilePath = appFileDirectory + "/iperf3";
+        String executableFilePath = setupIperf();
 
-        File cmdFile = new File(executableFilePath);
-        if (cmdFile.exists()) {
-            cmdFile.setExecutable(true, true);
-        } else {
+        /*try {
+         //     Process process = Runtime.getRuntime().exec(executableFilePath + " -version");
+            Process process = Runtime.getRuntime().exec(executableFilePath + " -c speedtest.iveloz.net.br -b 1M");
 
-            try {
-//                OutputStream out = new FileOutputStream(cmdFile);
-                FileUtils.copyToFile(getAssets().open("iperf3"), cmdFile);
-                cmdFile.setExecutable(true, true);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            Process process = Runtime.getRuntime().exec(executableFilePath + " -version");
             process.waitFor();
             int exitVal = process.exitValue();
             if (exitVal == 0) {
@@ -77,30 +64,31 @@ public class MainActivity<mCellularManager> extends AppCompatActivity {
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
 
-//        Iperf iperf = new Iperf();
-//       iperf.setServerIPAddress("192.168.1.30");
-//       iperf.setNumSecondsForTest(60);
-//       iperf.start(new IperfListener() {
-//           @Override
-//           public void onError(Exception e) {
-//               Log.e(TAG, e.getMessage());
-//           }
-//
-//           @Override
-//           public void onStart() {
-//               Log.i(TAG, "iperf starts");
-//
-//           }
-//
-//           @Override
-//           public void onFinished(IperfStats stats) {
-//               Log.i(TAG, "iperf finishes");
-//               Log.i(TAG, stats.getFullOutput());
-//
-//           }
-//       });
+        Iperf iperf = new Iperf();
+
+        iperf.setServerIPAddress("speedtest.iveloz.net.br");
+        iperf.setNumSecondsForTest(60);
+        iperf.start(new IperfListener() {
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
+
+            @Override
+            public void onStart() {
+                Log.i(TAG, "iperf starts");
+
+            }
+
+            @Override
+            public void onFinished(IperfStats stats) {
+                Log.i(TAG, "iperf finishes");
+                Log.i(TAG, stats.getFullOutput());
+
+            }
+        }, executableFilePath);
     }
 
 
@@ -152,6 +140,26 @@ public class MainActivity<mCellularManager> extends AppCompatActivity {
 
 }
 */
+
+    private String setupIperf() {
+        String appFileDirectory = getFilesDir().getAbsolutePath();
+        String executableFilePath = appFileDirectory + "/iperf3";
+
+        File cmdFile = new File(executableFilePath);
+        if (cmdFile.exists()) {
+            cmdFile.setExecutable(true, true);
+        } else {
+
+            try {
+                OutputStream out = new FileOutputStream(cmdFile);
+                FileUtils.copyToFile(getAssets().open("iperf3"), cmdFile);
+                cmdFile.setExecutable(true, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return executableFilePath;
+    }
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
         runOnUiThread(() -> {
             TextView signalStrengthValue = findViewById(R.id.SignalStrengthValue);
