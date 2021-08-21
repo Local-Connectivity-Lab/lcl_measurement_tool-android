@@ -1,2 +1,2 @@
-APP_PLATFORM := android-29
-APP_ABI := armeabi-v7a x86
+APP_PLATFORM := android-24
+APP_ABI := arm64-v8a armeabi-v7a
