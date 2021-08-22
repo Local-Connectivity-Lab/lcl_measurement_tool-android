@@ -9,12 +9,4 @@
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
-    <string name="permission_rationale">"We use Location Service to provide more accurate core network measurement and other related service. Granting the permission of the location service will help us improve our service. We will upload anonymized and fused location data to our encrypted server for post-analysis to better network experience."</string>
-    <string name="settings">Settings</string>
-    <string name="no_location_detected">No location detected</string>
-    <string name="enable_location_message">The core functionality relies on location to provide better cellular network experience. Disabling the location service will result in missing in functionality.</string>
-    <string name="go_to_setting">Settings</string>
-    <string name="location_message_title">Using Location Service</string>
-    <string name="permission_denied_explanation">"We use Location Service to provide core functionalities in this measurement tool. Disabling location service will result in missing in functionality."</string>
-    <string name="USER_UUID">uuid</string>
 </resources>

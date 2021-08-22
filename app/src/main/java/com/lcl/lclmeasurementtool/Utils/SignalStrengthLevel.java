@@ -1,12 +1,5 @@
 package com.lcl.lclmeasurementtool.Utils;
 
-import android.graphics.Color;
-import android.content.Context;
-
-import androidx.core.content.ContextCompat;
-
-import com.lcl.lclmeasurementtool.R;
-
 /**
  * The SignalStrength represents the cellular signal strength
  * received from the mobile network system.
@@ -27,10 +20,9 @@ public enum SignalStrengthLevel {
     }
 
     /**
-     * Initialize a SignalStrengthLevel based on input levelCode
-     * @param levelCode the input abstract representation of the Signal Strength;
-     * @throws IllegalArgumentException if the input levelCode is less than 0 or greater than 4.
-     * @return a SignalStrengthLevel Enum associated with the input levelCode.
+     * TODO: finish comment
+     * @param levelCode
+     * @return
      */
     public static SignalStrengthLevel init(int levelCode) {
         switch (levelCode) {
@@ -44,7 +36,7 @@ public enum SignalStrengthLevel {
                 return SignalStrengthLevel.GOOD;
             case 4:
                 return SignalStrengthLevel.GREAT;
-            default: throw new IllegalArgumentException("Signal Strength levelCode should be >=0 and <= 4. Current value is " + levelCode);
+            default: throw new IllegalArgumentException("Signal Strength levelCode should be >=0 and <= 4 ");
         }
     }
 
@@ -58,54 +50,9 @@ public enum SignalStrengthLevel {
 
     @Override
     public String toString() {
-        return this.name() + " " +
-                "levelCode=" + levelCode;
-    }
-
-    /**
-     * Retrieve the name of the signal strength.
-     *
-     * @return the string representation of the signal strength level.
-     */
-    public String getName() {
-        switch (this) {
-            case NONE:
-                return "No Signal";
-            case POOR:
-                return "Poor";
-            case MODERATE:
-                return "Moderate";
-            case GOOD:
-                return "Good";
-            case GREAT:
-                return "Great";
-            default:
-                break;
-        }
-
-        return "";
-    }
-
-    /**
-     * Retrieve the color representation of the signal strength.
-     * @param context the context of the application/activity
-     * @return the color representation of the signal strength.
-     */
-    public int getColor(Context context) {
-        switch (this) {
-            case GREAT:
-                return Color.GREEN;
-            case GOOD:
-                return ContextCompat.getColor(context, R.color.light_green);
-            case MODERATE:
-                return ContextCompat.getColor(context, R.color.orange);
-            case POOR:
-                return Color.RED;
-            case NONE:
-                return ContextCompat.getColor(context, R.color.light_gray);
-            default:break;
-        }
-
-        return -1;
+        return "SignalStrength{" +
+                this.name() + " " +
+                "levelCode=" + levelCode +
+                '}';
     }
 }
