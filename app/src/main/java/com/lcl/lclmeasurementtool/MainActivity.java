@@ -4,22 +4,35 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.content.Context;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.lcl.lclmeasurementtool.Functionality.Iperf;
-import com.lcl.lclmeasurementtool.Functionality.Iperf3Callback;
-import com.lcl.lclmeasurementtool.Functionality.Iperf3Client;
-import com.lcl.lclmeasurementtool.Functionality.Iperf3Config;
-import com.lcl.lclmeasurementtool.Functionality.IperfListener;
-import com.lcl.lclmeasurementtool.Functionality.IperfStats;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
+import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
+import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
+import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
+import com.lcl.lclmeasurementtool.Utils.UIUtils;
+import java.util.UUID;
+import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 
 import org.apache.commons.io.FileUtils;
 
@@ -32,127 +45,48 @@ import java.io.OutputStream;
 public class MainActivity<mCellularManager> extends AppCompatActivity {
 
     public static final String TAG = "MAIN_ACTIVITY";
+    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
     private Context context;
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
+    LocationServiceManager mLocationManager;
+    LocationServiceListener locationServiceListener;
+
+    private boolean isTestStarted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        context = this;
 
-
-        Iperf3Client iperf3Client = new Iperf3Client(new Iperf3Callback() {
-            @Override
-            public void onConnecting(String destHost, int destPort) {
-                Log.i(TAG, "on connecting");
-            }
-
-            @Override
-            public void onConnected(String localAddr, int localPort, String destAddr, int destPort) {
-                Log.i(TAG, "connected to testing server");
-            }
-
-            @Override
-            public void onInterval(float timeStart, float timeEnd, String sendBytes, String bandWidth, boolean isDown) {
-
-            }
-
-            @Override
-            public void onResult(float timeStart, float timeEnd, String sendBytes, String bandWidth, boolean isDown) {
-                Log.i(TAG, "result is " + timeStart + " " + timeEnd + " " + sendBytes + " " + bandWidth);
-            }
-
-            @Override
-            public void onError(String errMsg) {
-                Log.e(TAG, errMsg);
-            }
-        });
-
-        Iperf3Config config = new Iperf3Config();
-        config.mServerAddr = "iperf.biznetnetworks.com";
-        config.mServerPort = 5203;
-        config.parallels = 1;
-        config.isDownMode = false;
-
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                iperf3Client.exec(config);
-            }
-        });
-    }
-
-        /*try {
-         //     Process process = Runtime.getRuntime().exec(executableFilePath + " -version");
-            Process process = Runtime.getRuntime().exec(executableFilePath + " -c speedtest.iveloz.net.br -b 1M");
-
-            process.waitFor();
-            int exitVal = process.exitValue();
-            if (exitVal == 0) {
-                InputStreamReader reader = new InputStreamReader(process.getInputStream());
-                BufferedReader buffer = new BufferedReader(reader);
-                String output;
-
-                while ((output = buffer.readLine()) != null) {
-                    Log.i(TAG, output);
-                }
-            } else {
-                Log.e(TAG, "failed");
-            }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }*/
-
-//        Iperf iperf = new Iperf();
-//
-//        iperf.setServerIPAddress("speedtest.iveloz.net.br");
-//        iperf.setNumSecondsForTest(60);
-//        iperf.start(new IperfListener() {
-//            @Override
-//            public void onError(Exception e) {
-//                Log.e(TAG, e.getMessage());
-//            }
-//
-//            @Override
-//            public void onStart() {
-//                Log.i(TAG, "iperf starts");
-//
-//            }
-//
-//            @Override
-//            public void onFinished(IperfStats stats) {
-//                Log.i(TAG, "iperf finishes");
-//                Log.i(TAG, stats.getFullOutput());
-//
-//            }
-//        }, executableFilePath);
-//    }
-
-
-//        LocationManager manager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-//        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-//            Toast.makeText(this, "Enable location services for accurate data", Toast.LENGTH_SHORT).show();
-//        }
-
-
-/*
-
-        NetworkManager mNetworkManager = new NetworkManager(this);
-        mCellularManager = CellularManager.getManager(this);
-
-        if (!mNetworkManager.isCellularConnected()) {
-            updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
-            updateFAB(false);
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        if (!preferences.contains(getString(R.string.USER_UUID))) {
+            String uuid = UUID.randomUUID().toString();
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString(getString(R.string.USER_UUID), uuid);
+            editor.apply();
         }
 
-        mNetworkManager.addNetworkChangeListener(new NetworkManager.NetworkChangeListener() {
+        mNetworkManager = NetworkManager.getManager(this);
+        mCellularManager = CellularManager.getManager(this);
+        mLocationManager = LocationServiceManager.getManager(this.getApplicationContext());
+        locationServiceListener = new LocationServiceListener(this, getLifecycle());
+        getLifecycle().addObserver(locationServiceListener);
+        this.context = this;
+        this.isTestStarted = false;
+
+        if (!this.mNetworkManager.isCellularConnected()) {
+            updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+        }
+
+        setUpFAB();
+        updateFAB(this.mNetworkManager.isCellularConnected());
+
+        this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
             @Override
             public void onAvailable() {
+                Log.i(TAG, "from call back on available");
                 updateFAB(true);
                 mCellularManager.listenToSignalStrengthChange((level, dBm) ->
                                                                 updateSignalStrengthTexts(level, dBm));
@@ -161,55 +95,52 @@ public class MainActivity<mCellularManager> extends AppCompatActivity {
             @Override
             public void onLost() {
                 mCellularManager.stopListening();
+                Log.e(TAG, "on lost");
                 updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
                 updateFAB(false);
             }
 
             @Override
             public void onUnavailable() {
+                Log.e(TAG, "on unavailable");
                 updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
                 updateFAB(false);
             }
 
             @Override
             public void onCellularNetworkChanged(boolean isConnected) {
+                Log.e(TAG, "on connection lost");
                 if (!isConnected) {
                     updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
-                    updateFAB(isConnected);
+                    updateFAB(false);
                 }
             }
         });
+    }
 
-}
-*/
-
-//    private String setupIperf() {
-//        String appFileDirectory = getFilesDir().getAbsolutePath();
-//        String executableFilePath = appFileDirectory + "/iperf3";
-//
-//        File cmdFile = new File(executableFilePath);
-//        if (cmdFile.exists()) {
-//            cmdFile.setExecutable(true, true);
-//        } else {
-//
-//            try {
-//                OutputStream out = new FileOutputStream(cmdFile);
-//                FileUtils.copyToFile(getAssets().open("iperf3"), cmdFile);
-//                cmdFile.setExecutable(true, true);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return executableFilePath;
-//    }
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
         runOnUiThread(() -> {
             TextView signalStrengthValue = findViewById(R.id.SignalStrengthValue);
             TextView signalStrengthStatus = findViewById(R.id.SignalStrengthStatus);
+            TextView signalStrengthUnit = findViewById(R.id.SignalStrengthUnit);
             ImageView signalStrengthIndicator = findViewById(R.id.SignalStrengthIndicator);
             signalStrengthValue.setText(String.valueOf(dBm));
+            signalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
             signalStrengthStatus.setText(level.getName());
             signalStrengthIndicator.setColorFilter(level.getColor(context));
+        });
+    }
+
+    private void setUpFAB() {
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(button -> {
+            ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
+            fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
+
+            // TODO: init/cancel ping and iperf based in iTestStart
+
+            this.isTestStarted = !isTestStarted;
+            Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -217,15 +148,73 @@ public class MainActivity<mCellularManager> extends AppCompatActivity {
         runOnUiThread(() -> {
             FloatingActionButton fab = findViewById(R.id.fab);
             fab.setEnabled(state);
-            fab.setBackgroundColor(state ? ContextCompat.getColor(this, R.color.white) :
+            fab.setImageResource(R.drawable.start);
+            fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
                     ContextCompat.getColor(this, R.color.light_gray));
+
+//             TODO: cancel ping and iperf if started
+//            if (isTestStarted) {
+                // cancel test
+//            }
+
+            this.isTestStarted = false;
         });
     }
+
+
+    // TODO: update FAB Icon and State when tests are done
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mCellularManager.stopListening();
-        mNetworkManager.removeAllNetworkChangeListeners();
+        this.mCellularManager.stopListening();
+        this.mNetworkManager.removeAllNetworkChangeListeners();
     }
+
+
+    ////////////////// HELPER FUNCTION ///////////////////////
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
+            if (grantResults.length <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and we
+                // receive empty arrays.
+                Log.e(TAG, "User interaction was cancelled.");
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                Log.i(TAG, "Location permission granted");
+            } else {
+                // Permission denied.
+
+                // Notify the user via a dialog that they have rejected a core permission for the
+                // app, which makes the Activity useless.
+                UIUtils.showDialog(this,
+                        R.string.location_message_title,
+                        R.string.permission_denied_explanation,
+                        R.string.settings,
+                        (dialogInterface, actionID) -> {
+
+                    // Build intent that displays the App settings screen.
+                    Intent intent = new Intent();
+                    intent.setAction(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package",
+                            BuildConfig.APPLICATION_ID, null);
+                    intent.setData(uri);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                }, android.R.string.cancel, null);
+            }
+        }
+    }
+
+    /**
+     * Fetch the last location from the device
+     */
+    private void getLastLocation() {
+        mLocationManager.getLastLocation();
+    }
+
 }
