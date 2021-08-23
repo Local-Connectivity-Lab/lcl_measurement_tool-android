@@ -17,4 +17,6 @@
     <string name="location_message_title">Using Location Service</string>
     <string name="permission_denied_explanation">"We use Location Service to provide core functionalities in this measurement tool. Disabling location service will result in missing in functionality."</string>
     <string name="USER_UUID">uuid</string>
+    <string name="iperf_error">An error occurred when testing connection speed. We have recorded the error and will fix it in future updates.</string>
+    <string name="error">Error</string>
 </resources>

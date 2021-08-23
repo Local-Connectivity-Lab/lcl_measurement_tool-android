@@ -2,6 +2,7 @@ package com.lcl.lclmeasurementtool.Functionality;
 
 public class Iperf3Config {
     public static final long BANDWIDTH_1M = 1000 * 1000;
+    public static final long BANDWIDTH_10M = 10 * BANDWIDTH_1M;
     public static final long BANDWIDTH_1000M = 1000 * BANDWIDTH_1M;
 
 
