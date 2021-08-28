@@ -31,6 +31,8 @@
 #include "iperf3_java_callback.h"
 #include "common_jni_util.h"
 
+struct iperf_test *test_holder = NULL;
+
 static int run(struct iperf_test *test);
 
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_exec(
@@ -40,13 +42,12 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
     struct iperf_test *test;
 
     test = iperf_new_test();
+    test_holder = test;
     if (!test)
         iperf_errexit(NULL, "create new test error - %s", iperf_strerror(i_errno));
 
     iperf_defaults(test);    /* sets defaults */
-    // 解析Java层的测试参数
     parse_java_config(env, test, iperfConfig);
-    // 准备Java层的回调函数
     construct_java_callback(env, test, callback);
 
     if (run(test) < 0) {
@@ -80,9 +81,7 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
         iperf_errexit(NULL, "create new test error - %s", iperf_strerror(i_errno));
 
     iperf_defaults(test);    /* sets defaults */
-    // 准备Java层的回调函数
     construct_java_callback(env, test, callback);
-    // 设置iperf参数
     iperf_set_test_role(test, 'c');
     iperf_set_test_server_hostname(test, hostname);
     // -p

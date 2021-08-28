@@ -1,18 +1,22 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
 import android.content.Context;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkContinuation;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CancellationException;
 
 public class NetworkTestViewModel extends ViewModel {
 
@@ -22,6 +26,8 @@ public class NetworkTestViewModel extends ViewModel {
 
     private LiveData<List<WorkInfo>> mSavedIperfDownInfo;
     private LiveData<List<WorkInfo>> mSavedIperfUpInfo;
+    private UUID downStreamUUID;
+    private UUID upStreamUUID;
 
     public NetworkTestViewModel(@NonNull Context context) {
         mWorkManager = WorkManager.getInstance(context);
@@ -44,9 +50,11 @@ public class NetworkTestViewModel extends ViewModel {
                 .setInputData(prepareIperfWorkerData())
                 .addTag("IPERF_DOWN")
                 .build();
+        downStreamUUID = downStream.getId();
         OneTimeWorkRequest upStream = new OneTimeWorkRequest.Builder(IperfUpStreamWorker.class)
                 .setInputData(prepareIperfWorkerData())
                 .addTag("IPERF_UP").build();
+        upStreamUUID = upStream.getId();
 
         WorkContinuation continuation = mWorkManager.beginWith(downStream);
         continuation = continuation.then(upStream);
@@ -58,8 +66,8 @@ public class NetworkTestViewModel extends ViewModel {
 
         // TODO: cancel specific work with Tag
         Log.e(TAG, "cancel tests");
-
-        mWorkManager.cancelAllWork();
+        mWorkManager.cancelWorkById(downStreamUUID);
+        mWorkManager.cancelWorkById(upStreamUUID);
     }
 
     private Data prepareIperfWorkerData() {

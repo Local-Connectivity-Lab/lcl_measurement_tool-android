@@ -3,6 +3,8 @@ package com.lcl.lclmeasurementtool.Functionality;
 import android.os.Looper;
 import android.util.Log;
 
+import java.util.concurrent.Executor;
+
 public class Iperf3Client {
 
     static {
@@ -12,8 +14,7 @@ public class Iperf3Client {
     private Iperf3Callback mCallback;
     private Iperf3Config mConfig;
     private boolean stopTesting;
-
-    private Thread iperfThread;
+    Thread iperfThread;
 
     public Iperf3Client(Iperf3Callback callback, Iperf3Config config) {
         this();
@@ -26,7 +27,9 @@ public class Iperf3Client {
         mCallback = callback;
     }
 
-    public Iperf3Client() { }
+    public Iperf3Client() {
+        this.stopTesting = false;
+    }
 
     ///////////////////// NATIVE FUNCTION //////////////////////////
 
@@ -34,24 +37,19 @@ public class Iperf3Client {
 
     public native void exec(Iperf3Config testConfig, Iperf3Callback callback);
 
+    public native void cancelTest();
+
     ////////////////////// JAVA INVOCATION ////////////////////////
 
     public void exec(Iperf3Config testConfig) {
-        iperfThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                stopTesting = false;
-                Looper.prepare();
-                exec(testConfig, mCallback);
-                if (stopTesting) {
-                    Looper.myLooper().quitSafely();
-                    Log.i("IPERF3", "quit looper");
-                }
-                Looper.loop();
-            }
-        });
-
-        iperfThread.start();
+//        iperfThread = new Thread(() -> {
+//                Looper.prepare();
+//                Looper.loop();
+//        });
+//        System.out.println("Current thread started is " + iperfThread.getName());
+//        iperfThread.start();
+        exec(testConfig, mCallback);
+        Log.i("IPERF CLIENT", String.valueOf(stopTesting));
     }
 
     public void exec(String serverIp, String serverPort, boolean isDownMode) {
@@ -59,6 +57,13 @@ public class Iperf3Client {
     }
 
     public void stop() {
-        stopTesting = true;
+//        System.out.println("stop " + Thread.currentThread().getName());
+//        cancelTest();
+        Thread.currentThread().interrupt();
+        System.out.println("cancel test");
+//        iperfThread.interrupt();
+//        if (iperfThread.getState() == Thread.State.RUNNABLE) {
+//
+//        }
     }
 }

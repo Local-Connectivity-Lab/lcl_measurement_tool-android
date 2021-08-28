@@ -11,6 +11,8 @@ import androidx.work.WorkerParameters;
 import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
+import java.util.concurrent.CancellationException;
+
 public class IperfUpStreamWorker extends AbstractIperfWorker {
 
     private static final String TAG = "IPERF_UPSTREAM_WORKER";
@@ -31,11 +33,16 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
     @NonNull
     @Override
     public Result doWork() {
-        prepareConfig();
-        prepareCallback();
+        try {
+            prepareConfig();
+            prepareCallback();
 
-        client.exec(config, callback);
-        return isTestFailed ?
-                Result.failure() : ( finalData == null ? Result.success() : Result.success(finalData));
+            if (!isStopped()) client.exec(config, callback);
+            return isTestFailed ?
+                    Result.failure() : ( finalData == null ? Result.success() : Result.success(finalData));
+        } catch (Exception e) {
+            Log.e(TAG, "failed to run iperf test: " + e);
+            return Result.failure();
+        }
     }
 }

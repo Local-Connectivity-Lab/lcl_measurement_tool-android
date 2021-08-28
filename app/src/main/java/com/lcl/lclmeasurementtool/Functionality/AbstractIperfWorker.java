@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
@@ -25,6 +26,15 @@ public abstract class AbstractIperfWorker extends Worker {
         super(context, workerParams);
         this.context = context;
         this.client = new Iperf3Client();
+    }
+
+    @Override
+    public void onStopped() {
+        super.onStopped();
+//        Log.i(TAG, "stop the thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
+//        Thread.currentThread().interrupt();
+        client.stop();
+//        Log.i(TAG, String.valueOf(Thread.currentThread().getState()));
     }
 
     void prepareCallback() {

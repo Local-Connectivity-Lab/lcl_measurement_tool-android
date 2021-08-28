@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
@@ -87,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
         // FIXME: delete this line after test
         updateFAB(true);
-        seUpTestSection();
+        setUpTestSection();
 
         this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
             @Override
@@ -137,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void seUpTestSection() {
+    private void setUpTestSection() {
         runOnUiThread(() -> {
             ConstraintLayout upload = findViewById(R.id.upload);
             ConstraintLayout download = findViewById(R.id.download);
@@ -170,10 +171,15 @@ public class MainActivity extends AppCompatActivity {
             fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
 
             this.isTestStarted = !isTestStarted;
-            Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
 
-            // TODO: init/cancel ping and iperf based in iTestStart
-            mNetworkTestViewModel.run();
+            if (this.isTestStarted) {
+                setUpTestSection();
+                mNetworkTestViewModel.run();
+            } else {
+                mNetworkTestViewModel.cancel();
+            }
+
+            Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -185,10 +191,6 @@ public class MainActivity extends AppCompatActivity {
             fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
                     ContextCompat.getColor(this, R.color.light_gray));
 
-//             TODO: cancel ping and iperf if started
-//            if (isTestStarted) {
-//                mNetworkTestViewModel.cancel();
-//            }
 
             this.isTestStarted = false;
         });
@@ -262,8 +264,19 @@ public class MainActivity extends AppCompatActivity {
         Data output = workInfo.getOutputData();
         switch (workInfo.getState()) {
             case FAILED:
-                UIUtils.showDialog(context, R.string.error, R.string.iperf_error, android.R.string.ok, null, android.R.string.cancel, null);
-                mNetworkTestViewModel.cancel();
+
+                if (output.size() == 1) {
+                    boolean isTestCancelled = output.getBoolean("IS_CANCELLED", false);
+                    Toast.makeText(this, "test is cancelled: ", Toast.LENGTH_SHORT).show();
+                }
+
+                if (isTestStarted) {
+                    UIUtils.showDialog(context, R.string.error, R.string.iperf_error, android.R.string.ok, null, android.R.string.cancel, null);
+                    mNetworkTestViewModel.cancel();
+
+                    // TODO: update based on network condition
+                    updateFAB(true);
+                }
             case RUNNING:
                 if (progress.size() == 0) break;
                 String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
