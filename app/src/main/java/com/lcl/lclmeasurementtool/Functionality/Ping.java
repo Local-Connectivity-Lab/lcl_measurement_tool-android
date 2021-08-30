@@ -14,116 +14,78 @@ import java.time.Clock;
 /**
  * class declaration that encapsulates the Ping functionality
  */
+import androidx.annotation.NonNull;
+
+import java.io.IOException;
+import java.net.InetAddress;
+
 public class Ping {
-    /**
-     * instance variable declarations
-     */
 
-    private String host;
-    private int numPings;
-    private String pingOutput;
-    private Object RuntimeException;
+    private String address;
+    private int times;
+    private int timeout;
+    private boolean stopped;
 
-    /**
-     * Ping constructor
-     * @param host represents site or IP address being pinged
-     * @param numPings represents number of pings to host
-     */
-
-    public Ping(String host, int numPings) {
-        this.host = host;
-        this.numPings = numPings;
-        this.pingOutput = "";
+    public Ping() {
+        // probably do something
+        // we can also use InetAddress to validate IP address - option
     }
 
-    /**
-     * method launches the ping process
-     * @return a string consisting of the output from the process containing network information
-     *
-     *     64 bytes from server-13-226-214-69.lax50.r.cloudfront.net (13.226.214.69): icmp_seq=5 ttl=226 time=41.7 ms
-     *
-     *     --- espn.com ping statistics ---
-     *     5 packets transmitted, 5 received, 0% packet loss, time 4004ms
-     *     rtt min/avg/max/mdev = 38.705/40.685/41.955/1.159 ms
-     */
 
-    public String launchPing() {
-        Log.i("LCL_PING, ", "launchPing: entering ");
-        try {
-            Runtime runtime = Runtime.getRuntime();
-            String command = "/system/bin/ping -c " + numPings + " " + host;
-            Log.i("LCL_PING", command);
+    public Ping setAddress(@NonNull String address) {
+        this.address = address;
+        return this;
+    }
 
-            // wait for the process to exit
-            Process proc = Runtime.getRuntime().exec(command);
-            final int exit;
-            exit = proc.waitFor();
-            Log.i("LCL_PING", "exit code = " +  exit);
+    // return Ping object - Builder
+    public Ping setTimes(int times) {
+        if (times < 0) {
+            throw new IllegalArgumentException();
+        }
 
+        this.times = times;
+        return this;
+    }
 
-            InputStreamReader reader = new InputStreamReader(proc.getInputStream());
-            BufferedReader buffer = new BufferedReader(reader);
-            String line;
-            while ((line = buffer.readLine()) != null) {
-                pingOutput += line;
-                pingOutput += "\n";
-               // Log.i("LCL_PING", "Ping output == " + line);
+    public Ping setTimeout(int timeout) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException();
+        }
+
+        this.timeout = timeout;
+        return this;
+    }
+
+    public void stop() {
+        this.stopped = true;
+    }
+
+    public void start(@NonNull PingListener listener) {
+        new Thread(() -> {
+            if (address == null) {
+                listener.onError("address should not be null");
+                return;
             }
 
-            Log.i("LCL_PING", "Ping output == " + pingOutput);
-        }
-        catch (IOException | SecurityException | InterruptedException e) {
-            e.printStackTrace();
-            return null;
-        }
-        Log.i("LCL_PING, ", "launchPing: exiting ");
-        return pingOutput;
-    }
+            stopped = false;
+            PingStats stats;
+            try {
+                listener.onStart();
+                stats = PingUtils.ping(address, times, timeout);
+            } catch (IOException | InterruptedException ex) {
+                listener.onError(ex.getMessage());
+                return;
+            }
 
-    /**
-     * method to obtain the percentage of packet loss
-     * @return returns a string in the form "x % packet loss"
-     * @throws Throwable RuntimeException
-     */
+            if (stopped) return;
 
+            if (stats.hasError()) {
+                listener.onError(stats.getError().toString());
+                return;
+            }
 
-    public String getPacketLoss() throws Throwable {
-        if (pingOutput == null) {
-            throw (Throwable) RuntimeException;
-        }
+            listener.onFinished(stats);
 
-        String[] split = pingOutput.split(",");
-        return split[2];
-    }
-
-    /**
-     * obtains the ping quantity
-     * @return a double representing the latency in milliseconds
-     * @throws Throwable RuntimeException
-     */
-    public PingStats getLatency() throws Throwable {
-        Log.i("LCL_PING, ", "getLatency: entering ");
-        if (pingOutput == null) {
-            throw (Throwable) RuntimeException;
-        }
-        Log.i("LCL_PING", "getLatency: ");
-        Log.i("LCL_PING", "pingOutput equals : " + pingOutput);
-        PingStats pingStats = new PingStats();
-        String[] split = pingOutput.split("/");
-        String minStr = split[3];
-        String actualMinStr = split[3].substring(split[3].indexOf("=")+2);
-        String avgStr = split[4];
-        String maxStr = split[5];
-        Log.i("LCL_PING", "min = " + actualMinStr);
-        Log.i("LCL_PING", "average = " + avgStr);
-        Log.i("LCL_PING", "max = " + maxStr);
-
-        // convert strings to double
-        pingStats.setMinLatency(Double.parseDouble(actualMinStr));
-        pingStats.setAverageLatency(Double.parseDouble(avgStr));
-        pingStats.setMaxLatency(Double.parseDouble(maxStr));
-
-        Log.i("LCL_PING, ", "getLatency: exiting ");
-        return pingStats;
+        }).start();
     }
 }
