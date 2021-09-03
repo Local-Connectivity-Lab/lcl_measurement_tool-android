@@ -1,3 +1,5 @@
+#include <android/log.h>
+
 #include "iperf-3.1.3/src/iperf_config.h"
 
 #include <stdio.h>
@@ -38,6 +40,7 @@ static int run(struct iperf_test *test);
 
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_exec(
         JNIEnv *env, jobject iperfClient, jobject iperfConfig, jobject callback) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "lcl_meas", "Running client exec JNI function");
     invoke_flag = INVOKE_TYPE_JNI;
 
     struct iperf_test *test;
@@ -62,6 +65,7 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
 }
 
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stop (JNIEnv * env, jobject iperfClient) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "lcl_meas", "Running client stop JNI function");
     if (!test_holder) {
         iperf_errexit(NULL, "create new test error - %s", iperf_strerror(i_errno));
     }
@@ -71,6 +75,7 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
 
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_simpleTest
   (JNIEnv * env, jobject iperfClient, jstring ip, jstring port, jboolean isDownMode, jobject callback) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "lcl_meas", "Running client simple test JNI function");
     invoke_flag = INVOKE_TYPE_JNI;
 
     const char *hostname = (*env)->GetStringUTFChars(env, ip, NULL);
