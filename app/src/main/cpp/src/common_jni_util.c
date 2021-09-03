@@ -1,7 +1,6 @@
 #include <string.h>
 #include <malloc.h>
 #include "common_jni_util.h"
-#include "AndroidLog.h"
 
 #define TMP_PATH_PREFIX "/data/data/"
 #define TMP_PATH_SUFFIX "/files/iperf3.XXXXXX"

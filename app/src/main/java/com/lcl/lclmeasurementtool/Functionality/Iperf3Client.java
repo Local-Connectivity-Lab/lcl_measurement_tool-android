@@ -8,7 +8,7 @@ import java.util.concurrent.Executor;
 public class Iperf3Client {
 
     static {
-        System.loadLibrary("iperf3");
+        System.loadLibrary("lcl_measurement_tool_native");
     }
 
     private Iperf3Callback mCallback;

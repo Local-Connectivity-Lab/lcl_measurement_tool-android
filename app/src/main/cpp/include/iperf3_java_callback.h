@@ -3,7 +3,7 @@
 //
 
 #include <jni.h>
-#include "iperf-3.1.3/src/iperf.h"
+#include "iperf.h"
 
 #ifndef INC_5GMPORTAL_CMII_JAVA_CALLBACK_H
 #define INC_5GMPORTAL_CMII_JAVA_CALLBACK_H

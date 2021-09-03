@@ -32,8 +32,9 @@ android {
         viewBinding true
     }
     externalNativeBuild {
-        ndkBuild {
-            path file("src/main/cpp/Android.mk")
+        cmake {
+            path file("src/main/cpp/CMakeLists.txt")
+            version '3.10.2'
         }
     }
 }

@@ -1,6 +1,6 @@
 #include <android/log.h>
 
-#include "iperf-3.1.3/src/iperf_config.h"
+#include "iperf_config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,14 +22,13 @@
 #endif
 #include <netinet/tcp.h>
 
-#include "iperf-3.1.3/src/iperf.h"
-#include "iperf-3.1.3/src/iperf_api.h"
-#include "iperf-3.1.3/src/units.h"
-#include "iperf-3.1.3/src/iperf_locale.h"
-#include "iperf-3.1.3/src/net.h"
-#include "iperf-3.1.3/src/iperf_api.h"
+#include "iperf.h"
+#include "iperf_api.h"
+#include "units.h"
+#include "iperf_locale.h"
+#include "net.h"
+#include "iperf_api.h"
 
-#include "AndroidLog.h"
 #include "iperf3_jni_api.h"
 #include "iperf3_java_callback.h"
 #include "common_jni_util.h"
