@@ -5,6 +5,7 @@ plugins {
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
+    ndkVersion "21.4.7075529"
     defaultConfig {
         applicationId "com.lcl.lclmeasurementtool"
         minSdkVersion 24
@@ -31,7 +32,9 @@ android {
         viewBinding true
     }
     externalNativeBuild {
-
+        ndkBuild {
+            path file("src/main/jni/Android.mk")
+        }
     }
 }
 
