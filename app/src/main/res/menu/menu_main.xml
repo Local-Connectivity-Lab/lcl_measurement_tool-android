@@ -2,9 +2,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.lcl.lclmeasurementtool.MainActivity">
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+    <group
+        android:id="@+id/group1"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/item0"
+            android:icon="@drawable/main"
+            android:title="Home"/>
+        <item
+            android:id="@+id/item1"
+            android:icon="@drawable/speed_test"
+            android:title="History Speed Test Data"/>
+        <item
+            android:id="@+id/item2"
+            android:icon="@drawable/signal_strength_indicator"
+            android:title="History Signal Strength Data"/>
+    </group>
+    <group
+        android:id="@+id/group2"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/item3"
+            android:title="Settings"/>
+    </group>
 </menu>

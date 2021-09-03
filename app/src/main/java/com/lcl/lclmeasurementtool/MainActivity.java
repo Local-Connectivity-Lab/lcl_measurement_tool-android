@@ -3,6 +3,10 @@ package com.lcl.lclmeasurementtool;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,11 +18,14 @@ import android.content.Context;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.BuildConfig;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -42,29 +49,28 @@ import java.time.ZoneId;
 import java.util.UUID;
 
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
+import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
-
+public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MAIN_ACTIVITY";
+    private AppBarConfiguration appBarConfiguration;
+    private ActivityMainBinding binding;
+
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
-
-    private Context context;
-    CellularManager mCellularManager;
-    NetworkManager mNetworkManager;
-    LocationServiceManager mLocationManager;
-    LocationServiceListener locationServiceListener;
-    Location testLocation;
-    GoogleMap map;
-
-    private boolean isTestStarted;
-    private boolean isCellularConnected;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        this.context = this.getApplicationContext();
+
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        setSupportActionBar(binding.toolbar);
+
+        NavController navController = Navigation.findNavController(this, R.id.nav_host);
+        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
+        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
 
         // set up UUID
@@ -76,191 +82,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             editor.apply();
         }
 
-        // prepare necessary information managers
-        mNetworkManager = NetworkManager.getManager(this);
-        mCellularManager = CellularManager.getManager(this);
-        mLocationManager = LocationServiceManager.getManager(this);
-        locationServiceListener = new LocationServiceListener(this, getLifecycle());
-        getLifecycle().addObserver(locationServiceListener);
-
-        // set up DB
+//        // set up DB
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
-
-        this.isTestStarted = false;
-        this.isCellularConnected = false;
-
-        // update and listen to signal strength changes
-        updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
-        mCellularManager.listenToSignalStrengthChange(new CellularChangeListener() {
-            @Override
-            public void onChange(SignalStrengthLevel level, int dBm) {
-                updateSignalStrengthTexts(level, dBm);
-                String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
-                mLocationManager.getLastLocation(location -> {
-                    LatLng latLng = LocationUtils.toLatLng(location);
-//                    db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode(), latLng));
-                });
-            }
-        });
-
-        // enable map
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
-        } else {
-            Log.e(TAG, "Map Fragment is null");
-        }
-
-        // set up FAB
-        setUpFAB();
-        updateFAB(isCellularConnected);
-
-        this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
-
-            @Override
-            public void onAvailable() {
-                Log.i(TAG, "from call back on cellular available");
-                isCellularConnected = true;
-                updateFAB(true);
-            }
-
-            @Override
-            public void onLost() {
-                mCellularManager.stopListening();
-                Log.e(TAG, "on cellular lost");
-                isCellularConnected = false;
-                // TODO cancel test
-                updateFAB(false);
-            }
-
-            @Override
-            public void onUnavailable() {
-                Log.e(TAG, "on cellular unavailable");
-                isCellularConnected = false;
-                // TODO cancel test
-                updateFAB(false);
-            }
-
-            @Override
-            public void onCellularNetworkChanged(NetworkCapabilities capabilities) { }
-
-        }, new NetworkChangeListener() {
-            @Override
-            public void onAvailable() {
-                Log.i(TAG, "from call back on wifi available");
-                isCellularConnected = false;
-                // TODO: cancel test
-                updateFAB(false);
-            }
-
-            @Override
-            public void onUnavailable() { }
-
-            @Override
-            public void onLost() { }
-
-            @Override
-            public void onCellularNetworkChanged(NetworkCapabilities capabilities) { }
-        });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (mCellularManager.isSimCardAbsence()) {
-            UIUtils.showDialog(this,
-                    R.string.sim_missing,
-                    R.string.sim_missing_message,
-                    android.R.string.ok,
-                    (dialog, which) -> {
-                        finishAndRemoveTask();
-                        System.exit(0);
-                    },
-                    -1,
-                    null
-            );
-        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        this.mLocationManager.stop();
-        this.mCellularManager.stopListening();
-        this.mNetworkManager.stopListenToNetworkChanges();
     }
 
-    private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
-        runOnUiThread(() -> {
-            TextView signalStrengthValue = findViewById(R.id.SignalStrengthValue);
-            TextView signalStrengthStatus = findViewById(R.id.SignalStrengthStatus);
-            TextView signalStrengthUnit = findViewById(R.id.SignalStrengthUnit);
-            ImageView signalStrengthIndicator = findViewById(R.id.SignalStrengthIndicator);
-            signalStrengthValue.setText(String.valueOf(dBm));
-            signalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
-            signalStrengthStatus.setText(level.getName());
-            signalStrengthIndicator.setColorFilter(level.getColor(context));
-        });
-    }
 
-    private void setUpFAB() {
-        FloatingActionButton fab = findViewById(R.id.fab);
-        CircularProgressIndicator progressIndicator = findViewById(R.id.progress_indicator);
-        progressIndicator.setVisibility(View.INVISIBLE);
-        fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
-        fab.setOnClickListener(button -> {
-
-            if (!this.isCellularConnected) {
-                // raise alert telling user to enable cellular data
-                Log.e(TAG, "not connected to cellular network");
-
-
-                UIUtils.showDialog(this,
-                        R.string.cellular_on_title,
-                        R.string.cellular_on_message,
-                        R.string.settings,
-                        (dialog, which) -> {
-                            Intent networkSettings = new Intent(Settings.ACTION_SETTINGS);
-                            networkSettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(networkSettings);
-                        },
-                        android.R.string.cancel, null);
-
-            } else {
-                ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
-                fab.setColorFilter(ContextCompat.getColor(this, R.color.purple_500));
-                progressIndicator.setActivated(this.isTestStarted);
-                progressIndicator.setVisibility(this.isTestStarted ? View.INVISIBLE : View.VISIBLE);
-
-                // TODO: init/cancel ping and iperf based in iTestStart
-                this.mLocationManager.getLastLocation(testLocation::set);
-                LatLng testLatLng = LocationUtils.toLatLng(testLocation);
-                this.map.addMarker(new MarkerOptions().position(testLatLng).draggable(false));
-
-                this.isTestStarted = !isTestStarted;
-                Toast.makeText(this, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void updateFAB(boolean state) {
-        runOnUiThread(() -> {
-            FloatingActionButton fab = findViewById(R.id.fab);
-            fab.setSelected(state);
-            fab.setImageResource(R.drawable.start);
-            fab.setColorFilter(state ? ContextCompat.getColor(this, R.color.purple_500) :
-                    ContextCompat.getColor(this, R.color.light_gray));
-
-//             TODO: cancel ping and iperf if started
-//            if (isTestStarted) {
-                // cancel test
-//            }
-
-                this.isTestStarted = false;
-        });
-    }
 
 
     // TODO: update FAB Icon and State when tests are done
@@ -304,11 +135,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        Log.i(TAG, "Map ready");
-        this.map = googleMap;
-        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        googleMap.setMaxZoomPreference(20.0f);
-        googleMap.setMinZoomPreference(6.0f);
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host);
+        return NavigationUI.navigateUp(navController, appBarConfiguration)
+                || super.onSupportNavigateUp();
     }
 }
