@@ -14,12 +14,12 @@ LOCAL_SRC_FILES :=  iperf-3.1.3/src/cjson.c            \
 					iperf-3.1.3/src/main.c             \
 					iperf-3.1.3/src/net.c              \
 					iperf-3.1.3/src/tcp_info.c         \
-                    iperf-3.1.3/src/tcp_window_size.c  \
-                    iperf-3.1.3/src/timer.c            \
-                    iperf-3.1.3/src/units.c            \
-                    common_jni_util.c                  \
-                    iperf3_java_callback.c             \
-                    iperf3_jni_api.c
+					iperf-3.1.3/src/tcp_window_size.c  \
+					iperf-3.1.3/src/timer.c            \
+					iperf-3.1.3/src/units.c            \
+					common_jni_util.c                  \
+					iperf3_java_callback.c             \
+					iperf3_jni_api.c
 
 
 LOCAL_CFLAGS += -pie -fPIE -fPIC -s
