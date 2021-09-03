@@ -33,7 +33,7 @@ public abstract class AbstractIperfWorker extends Worker {
         super.onStopped();
 //        Log.i(TAG, "stop the thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
 //        Thread.currentThread().interrupt();
-        client.stop();
+        client.cancelTest();
 //        Log.i(TAG, String.valueOf(Thread.currentThread().getState()));
     }
 

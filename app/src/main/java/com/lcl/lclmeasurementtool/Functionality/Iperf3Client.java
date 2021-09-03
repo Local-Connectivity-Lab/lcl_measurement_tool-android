@@ -37,7 +37,7 @@ public class Iperf3Client {
 
     public native void exec(Iperf3Config testConfig, Iperf3Callback callback);
 
-    public native void cancelTest();
+    public native void stop();
 
     ////////////////////// JAVA INVOCATION ////////////////////////
 
@@ -56,11 +56,11 @@ public class Iperf3Client {
         simpleTest(serverIp, serverPort, isDownMode, mCallback);
     }
 
-    public void stop() {
+    public void cancelTest() {
 //        System.out.println("stop " + Thread.currentThread().getName());
 //        cancelTest();
-        Thread.currentThread().interrupt();
         System.out.println("cancel test");
+        stop();
 //        iperfThread.interrupt();
 //        if (iperfThread.getState() == Thread.State.RUNNABLE) {
 //

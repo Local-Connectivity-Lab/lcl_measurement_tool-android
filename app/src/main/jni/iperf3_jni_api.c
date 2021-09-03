@@ -25,6 +25,7 @@
 #include "iperf-3.1.3/src/units.h"
 #include "iperf-3.1.3/src/iperf_locale.h"
 #include "iperf-3.1.3/src/net.h"
+#include "iperf-3.1.3/src/iperf_api.h"
 
 #include "AndroidLog.h"
 #include "iperf3_jni_api.h"
@@ -58,6 +59,14 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
     }
 
     iperf_free_test(test);
+}
+
+JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stop (JNIEnv * env, jobject iperfClient) {
+    if (!test_holder) {
+        iperf_errexit(NULL, "create new test error - %s", iperf_strerror(i_errno));
+    }
+    iperf_got_sigend(test_holder);
+    iperf_free_test(test_holder);
 }
 
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_simpleTest

@@ -1,7 +1,3 @@
-//
-// Created by 申勇 on 2020/11/20.
-//
-
 #include <jni.h>
 
 #ifndef INC_5GMPORTAL_CMII_JNI_UTIL_H

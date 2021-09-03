@@ -13,6 +13,9 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_exec
         (JNIEnv *, jobject, jobject , jobject);
 
+JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stop
+    (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

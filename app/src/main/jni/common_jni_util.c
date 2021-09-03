@@ -1,7 +1,3 @@
-//
-// Created by 申勇 on 2020/11/20.
-//
-
 #include <string.h>
 #include <malloc.h>
 #include "common_jni_util.h"
