@@ -1,29 +1,41 @@
 add_library( # Sets the name of the library.
         lcl_measurement_tool_native
-
-        # Sets the library as a shared library.
+        # Use shared linking
         SHARED
-
-        # Provides a relative path to your source file(s).
+        # Paths to all source files
         iperf3_jni_api.c
         iperf3_java_callback.c
+        iperf3_state_wrapper.c
         common_jni_util.c
         ../include/common_jni_util.h
         ../include/iperf3_java_callback.h
         ../include/iperf3_jni_api.h
+        ../include/iperf3_state_wrapper.h
         )
 
 target_include_directories(lcl_measurement_tool_native PUBLIC ../include)
+
+# Searches for a specified prebuilt library and stores the path as a
+# variable. Because CMake includes system libraries in the search path by
+# default, you only need to specify the name of the public NDK library
+# you want to add. CMake verifies that the library exists before
+# completing its build.
+find_library(
+    log-lib  # Sets the name of the path variable.
+    log  # Specifies the name of the NDK library that you want CMake to locate.
+    )
 
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 target_link_libraries( # Specifies the target library.
         lcl_measurement_tool_native
-
-        # Links the target library to the log library
-        # included in the NDK.
         ${log-lib}
         android
-        iperf-cmake-wrapper
+        iperf
         )
+
+# No tests available yet
+#if(BUILD_TESTING)
+#    add_subdirectory(tests)
+#endif()
