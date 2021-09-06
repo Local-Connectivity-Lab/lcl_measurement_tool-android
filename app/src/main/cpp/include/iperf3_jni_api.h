@@ -7,9 +7,6 @@
 extern "C" {
 #endif
 
-JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_simpleTest
-  (JNIEnv *, jobject, jstring, jstring, jboolean, jobject);
-
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_exec
         (JNIEnv *, jobject, jobject , jobject);
 

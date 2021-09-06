@@ -33,8 +33,6 @@ public class Iperf3Client {
 
     ///////////////////// NATIVE FUNCTION //////////////////////////
 
-    private native void simpleTest(String serverIp, String serverPort, boolean isDownMode, Iperf3Callback callback);
-
     public native void exec(Iperf3Config testConfig, Iperf3Callback callback);
 
     public native void stop();
@@ -53,7 +51,7 @@ public class Iperf3Client {
     }
 
     public void exec(String serverIp, String serverPort, boolean isDownMode) {
-        simpleTest(serverIp, serverPort, isDownMode, mCallback);
+        throw new UnsupportedOperationException("Have not implemented simple exec configuration");
     }
 
     public void cancelTest() {
