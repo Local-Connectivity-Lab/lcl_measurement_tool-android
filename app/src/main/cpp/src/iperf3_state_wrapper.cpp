@@ -4,11 +4,17 @@
 #include "iperf_api.h"
 
 int
+stop_wrapper(struct iperf_test_state *test_wrapper) {
+    // TODO(matt9j) This can be called from a concurrent context to run_wrapper, and cause race
+    //  conditions or failures. The standalone iperf binary relies on a single threaded client and
+    //  the OS signal taking over the single threaded context, which is not the case here.
+    iperf_got_sigend(test_wrapper->iperf_test);
+
+}
+
+int
 run_wrapper(struct iperf_test_state *test_wrapper)
 {
-    // TODO(matt9j) handle an end call from the JNI
-    // iperf_got_sigend(test);
-
     /* Ignore SIGPIPE to simplify error handling */
     signal(SIGPIPE, SIG_IGN);
 

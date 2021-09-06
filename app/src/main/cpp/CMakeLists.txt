@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.16.3)
 
 # Declares and names the project.
 project("lcl_measurement_tool_native")
-
+set (CMAKE_CXX_STANDARD 17)
 
 # Include sub-projects by directory (must also be built with CMake).
 

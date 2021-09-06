@@ -5,7 +5,7 @@ add_library( # Sets the name of the library.
         # Paths to all source files
         iperf3_jni_api.c
         iperf3_java_callback.c
-        iperf3_state_wrapper.c
+        iperf3_state_wrapper.cpp
         common_jni_util.c
         ../include/common_jni_util.h
         ../include/iperf3_java_callback.h

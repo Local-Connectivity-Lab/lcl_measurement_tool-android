@@ -7,6 +7,10 @@
 // TODO(matt9j) Should not be needed, pulling definition of iperf_test right now...
 #include "iperf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* ------------------------- */
 /* -- Struct declarations -- */
 /* ------------------------- */
@@ -17,6 +21,7 @@ struct jni_callback;
 /* - Function declarations - */
 /* ------------------------- */
 int run_wrapper(struct iperf_test_state *test);
+int stop_wrapper(struct iperf_test_state *test);
 
 /* ------------------------- */
 /* --- Struct definitions -- */
@@ -51,5 +56,9 @@ struct iperf_test_state {
     struct iperf_test * iperf_test ;
     struct jni_callback * jniCallback;
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //LCL_MEASUREMENT_TOOL_IPERF3_STATE_WRAPPER_H
