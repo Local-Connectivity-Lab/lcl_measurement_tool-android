@@ -1,8 +1,10 @@
-#include <string.h>
+#include <iperf_api.h>
 #include <malloc.h>
-#include "iperf3_java_callback.h"
+#include <string.h>
+
 #include "common_jni_util.h"
-#include "iperf_api.h"
+#include "iperf3_java_callback.h"
+#include "iperf3_state_wrapper.h"
 
 /******************************** Java 方法回调 start ********************************/
 void call_java_method(struct iperf_test *test, jmethodID  method_id, int argc, ...) {

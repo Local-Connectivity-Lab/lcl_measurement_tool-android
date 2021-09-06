@@ -1,33 +1,5 @@
 #include <android/log.h>
-
-#include "iperf_config.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <getopt.h>
-#include <errno.h>
-#include <signal.h>
-#include <unistd.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#include <netinet/tcp.h>
-
-#include "iperf.h"
-#include "iperf_api.h"
-#include "units.h"
-#include "iperf_locale.h"
-#include "net.h"
-#include "iperf_api.h"
+#include <iperf_api.h>
 
 #include "iperf3_jni_api.h"
 #include "iperf3_java_callback.h"
