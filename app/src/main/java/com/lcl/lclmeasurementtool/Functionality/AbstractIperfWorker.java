@@ -72,7 +72,7 @@ public abstract class AbstractIperfWorker extends Worker {
             public void onError(String errMsg) {
                 Log.e(TAG, errMsg);
                 isTestFailed = true;
-                client.stop();
+                client.cancelTest();
             }
         };
     }

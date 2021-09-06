@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 
-JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_exec
+JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_runIperfTest
         (JNIEnv *, jobject, jobject , jobject);
 
-JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stop
+JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stopIperfTest
     (JNIEnv *, jobject);
 
 #ifdef __cplusplus

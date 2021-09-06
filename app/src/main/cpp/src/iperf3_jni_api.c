@@ -5,13 +5,12 @@
 #include "iperf3_java_callback.h"
 #include "common_jni_util.h"
 
+struct iperf_test_state test_state_wrapper;
 
-JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_exec(
+JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_runIperfTest(
         JNIEnv *env, jobject iperfClient, jobject iperfConfig, jobject callback) {
     __android_log_print(ANDROID_LOG_VERBOSE, "lcl_meas", "Running client exec JNI function");
 
-    //TODO(matt9j) Allocated on the stack for now... is this correct?
-    struct iperf_test_state test_state_wrapper;
     struct iperf_test *test;
 
     test_state_wrapper.iperf_test = iperf_new_test();
@@ -37,13 +36,8 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
     iperf_free_test(test);
 }
 
-JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stop (JNIEnv * env, jobject iperfClient) {
+JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stopIperfTest (JNIEnv * env, jobject iperfClient) {
     __android_log_print(ANDROID_LOG_VERBOSE, "lcl_meas", "Running client stop JNI function");
 
-    // TODO(matt9j) Need to gracefully shutdown the test
-//    if (!test_holder) {
-//        iperf_errexit(NULL, "create new test error - %s", iperf_strerror(i_errno));
-//    }
-//    iperf_got_sigend(test_holder);
-//    iperf_free_test(test_holder);
+    stop_wrapper(&test_state_wrapper);
 }
