@@ -11,21 +11,8 @@ public class Iperf3Client {
         System.loadLibrary("lcl_measurement_tool_native");
     }
 
-    private Iperf3Callback mCallback;
-    private Iperf3Config mConfig;
     private boolean stopTesting;
     Thread iperfThread;
-
-    public Iperf3Client(Iperf3Callback callback, Iperf3Config config) {
-        this();
-        mCallback = callback;
-        mConfig = config;
-    }
-
-    public Iperf3Client(Iperf3Callback callback) {
-        this();
-        mCallback = callback;
-    }
 
     public Iperf3Client() {
         this.stopTesting = false;
@@ -47,7 +34,7 @@ public class Iperf3Client {
 //        System.out.println("Current thread started is " + iperfThread.getName());
 //        iperfThread.start();
         Log.i("IPERF CLIENT", "Running iperf client testConfig exec");
-        runIperfTest(testConfig, mCallback);
+        runIperfTest(testConfig, callback);
         Log.i("IPERF CLIENT", String.valueOf(stopTesting));
     }
 
