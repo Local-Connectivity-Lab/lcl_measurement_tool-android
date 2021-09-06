@@ -7,7 +7,7 @@
 #include "iperf3_state_wrapper.h"
 
 /******************************** Java 方法回调 start ********************************/
-void call_java_method(struct iperf_test *test, jmethodID  method_id, int argc, ...) {
+void call_java_method(struct iperf_test_state *test, jmethodID  method_id, int argc, ...) {
     JNIEnv *env = test->jniCallback->env;
     struct jni_callback *jniCallback = test->jniCallback;
     jobject callbackObj = jniCallback->callbackObj;
@@ -18,41 +18,41 @@ void call_java_method(struct iperf_test *test, jmethodID  method_id, int argc, .
     va_end(arg_list);
 }
 
-void on_connecting_java(struct iperf_test *test, char * ipr, int port) {
+void on_connecting_java(struct iperf_test_state *test, char * ipr, int port) {
     JNIEnv *env = test->jniCallback->env;
     call_java_method(test, test->jniCallback->connectingMethod, 2, charToJstring(env, ipr), port);
 }
 
-void on_connected_java(struct iperf_test *test, char ipl[], int portl, char ipr[], int portr) {
+void on_connected_java(struct iperf_test_state *test, char ipl[], int portl, char ipr[], int portr) {
     JNIEnv *env = test->jniCallback->env;
     call_java_method(test, test->jniCallback->connectedMethod, 4, charToJstring(env, ipl), portl,
                      charToJstring(env, ipr), portr);
 }
 
 /* 共用报告带宽方法 */
-void on_report_bandwidth(struct iperf_test *test, jmethodID  method_id,
+void on_report_bandwidth(struct iperf_test_state *test, jmethodID  method_id,
                     float start, float end, char send_bytes[], char band_width[]) {
     JNIEnv *env = test->jniCallback->env;
     call_java_method(test, method_id, 4, start, end,
-                     charToJstring(env, send_bytes), charToJstring(env, band_width), test->reverse);
+                     charToJstring(env, send_bytes), charToJstring(env, band_width), test->iperf_test->reverse);
 }
 
-void on_interval_java(struct iperf_test *test, float start, float end, char send_bytes[], char band_width[]) {
+void on_interval_java(struct iperf_test_state *test, float start, float end, char send_bytes[], char band_width[]) {
     on_report_bandwidth(test, test->jniCallback->intervalMethod, start, end, send_bytes, band_width);
 }
 
-void on_result_java(struct iperf_test *test, float start, float end, char send_bytes[], char band_width[]) {
+void on_result_java(struct iperf_test_state *test, float start, float end, char send_bytes[], char band_width[]) {
     on_report_bandwidth(test, test->jniCallback->resultMethod, start, end, send_bytes, band_width);
 }
 
-void on_error_java(struct iperf_test *test, char *err_msg) {
+void on_error_java(struct iperf_test_state *test, char *err_msg) {
     JNIEnv *env = test->jniCallback->env;
     call_java_method(test, test->jniCallback->errorMethod, 1, charToJstring(env, err_msg));
 }
 /******************************** Java 方法回调 end ********************************/
 
 /* 构造回调Java方法需要的参数 */
-int construct_java_callback(JNIEnv *env, struct iperf_test *test, jobject callback) {
+int construct_java_callback(JNIEnv *env, struct iperf_test_state *test, jobject callback) {
     test->jniCallback = (struct jni_callback *) malloc(sizeof(struct jni_callback));
     if (!test->jniCallback) {
         free(test);
@@ -105,7 +105,8 @@ int construct_java_callback(JNIEnv *env, struct iperf_test *test, jobject callba
     return 0;
 }
 
-int parse_java_config(JNIEnv *env, struct iperf_test *test, jobject config) {
+int parse_java_config(JNIEnv *env, struct iperf_test_state *test_wrapper, jobject config) {
+    struct iperf_test* test = test_wrapper->iperf_test;
     jclass class = (*env)->GetObjectClass(env, config);
     /**
      * public class com.cmii.iperf3.Iperf3Config {
@@ -149,7 +150,9 @@ int parse_java_config(JNIEnv *env, struct iperf_test *test, jobject config) {
     // -f
     jfieldID unit_field = (*env)->GetFieldID(env, class, "formatUnit", "C");
     jchar unit = (*env)->GetCharField(env, config, unit_field);
-    iperf_set_test_unit_format(test, (char) unit);
+    // TODO(matt9j) Removed from iperf API
+    //iperf_set_test_unit_format(test, (char) unit);
+
     // -P
     jfieldID parallels_field = (*env)->GetFieldID(env, class, "parallels", "I");
     jint parallels = (*env)->GetIntField(env, config, parallels_field);
