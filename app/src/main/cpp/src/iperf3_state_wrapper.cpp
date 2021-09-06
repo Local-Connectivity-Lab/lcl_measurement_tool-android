@@ -11,6 +11,7 @@ stop_wrapper(struct iperf_test_state *test_wrapper) {
     //  conditions or failures. The standalone iperf binary relies on a single threaded client and
     //  the OS signal taking over the single threaded context, which is not the case here.
     test_wrapper->iperf_test->done = 1;
+    return 0;
 }
 
 int
