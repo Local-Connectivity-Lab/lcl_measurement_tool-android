@@ -55,7 +55,7 @@ int construct_java_callback(JNIEnv *env, struct iperf_test *test, jobject callba
     if (!test->jniCallback) {
         free(test);
         i_errno = IENEWTEST;
-        return NULL;
+        return -1;
     }
     memset(test->jniCallback, 0, sizeof(struct jni_callback));
 
