@@ -1,6 +1,5 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
