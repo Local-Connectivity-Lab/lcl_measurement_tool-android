@@ -8,6 +8,8 @@ import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import java.lang.Thread;
+
 public abstract class AbstractIperfWorker extends Worker {
     private static final String TAG = "IPERF_WORKER";
 
@@ -30,10 +32,11 @@ public abstract class AbstractIperfWorker extends Worker {
     @Override
     public void onStopped() {
         super.onStopped();
-//        Log.i(TAG, "stop the thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
-//        Thread.currentThread().interrupt();
+        Log.d(TAG, "Worker stopping in thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
+
+        // TODO(matt9j) This might run in a different thread than the doWork context?!?
+        // Cancel the iperf test first before calling the superclass method to end the test before killing the worker thread???
         client.cancelTest();
-//        Log.i(TAG, String.valueOf(Thread.currentThread().getState()));
     }
 
     void prepareCallback() {

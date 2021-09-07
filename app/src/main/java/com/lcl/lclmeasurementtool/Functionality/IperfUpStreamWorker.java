@@ -6,6 +6,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.work.WorkerParameters;
 
+import java.lang.Thread;
+
 public class IperfUpStreamWorker extends AbstractIperfWorker {
 
     private static final String TAG = "IPERF_UPSTREAM_WORKER";
@@ -26,6 +28,7 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
     @NonNull
     @Override
     public Result doWork() {
+        Log.d(TAG, "Beginning synchronous upstream work in thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
         try {
             prepareConfig();
             prepareCallback();

@@ -6,6 +6,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.work.WorkerParameters;
 
+import java.lang.Thread;
+
 public class IperfDownStreamWorker extends AbstractIperfWorker {
 
     private static final String TAG = "IPERF_DOWNSTREAM_WORKER";
@@ -26,11 +28,13 @@ public class IperfDownStreamWorker extends AbstractIperfWorker {
     @NonNull
     @Override
     public Result doWork() {
-
+        Log.d(TAG, "Beginning synchronous downstream work in thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
         prepareConfig();
         prepareCallback();
 
+        Log.d(TAG, "Beginning background test");
         client.exec(config, callback);
+        Log.d(TAG, "Background test complete");
         return isTestFailed ?
                 Result.failure() : ( finalData == null ? Result.success() : Result.success(finalData));
     }
