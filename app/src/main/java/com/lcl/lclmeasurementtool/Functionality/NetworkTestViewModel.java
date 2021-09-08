@@ -33,6 +33,9 @@ public class NetworkTestViewModel extends ViewModel {
     public NetworkTestViewModel(@NonNull Context context) {
         mWorkManager = WorkManager.getInstance(context);
         mWorkManager.pruneWork();
+        // TODO HACK! For now cancel any pending work leftover from previous invocations of the app?
+        // The app should probably eventually list the status of all pending and completed tests the user has done?
+        mWorkManager.cancelAllWorkByTag("backgroundIperf");
         mSavedIperfDownInfo = mWorkManager.getWorkInfosByTagLiveData("IPERF_DOWN");
         mSavedIperfUpInfo = mWorkManager.getWorkInfosByTagLiveData("IPERF_UP");
     }
@@ -47,14 +50,18 @@ public class NetworkTestViewModel extends ViewModel {
 
     public void run() {
 
+        // TODO: Clarify the background work model we want exposed to end users... should these be "unique" work?
         OneTimeWorkRequest downStream = new OneTimeWorkRequest.Builder(IperfDownStreamWorker.class)
                 .setInputData(prepareIperfWorkerData())
                 .addTag("IPERF_DOWN")
+                .addTag("backgroundIperf")
                 .build();
         downStreamUUID = downStream.getId();
         OneTimeWorkRequest upStream = new OneTimeWorkRequest.Builder(IperfUpStreamWorker.class)
                 .setInputData(prepareIperfWorkerData())
-                .addTag("IPERF_UP").build();
+                .addTag("IPERF_UP")
+                .addTag("backgroundIperf")
+                .build();
         upStreamUUID = upStream.getId();
 
         WorkContinuation continuation = mWorkManager.beginWith(downStream);
