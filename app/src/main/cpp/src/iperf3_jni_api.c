@@ -30,7 +30,6 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
         char *err_str = iperf_strerror(i_errno);
         // jni callback
         test_state_wrapper.jniCallback->on_error(&test_state_wrapper, err_str);
-        iperf_errexit(test, "error - %s", err_str);
     }
 
     iperf_free_test(test);
