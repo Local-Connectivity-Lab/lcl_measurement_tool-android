@@ -22,7 +22,7 @@ public class Iperf3Client {
 
     ///////////////////// NATIVE FUNCTION //////////////////////////
 
-    private native void runIperfTest(Iperf3Config testConfig, Iperf3Callback callback, String cacheDir);
+    private native int runIperfTest(Iperf3Config testConfig, Iperf3Callback callback, String cacheDir);
 
     private native void stopIperfTest();
 
@@ -40,7 +40,13 @@ public class Iperf3Client {
         Log.d(TAG, "callback: " + callback.toString());
 
         String cacheTemplate = cacheDir.toString() + "/iperf3.XXXXXX";
-        runIperfTest(testConfig, callback, cacheTemplate);
+
+        // Translate from the "c-style" error return codes to java-style exceptions so calling code
+        // can operate cleanly.
+        if (runIperfTest(testConfig, callback, cacheTemplate) != 0) {
+            // TODO(matt9j) Propagate the error cause in the exception
+            throw new RuntimeException("Iperf test failed to run");
+        }
     }
 
     public void exec(String serverIp, String serverPort, boolean isDownMode) {

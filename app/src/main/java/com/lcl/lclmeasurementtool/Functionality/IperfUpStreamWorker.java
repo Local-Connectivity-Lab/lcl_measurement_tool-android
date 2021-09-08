@@ -29,18 +29,25 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
     @Override
     public Result doWork() {
         Log.d(TAG, "Beginning synchronous upstream work in thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
-        try {
-            prepareConfig();
-            prepareCallback();
 
-            if (!isStopped()) {
-                client.exec(config, callback, context.getCacheDir());
-            }
-            return isTestFailed ?
-                    Result.failure() : ( finalData == null ? Result.success() : Result.success(finalData));
-        } catch (Exception e) {
-            Log.e(TAG, "failed to run iperf test: " + e);
+        prepareConfig();
+        prepareCallback();
+
+        Log.d(TAG, "Beginning background test");
+        try {
+            client.exec(config, callback, context.getCacheDir());
+        } catch (RuntimeException e) {
+            // TODO(matt9j) Propagate the error cause to some kind of error reporting or app metrics!
+            Log.e(TAG, "Background test failed");
             return Result.failure();
+        }
+
+        if (finalData == null) {
+            Log.w(TAG, "Iperf worker completed successfully without returning final data");
+            return Result.success();
+        } else {
+            Log.i(TAG, "Iperf worker completed successfully");
+            return Result.success(finalData);
         }
     }
 }

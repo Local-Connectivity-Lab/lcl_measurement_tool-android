@@ -33,9 +33,20 @@ public class IperfDownStreamWorker extends AbstractIperfWorker {
         prepareCallback();
 
         Log.d(TAG, "Beginning background test");
-        client.exec(config, callback, context.getCacheDir());
-        Log.d(TAG, "Background test complete");
-        return isTestFailed ?
-                Result.failure() : ( finalData == null ? Result.success() : Result.success(finalData));
+        try {
+            client.exec(config, callback, context.getCacheDir());
+        } catch (RuntimeException e) {
+            // TODO(matt9j) Propagate the error cause to some kind of error reporting or app metrics!
+            Log.e(TAG, "Background test failed");
+            return Result.failure();
+        }
+
+        if (finalData == null) {
+            Log.w(TAG, "Iperf worker completed successfully without returning final data");
+            return Result.success();
+        } else {
+            Log.i(TAG, "Iperf worker completed successfully");
+            return Result.success(finalData);
+        }
     }
 }

@@ -18,7 +18,6 @@ public abstract class AbstractIperfWorker extends Worker {
     Iperf3Config config;
     protected Context context;
 
-    boolean isTestFailed;
     Data finalData;
 
     abstract void prepareConfig();
@@ -73,8 +72,6 @@ public abstract class AbstractIperfWorker extends Worker {
             @Override
             public void onError(String errMsg) {
                 Log.e(TAG, errMsg);
-                isTestFailed = true;
-                client.cancelTest();
             }
         };
     }
