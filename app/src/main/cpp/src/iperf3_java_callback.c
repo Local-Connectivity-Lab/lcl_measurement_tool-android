@@ -4,7 +4,7 @@
 
 #include "common_jni_util.h"
 #include "iperf3_java_callback.h"
-#include "iperf3_state_wrapper.h"
+#include "iperf_state_wrapper_interface.h"
 
 /******************************** Java 方法回调 start ********************************/
 void call_java_method(struct iperf_test_state *test, jmethodID  method_id, int argc, ...) {

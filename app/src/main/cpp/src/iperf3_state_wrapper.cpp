@@ -5,26 +5,52 @@
 
 #include <vector>
 
-int
-stop_wrapper(struct iperf_test_state *test_wrapper) {
-    // TODO(matt9j) This can be called from a concurrent context to run_wrapper, and cause race
-    //  conditions or failures. The standalone iperf binary relies on a single threaded client and
-    //  the OS signal taking over the single threaded context, which is not the case here.
-    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Entering stop_wrapper");
-    test_wrapper->iperf_test->done = 1;
-    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Exiting stop_wrapper");
-    return 0;
+static IperfStateWrapper iperf_wrapper = IperfStateWrapper();
+
+struct iperf_test_state * new_client_wrapper() {
+    return iperf_wrapper.create_new_test();
 }
 
-int
-run_wrapper(struct iperf_test_state *test_wrapper)
+int run_wrapper()
 {
+    return iperf_wrapper.run_test();
+}
+
+
+int stop_wrapper() {
+    return iperf_wrapper.stop_test();
+}
+
+void delete_client_wrapper() {
+    iperf_wrapper.finalize_test();
+}
+
+IperfStateWrapper::IperfStateWrapper() noexcept:
+        _test_state(),
+        _run_mutex(),
+        _stop_signal_mutex() {}
+
+struct iperf_test_state * IperfStateWrapper::create_new_test() {
+    _run_mutex.lock();
+    std::scoped_lock lock(_stop_signal_mutex);
+    _test_state.iperf_test = iperf_new_test();
+    if (!_test_state.iperf_test) {
+        _run_mutex.unlock();
+        return nullptr;
+    }
+
+    // Intentionally do not unlock the run mutex, will be released as part of the close function.
+    return &_test_state;
+}
+
+int IperfStateWrapper::run_test() {
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering run_wrapper");
+    std::scoped_lock lock(_run_mutex);
 
     /* Ignore SIGPIPE to simplify error handling */
     signal(SIGPIPE, SIG_IGN);
 
-    struct iperf_test * test = test_wrapper->iperf_test;
+    struct iperf_test * test = _test_state.iperf_test;
     switch (test->role) {
         case 's':
             __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Instructed to start an unsupported server!");
@@ -96,4 +122,21 @@ run_wrapper(struct iperf_test_state *test_wrapper)
 
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting run_wrapper");
     return 0;
+}
+
+int IperfStateWrapper::stop_test() {
+    std::scoped_lock lock(_stop_signal_mutex);
+    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Entering stop_wrapper");
+    if (_test_state.iperf_test) {
+        // TODO(matt9j) Done really needs to be atomic : /
+        _test_state.iperf_test->done = 1;
+    }
+    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Exiting stop_wrapper");
+    return 0;
+}
+
+void IperfStateWrapper::finalize_test() {
+    std::scoped_lock lock(_run_mutex, _stop_signal_mutex);
+    iperf_free_test(_test_state.iperf_test);
+    _run_mutex.unlock();
 }
