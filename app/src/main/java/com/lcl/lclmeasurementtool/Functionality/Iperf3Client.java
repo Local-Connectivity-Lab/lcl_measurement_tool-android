@@ -3,6 +3,7 @@ package com.lcl.lclmeasurementtool.Functionality;
 import android.os.Looper;
 import android.util.Log;
 
+import java.io.File;
 import java.util.concurrent.Executor;
 
 public class Iperf3Client {
@@ -21,13 +22,13 @@ public class Iperf3Client {
 
     ///////////////////// NATIVE FUNCTION //////////////////////////
 
-    private native void runIperfTest(Iperf3Config testConfig, Iperf3Callback callback);
+    private native void runIperfTest(Iperf3Config testConfig, Iperf3Callback callback, String cacheDir);
 
     private native void stopIperfTest();
 
     ////////////////////// JAVA INVOCATION ////////////////////////
 
-    public void exec(Iperf3Config testConfig, Iperf3Callback callback) {
+    public void exec(Iperf3Config testConfig, Iperf3Callback callback, File cacheDir) {
 //        iperfThread = new Thread(() -> {
 //                Looper.prepare();
 //                Looper.loop();
@@ -37,8 +38,9 @@ public class Iperf3Client {
         Log.i(TAG, "Running iperf client exec");
         Log.d(TAG, "testConfig: " + testConfig.toString());
         Log.d(TAG, "callback: " + callback.toString());
-        runIperfTest(testConfig, callback);
-        Log.i(TAG, String.valueOf(stopTesting));
+
+        String cacheTemplate = cacheDir.toString() + "/iperf3.XXXXXX";
+        runIperfTest(testConfig, callback, cacheTemplate);
     }
 
     public void exec(String serverIp, String serverPort, boolean isDownMode) {

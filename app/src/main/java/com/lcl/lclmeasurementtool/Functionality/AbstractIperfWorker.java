@@ -16,7 +16,7 @@ public abstract class AbstractIperfWorker extends Worker {
     Iperf3Client client;
     Iperf3Callback callback;
     Iperf3Config config;
-    private Context context;
+    protected Context context;
 
     boolean isTestFailed;
     Data finalData;

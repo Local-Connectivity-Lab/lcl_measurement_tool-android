@@ -33,7 +33,9 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
             prepareConfig();
             prepareCallback();
 
-            if (!isStopped()) client.exec(config, callback);
+            if (!isStopped()) {
+                client.exec(config, callback, context.getCacheDir());
+            }
             return isTestFailed ?
                     Result.failure() : ( finalData == null ? Result.success() : Result.success(finalData));
         } catch (Exception e) {

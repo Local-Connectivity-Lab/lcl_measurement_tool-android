@@ -33,7 +33,7 @@ public class IperfDownStreamWorker extends AbstractIperfWorker {
         prepareCallback();
 
         Log.d(TAG, "Beginning background test");
-        client.exec(config, callback);
+        client.exec(config, callback, context.getCacheDir());
         Log.d(TAG, "Background test complete");
         return isTestFailed ?
                 Result.failure() : ( finalData == null ? Result.success() : Result.success(finalData));

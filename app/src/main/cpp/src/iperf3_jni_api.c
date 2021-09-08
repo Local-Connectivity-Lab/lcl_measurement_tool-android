@@ -8,19 +8,18 @@
 struct iperf_test_state test_state_wrapper;
 
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_runIperfTest(
-        JNIEnv *env, jobject iperfClient, jobject iperfConfig, jobject callback) {
+        JNIEnv *env, jobject iperfClient, jobject iperfConfig, jobject callback, jstring cacheDirTemplate) {
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering runIperfTest JNI function");
 
-    struct iperf_test *test;
-
     test_state_wrapper.iperf_test = iperf_new_test();
-    test = test_state_wrapper.iperf_test;
 
-    if (!test)
-        iperf_errexit(NULL, "create new test error - %s", iperf_strerror(i_errno));
+    if (!test_state_wrapper.iperf_test) {
+        __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__,"Unable to allocate test");
+        return;
+    }
 
-    iperf_defaults(test);    /* sets defaults */
-    parse_java_config(env, &test_state_wrapper, iperfConfig);
+    iperf_defaults(test_state_wrapper.iperf_test);    /* sets defaults */
+    parse_java_config(env, &test_state_wrapper, iperfConfig, cacheDirTemplate);
 
     if (construct_java_callback(env, &test_state_wrapper, callback) < 0) {
         // TODO(matt9j) Need error handling here?
@@ -32,7 +31,7 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
         test_state_wrapper.jniCallback->on_error(&test_state_wrapper, err_str);
     }
 
-    iperf_free_test(test);
+    iperf_free_test(test_state_wrapper.iperf_test);
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting runIperfTest JNI function");
 }
 

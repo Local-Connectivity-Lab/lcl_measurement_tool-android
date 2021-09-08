@@ -14,6 +14,7 @@ import androidx.work.WorkContinuation;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
@@ -22,7 +23,7 @@ public class NetworkTestViewModel extends ViewModel {
 
     private static final String TAG = "NetworkTestViewModel";
 
-    WorkManager mWorkManager;
+    private WorkManager mWorkManager;
 
     private LiveData<List<WorkInfo>> mSavedIperfDownInfo;
     private LiveData<List<WorkInfo>> mSavedIperfUpInfo;
@@ -63,11 +64,11 @@ public class NetworkTestViewModel extends ViewModel {
     }
 
     public void cancel() {
-
-        // TODO: cancel specific work with Tag
         Log.e(TAG, "cancel tests");
         mWorkManager.cancelWorkById(downStreamUUID);
         mWorkManager.cancelWorkById(upStreamUUID);
+        // TODO: Clarify the background work model we want exposed to end users
+        mWorkManager.cancelAllWorkByTag("backgroundIperf");
     }
 
     private Data prepareIperfWorkerData() {

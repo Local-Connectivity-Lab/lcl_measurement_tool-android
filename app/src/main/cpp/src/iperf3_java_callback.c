@@ -105,7 +105,7 @@ int construct_java_callback(JNIEnv *env, struct iperf_test_state *test, jobject 
     return 0;
 }
 
-int parse_java_config(JNIEnv *env, struct iperf_test_state *test_wrapper, jobject config) {
+int parse_java_config(JNIEnv *env, struct iperf_test_state *test_wrapper, jobject config, jstring cacheDirTemplate) {
     struct iperf_test* test = test_wrapper->iperf_test;
     jclass class = (*env)->GetObjectClass(env, config);
     /**
@@ -157,9 +157,11 @@ int parse_java_config(JNIEnv *env, struct iperf_test_state *test_wrapper, jobjec
     jfieldID parallels_field = (*env)->GetFieldID(env, class, "parallels", "I");
     jint parallels = (*env)->GetIntField(env, config, parallels_field);
     iperf_set_test_num_streams(test, parallels);
+
     // --tmp-path
-    char *tmp_path = getSafeTmpPath(env);
+    const char * tmp_path = (*env)->GetStringUTFChars(env, cacheDirTemplate, NULL);
     iperf_set_test_template(test, tmp_path);
+
     // -i
     jfieldID interval_field = (*env)->GetFieldID(env, class, "interval", "D");
     double interval = (*env)->GetDoubleField(env, config, interval_field);
