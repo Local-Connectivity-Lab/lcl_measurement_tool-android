@@ -1,11 +1,12 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
-import android.os.Looper;
 import android.util.Log;
-
 import java.io.File;
-import java.util.concurrent.Executor;
+import java.lang.Thread;
 
+/**
+ * A wrapper narrowly translating the c-language iperf API to/from java.
+ */
 public class Iperf3Client {
     private static final String TAG = "Iperf3Client";
 
@@ -13,28 +14,16 @@ public class Iperf3Client {
         System.loadLibrary("lcl_measurement_tool_native");
     }
 
-    private boolean stopTesting;
-    Thread iperfThread;
+    public Iperf3Client() {};
 
-    public Iperf3Client() {
-        this.stopTesting = false;
-    }
-
-    ///////////////////// NATIVE FUNCTION //////////////////////////
+    ///////////////////// NATIVE FUNCTIONS //////////////////////////
 
     private native int runIperfTest(Iperf3Config testConfig, Iperf3Callback callback, String cacheDir);
-
     private native void stopIperfTest();
 
     ////////////////////// JAVA INVOCATION ////////////////////////
 
     public void exec(Iperf3Config testConfig, Iperf3Callback callback, File cacheDir) {
-//        iperfThread = new Thread(() -> {
-//                Looper.prepare();
-//                Looper.loop();
-//        });
-//        System.out.println("Current thread started is " + iperfThread.getName());
-//        iperfThread.start();
         Log.i(TAG, "Running iperf client exec");
         Log.d(TAG, "testConfig: " + testConfig.toString());
         Log.d(TAG, "callback: " + callback.toString());
@@ -49,18 +38,8 @@ public class Iperf3Client {
         }
     }
 
-    public void exec(String serverIp, String serverPort, boolean isDownMode) {
-        throw new UnsupportedOperationException("Have not implemented simple exec configuration");
-    }
-
     public void cancelTest() {
-//        System.out.println("stop " + Thread.currentThread().getName());
-//        cancelTest();
-        System.out.println("cancel test");
+        Log.v(TAG, "Iperf cancel in thread" + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
         stopIperfTest();
-//        iperfThread.interrupt();
-//        if (iperfThread.getState() == Thread.State.RUNNABLE) {
-//
-//        }
     }
 }

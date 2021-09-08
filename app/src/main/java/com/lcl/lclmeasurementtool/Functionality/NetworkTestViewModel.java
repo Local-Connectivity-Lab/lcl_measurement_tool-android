@@ -1,14 +1,12 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
 import android.content.Context;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.work.Data;
-import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkContinuation;
 import androidx.work.WorkInfo;
@@ -17,7 +15,6 @@ import androidx.work.WorkManager;
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CancellationException;
 
 public class NetworkTestViewModel extends ViewModel {
 
