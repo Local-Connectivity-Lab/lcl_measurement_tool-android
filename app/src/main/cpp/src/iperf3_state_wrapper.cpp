@@ -77,7 +77,9 @@ run_wrapper(struct iperf_test_state *test_wrapper)
             }
             if (iperf_run_client(test) < 0) {
                 __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Failed to run client: %s", iperf_strerror(i_errno));
-                iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
+                iperf_delete_pidfile(test);
+                signal(SIGPIPE, SIG_DFL);
+                return -1;
             }
             iperf_delete_pidfile(test);
             break;
