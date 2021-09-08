@@ -6,6 +6,7 @@ import android.util.Log;
 import java.util.concurrent.Executor;
 
 public class Iperf3Client {
+    private static final String TAG = "Iperf3Client";
 
     static {
         System.loadLibrary("lcl_measurement_tool_native");
@@ -33,9 +34,11 @@ public class Iperf3Client {
 //        });
 //        System.out.println("Current thread started is " + iperfThread.getName());
 //        iperfThread.start();
-        Log.i("IPERF CLIENT", "Running iperf client testConfig exec");
+        Log.i(TAG, "Running iperf client exec");
+        Log.d(TAG, "testConfig: " + testConfig.toString());
+        Log.d(TAG, "callback: " + callback.toString());
         runIperfTest(testConfig, callback);
-        Log.i("IPERF CLIENT", String.valueOf(stopTesting));
+        Log.i(TAG, String.valueOf(stopTesting));
     }
 
     public void exec(String serverIp, String serverPort, boolean isDownMode) {

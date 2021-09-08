@@ -10,20 +10,24 @@ stop_wrapper(struct iperf_test_state *test_wrapper) {
     // TODO(matt9j) This can be called from a concurrent context to run_wrapper, and cause race
     //  conditions or failures. The standalone iperf binary relies on a single threaded client and
     //  the OS signal taking over the single threaded context, which is not the case here.
+    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Entering stop_wrapper");
     test_wrapper->iperf_test->done = 1;
+    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Exiting stop_wrapper");
     return 0;
 }
 
 int
 run_wrapper(struct iperf_test_state *test_wrapper)
 {
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering run_wrapper");
+
     /* Ignore SIGPIPE to simplify error handling */
     signal(SIGPIPE, SIG_IGN);
 
     struct iperf_test * test = test_wrapper->iperf_test;
     switch (test->role) {
         case 's':
-            __android_log_print(ANDROID_LOG_ERROR, "lcl_meas", "Instructed to start an unsupported server!");
+            __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Instructed to start an unsupported server!");
             break;
 //            if (test->daemon) {
 //                int rc;
@@ -65,21 +69,21 @@ run_wrapper(struct iperf_test_state *test_wrapper)
 //            iperf_delete_pidfile(test);
 //            break;
         case 'c':
-            __android_log_print(ANDROID_LOG_VERBOSE, "lcl_meas", "Running client in run_wrapper");
+            __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Running client in run_wrapper");
             if (iperf_create_pidfile(test) < 0) {
-                __android_log_print(ANDROID_LOG_ERROR, "lcl_meas", "Failed to create pidfile");
+                __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Failed to create pidfile");
                 i_errno = IEPIDFILE;
                 iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
             }
             if (iperf_run_client(test) < 0) {
-                __android_log_print(ANDROID_LOG_ERROR, "lcl_meas", "Failed to run client");
+                __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Failed to run client: %s", iperf_strerror(i_errno));
                 iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
             }
             iperf_delete_pidfile(test);
             break;
         default:
             // TODO(matt9j) Can probably be eliminated???
-            __android_log_print(ANDROID_LOG_ERROR, "lcl_meas", "Fell through to usage case");
+            __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Fell through to usage case");
             usage();
             break;
     }
@@ -88,5 +92,6 @@ run_wrapper(struct iperf_test_state *test_wrapper)
 //    iperf_catch_sigend(SIG_DFL);
     signal(SIGPIPE, SIG_DFL);
 
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting run_wrapper");
     return 0;
 }

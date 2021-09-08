@@ -9,7 +9,7 @@ struct iperf_test_state test_state_wrapper;
 
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_runIperfTest(
         JNIEnv *env, jobject iperfClient, jobject iperfConfig, jobject callback) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "lcl_meas", "Running client exec JNI function");
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering runIperfTest JNI function");
 
     struct iperf_test *test;
 
@@ -33,10 +33,13 @@ JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
     }
 
     iperf_free_test(test);
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting runIperfTest JNI function");
 }
 
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stopIperfTest (JNIEnv * env, jobject iperfClient) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "lcl_meas", "Running client stop JNI function");
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering stopIperfTest JNI function");
 
     stop_wrapper(&test_state_wrapper);
+
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting stopIperfTest JNI function");
 }

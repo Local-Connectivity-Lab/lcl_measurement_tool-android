@@ -20,7 +20,7 @@ import java.util.concurrent.CancellationException;
 
 public class NetworkTestViewModel extends ViewModel {
 
-    private static final String TAG = "Network Test ViewModel";
+    private static final String TAG = "NetworkTestViewModel";
 
     WorkManager mWorkManager;
 
