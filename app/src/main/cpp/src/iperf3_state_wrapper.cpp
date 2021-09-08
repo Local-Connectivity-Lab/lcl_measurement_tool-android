@@ -52,48 +52,6 @@ int IperfStateWrapper::run_test() {
 
     struct iperf_test * test = _test_state.iperf_test;
     switch (test->role) {
-        case 's':
-            __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Instructed to start an unsupported server!");
-            break;
-//            if (test->daemon) {
-//                int rc;
-//                rc = daemon(0, 0);
-//                if (rc < 0) {
-//                    i_errno = IEDAEMON;
-//                    iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
-//                }
-//            }
-//            if (iperf_create_pidfile(test) < 0) {
-//                i_errno = IEPIDFILE;
-//                iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
-//            }
-//            for (;;) {
-//                int rc;
-//                rc = iperf_run_server(test);
-//                test->server_last_run_rc =rc;
-//                if (rc < 0) {
-//                    iperf_err(test, "error - %s", iperf_strerror(i_errno));
-//                    if (test->json_output) {
-//                        if (iperf_json_finish(test) < 0)
-//                            return -1;
-//                    }
-//                    iflush(test);
-//
-//                    if (rc < -1) {
-//                        iperf_errexit(test, "exiting");
-//                    }
-//                }
-//                iperf_reset_test(test);
-//                if (iperf_get_test_one_off(test) && rc != 2) {
-//                    /* Authentication failure doesn't count for 1-off test */
-//                    if (rc < 0 && i_errno == IEAUTHTEST) {
-//                        continue;
-//                    }
-//                    break;
-//                }
-//            }
-//            iperf_delete_pidfile(test);
-//            break;
         case 'c':
             __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Running client in run_wrapper");
             if (iperf_create_pidfile(test) < 0) {
@@ -109,17 +67,14 @@ int IperfStateWrapper::run_test() {
             }
             iperf_delete_pidfile(test);
             break;
+        case 's':
         default:
-            // TODO(matt9j) Can probably be eliminated???
-            __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Fell through to usage case");
-            usage();
-            break;
+            __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Instructed to start an unsupported role %c!", test->role);
+            signal(SIGPIPE, SIG_DFL);
+            return -1;
     }
 
-    // TODO(matt9j) Can be removed if above is removed
-//    iperf_catch_sigend(SIG_DFL);
     signal(SIGPIPE, SIG_DFL);
-
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting run_wrapper");
     return 0;
 }
