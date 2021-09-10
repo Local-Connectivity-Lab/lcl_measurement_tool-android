@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
                 String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
                 boolean isDownModeInProgress = progress.getBoolean("IS_DOWN_MODE", false);
                 runOnUiThread(() -> {
-                    TextView speedTest = (isDownModeInProgress) ? findViewById(R.id.upload).findViewById(R.id.data) : findViewById(R.id.download).findViewById(R.id.data);
+                    TextView speedTest = (isDownModeInProgress) ? findViewById(R.id.download).findViewById(R.id.data) : findViewById(R.id.upload).findViewById(R.id.data);
                     speedTest.setTextColor(getColor(R.color.light_gray));
                     speedTest.setText(bandWidth);
                 });
@@ -291,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
                 String finalResult = output.getString("FINAL_RESULT");
                 boolean isDownModeInSucceeded = output.getBoolean("IS_DOWN_MODE", false);
                 runOnUiThread(() -> {
-                    TextView speedTest = (isDownModeInSucceeded) ? findViewById(R.id.upload).findViewById(R.id.data) : findViewById(R.id.download).findViewById(R.id.data);
+                    TextView speedTest = (isDownModeInSucceeded) ? findViewById(R.id.download).findViewById(R.id.data) : findViewById(R.id.upload).findViewById(R.id.data);
                     speedTest.setTextColor(getColor(R.color.white));
                     speedTest.setText(finalResult);
                     if (workInfo.getTags().contains("IPERF_UP")) {

@@ -21,7 +21,7 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
         config = new Iperf3Config();
         config.mServerAddr = getInputData().getString("SERVER_ADDR");
         config.mServerPort = getInputData().getInt("SERVER_PORT", 5201);
-        config.isDownMode = true;
+        config.isDownMode = false;
         Log.i(TAG, config.mServerAddr + ":" + config.mServerPort + " isDown="+config.isDownMode);
     }
 

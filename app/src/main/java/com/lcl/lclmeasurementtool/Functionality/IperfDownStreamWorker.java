@@ -22,7 +22,7 @@ public class IperfDownStreamWorker extends AbstractIperfWorker {
         config = new Iperf3Config();
         config.mServerAddr = getInputData().getString("SERVER_ADDR");
         config.mServerPort = getInputData().getInt("SERVER_PORT", 5201);
-        config.isDownMode = false;
+        config.isDownMode = true;
     }
 
     @NonNull
