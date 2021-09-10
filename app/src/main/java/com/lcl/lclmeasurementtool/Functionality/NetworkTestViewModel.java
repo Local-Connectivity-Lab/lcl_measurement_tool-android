@@ -68,7 +68,7 @@ public class NetworkTestViewModel extends ViewModel {
     }
 
     public void cancel() {
-        Log.e(TAG, "cancel tests");
+        Log.v(TAG, "cancel tests");
         mWorkManager.cancelWorkById(downStreamUUID);
         mWorkManager.cancelWorkById(upStreamUUID);
         // TODO: Clarify the background work model we want exposed to end users
