@@ -230,6 +230,17 @@ void     iperf_stats_callback(struct iperf_test * test);
 void     iperf_reporter_callback(struct iperf_test * test);
 
 /**
+ * iperf_set_external_interval_report_callback -- Set a pluggable external function for interval statistics reporting
+ */
+void     iperf_set_external_interval_report_callback(struct iperf_test * test, void (*external_interval_report_callback)(float, float, char[], char[]));
+
+/**
+ * iperf_set_external_summary_report_callback -- Set a pluggable external function for summary statistics reporting
+ */
+void     iperf_set_external_summary_report_callback(struct iperf_test * test, void (*external_summary_report_callback)(float, float, char[], char[]));
+
+
+/**
  * iperf_new_test -- return a new iperf_test with default values
  *
  * returns NULL on failure

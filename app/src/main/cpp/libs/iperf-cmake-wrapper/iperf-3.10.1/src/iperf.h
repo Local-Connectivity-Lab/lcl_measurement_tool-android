@@ -371,6 +371,10 @@ struct iperf_test
     void      (*on_connect)(struct iperf_test *);
     void      (*on_test_finish)(struct iperf_test *);
 
+    /* external callbacks */
+    void      (*external_interval_report_callback)(float start, float end, char sent_bytes[], char bandwidth[]);
+    void      (*external_summary_report_callback)(float start, float end, char sent_bytes[], char bandwidth[]);
+
     /* cJSON handles for use when in -J mode */\
     cJSON *json_top;
     cJSON *json_start;
