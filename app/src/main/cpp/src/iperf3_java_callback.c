@@ -123,8 +123,7 @@ int parse_java_config(JNIEnv *env, struct iperf_test_state *test_wrapper, jobjec
     // -f
     jfieldID unit_field = (*env)->GetFieldID(env, class, "formatUnit", "C");
     jchar unit = (*env)->GetCharField(env, config, unit_field);
-    // TODO(matt9j) Removed from iperf API
-    //iperf_set_test_unit_format(test, (char) unit);
+    iperf_set_test_unit_format(test, (char) unit);
 
     // -P
     jfieldID parallels_field = (*env)->GetFieldID(env, class, "parallels", "I");
