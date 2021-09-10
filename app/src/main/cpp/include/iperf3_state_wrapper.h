@@ -20,8 +20,9 @@ public:
     void send_summary_report(float, float, char[], char[]);
 private:
     struct iperf_test_state _test_state;
-    std::mutex _stop_signal_mutex;
-    std::mutex _run_mutex;
 };
+
+extern std::mutex singleton_mutex;
+extern IperfStateWrapper* global_state_wrapper;
 
 #endif //LCL_MEASUREMENT_TOOL_IPERF3_STATE_WRAPPER_H

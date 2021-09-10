@@ -4,39 +4,59 @@
 #include "iperf3_java_callback.h"
 #include "iperf_api.h"
 
-#include <vector>
+#include <mutex>
+
+std::mutex singleton_mutex;
+IperfStateWrapper* global_state_wrapper;
 
 extern "C" {
 
 void
 send_interval_report(float start, float end, char sent_bytes[], char bandwidth[]) {
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Got interval report callback");
-    // TODO(matt9j) Plumb to global...
-    // iperf_wrapper.send_interval_report(start, end, sent_bytes, bandwidth);
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Enter interval report global function");
+    {
+        std::scoped_lock lock(singleton_mutex);
+
+        if (global_state_wrapper) {
+            __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__,
+                                "Interval report acquired lock");
+            global_state_wrapper->send_interval_report(start, end, sent_bytes, bandwidth);
+        }
+    }
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exit interval report global function");
 }
 
 void
 send_summary_report(float start, float end, char sent_bytes[], char bandwidth[]) {
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Got summary report callback");
-    // TODO(matt9j) Plumb to global...
-    //iperf_wrapper.send_summary_report(start, end, sent_bytes, bandwidth);
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Enter summary report global function");
+    {
+        std::scoped_lock lock(singleton_mutex);
+
+        if (global_state_wrapper) {
+            __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__,
+                                "Enter summary report global function locked section");
+            global_state_wrapper->send_summary_report(start, end, sent_bytes, bandwidth);
+        }
+    }
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exit summary report global function");
 }
 
 int
 stop_wrapper() {
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Got stop wrapper global call!");
-    // TODO(matt9j) Plumb to global...
-    return 0;
+    std::scoped_lock lock(singleton_mutex);
+
+    if (global_state_wrapper) {
+        global_state_wrapper->stop_test();
+        return 0;
+    }
+    return 1;
 }
 
-}
+} // extern "c"
 
 IperfStateWrapper::IperfStateWrapper() noexcept:
-        _test_state(),
-        _run_mutex(),
-        _stop_signal_mutex() {
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Constructing a state wrapper");
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Test pointer is %p", _test_state.iperf_test);
+    _test_state()
+{
     _test_state.iperf_test = iperf_new_test();
     if (!_test_state.iperf_test) {
         __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Failed to allocate a new iperf test");
@@ -44,9 +64,19 @@ IperfStateWrapper::IperfStateWrapper() noexcept:
         exit(1);
     }
     iperf_defaults(_test_state.iperf_test);    /* sets defaults */
+
+    {
+        std::scoped_lock lock(singleton_mutex);
+        global_state_wrapper = this;
+    }
 }
 
 IperfStateWrapper::~IperfStateWrapper() noexcept {
+    {
+        std::scoped_lock lock(singleton_mutex);
+        global_state_wrapper = nullptr;
+    }
+
     if (_test_state.iperf_test) {
         iperf_free_test(_test_state.iperf_test);
         _test_state.iperf_test = nullptr;
