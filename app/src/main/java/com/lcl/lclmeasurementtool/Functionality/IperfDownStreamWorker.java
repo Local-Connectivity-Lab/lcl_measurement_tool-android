@@ -18,11 +18,12 @@ public class IperfDownStreamWorker extends AbstractIperfWorker {
     }
 
     void prepareConfig() {
-        Log.d(TAG, "now preparing config for downstream");
+        Log.d(TAG, "Preparing downstream test config");
         config = new Iperf3Config();
         config.mServerAddr = getInputData().getString("SERVER_ADDR");
         config.mServerPort = getInputData().getInt("SERVER_PORT", 5201);
         config.isDownMode = true;
+        Log.d(TAG, config.mServerAddr + ":" + config.mServerPort + " isDown="+config.isDownMode);
     }
 
     @NonNull
