@@ -8,6 +8,7 @@
 
 std::mutex singleton_mutex;
 IperfStateWrapper* global_state_wrapper;
+bool global_stop_requested = false;
 
 extern "C" {
 
@@ -21,6 +22,15 @@ send_interval_report(float start, float end, char sent_bytes[], char bandwidth[]
             __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__,
                                 "Interval report acquired lock");
             global_state_wrapper->send_interval_report(start, end, sent_bytes, bandwidth);
+
+            if (global_stop_requested) {
+                // There is a race condition where the iperf client will reset the "done" flag while
+                // beginning communication with the server in the run_iperf_client function :/
+                //
+                // This check will safely set the done flag again if a stop has been requested and
+                // the global wrapper is present.
+                global_state_wrapper->stop_test();
+            }
         }
     }
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exit interval report global function");
@@ -36,6 +46,15 @@ send_summary_report(float start, float end, char sent_bytes[], char bandwidth[])
             __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__,
                                 "Enter summary report global function locked section");
             global_state_wrapper->send_summary_report(start, end, sent_bytes, bandwidth);
+
+            if (global_stop_requested) {
+                // There is a race condition where the iperf client will reset the "done" flag while
+                // beginning communication with the server in the run_iperf_client function :/
+                //
+                // This check will safely set the done flag again if a stop has been requested and
+                // the global wrapper is present.
+                global_state_wrapper->stop_test();
+            }
         }
     }
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exit summary report global function");
@@ -45,10 +64,13 @@ int
 stop_wrapper() {
     std::scoped_lock lock(singleton_mutex);
 
+    global_stop_requested = true;
+
     if (global_state_wrapper) {
         global_state_wrapper->stop_test();
         return 0;
     }
+    __android_log_print(ANDROID_LOG_WARN, __FILE_NAME__, "Stop called with no global allocated");
     return 1;
 }
 
@@ -67,7 +89,20 @@ IperfStateWrapper::IperfStateWrapper() noexcept:
 
     {
         std::scoped_lock lock(singleton_mutex);
+        if (global_state_wrapper) {
+            // There is already a global pointer!!!
+            __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Inconsistent global state pointer");
+            __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Intentionally crashing with nonzero exit");
+            exit(1);
+        }
+
         global_state_wrapper = this;
+
+        if (global_stop_requested) {
+            // Handle the edge case that the stop_wrapper was called before the state wrapper was
+            // initialized.
+            stop_test();
+        }
     }
 }
 
@@ -75,6 +110,7 @@ IperfStateWrapper::~IperfStateWrapper() noexcept {
     {
         std::scoped_lock lock(singleton_mutex);
         global_state_wrapper = nullptr;
+        global_stop_requested = false;
     }
 
     if (_test_state.iperf_test) {

@@ -24,5 +24,6 @@ private:
 
 extern std::mutex singleton_mutex;
 extern IperfStateWrapper* global_state_wrapper;
+extern bool global_stop_requested;
 
 #endif //LCL_MEASUREMENT_TOOL_IPERF3_STATE_WRAPPER_H
