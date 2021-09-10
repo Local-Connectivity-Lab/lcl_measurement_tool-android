@@ -128,12 +128,8 @@ IperfStateWrapper::register_callbacks(JNIEnv *javaEnv, jobject iperfConfig, jobj
         return false;
     }
 
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "constructed callback structure");
-
     iperf_set_external_interval_report_callback(_test_state.iperf_test, ::send_interval_report);
     iperf_set_external_summary_report_callback(_test_state.iperf_test, ::send_summary_report);
-
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "registered test callbacks");
 
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting register_callbacks");
     return true;
@@ -141,7 +137,7 @@ IperfStateWrapper::register_callbacks(JNIEnv *javaEnv, jobject iperfConfig, jobj
 
 int
 IperfStateWrapper::run_test() {
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering run_wrapper");
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering run_test");
 
     /* Ignore SIGPIPE to simplify error handling */
     signal(SIGPIPE, SIG_IGN);
@@ -149,7 +145,6 @@ IperfStateWrapper::run_test() {
     struct iperf_test * test = _test_state.iperf_test;
     switch (test->role) {
         case 'c':
-            __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Running client in run_wrapper");
             if (iperf_create_pidfile(test) < 0) {
                 __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Failed to create pidfile");
                 i_errno = IEPIDFILE;
@@ -177,19 +172,18 @@ IperfStateWrapper::run_test() {
     }
 
     signal(SIGPIPE, SIG_DFL);
-    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting run_wrapper");
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting run_test");
     return 0;
 }
 
 int
 IperfStateWrapper::stop_test() {
-    // TODO(matt9j) Ensure this is robust when called from a different thread context!
-    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Entering stop_wrapper");
+    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Entering stop_test");
     if (_test_state.iperf_test) {
-        // TODO(matt9j) Done really needs to be atomic : /
+        // TODO(matt9j) Done really needs to be atomic since it is set and read from multiple contexts : /
         _test_state.iperf_test->done = 1;
     }
-    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Exiting stop_wrapper");
+    __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Exiting stop_test");
     return 0;
 }
 
