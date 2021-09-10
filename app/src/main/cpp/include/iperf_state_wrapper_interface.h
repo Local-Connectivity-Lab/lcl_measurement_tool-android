@@ -32,11 +32,6 @@ void send_summary_report(float start, float end, char sent_bytes[], char bandwid
 struct jni_callback {
     JNIEnv *env;
     jobject callbackObj;
-    /* descriptor: (Ljava/lang/String;I)V */
-    jmethodID connectingMethod;
-
-    /* descriptor: (Ljava/lang/String;ILjava/lang/String;I)V */
-    jmethodID connectedMethod;
 
     /* descriptor: (FFLjava/lang/String;Ljava/lang/String;)V */
     jmethodID intervalMethod;
