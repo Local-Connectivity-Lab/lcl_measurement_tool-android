@@ -87,6 +87,10 @@ IperfStateWrapper::IperfStateWrapper() noexcept:
     }
     iperf_defaults(_test_state.iperf_test);    /* sets defaults */
 
+    // Set receive timeout to something sane for the modern internet, not the default 120s.
+    _test_state.iperf_test->settings->rcv_timeout.secs = 5;
+    _test_state.iperf_test->settings->rcv_timeout.usecs = 0;
+
     {
         std::scoped_lock lock(singleton_mutex);
         if (global_state_wrapper) {
