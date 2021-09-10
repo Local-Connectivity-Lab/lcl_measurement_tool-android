@@ -1,51 +1,81 @@
 #include <android/log.h>
 
 #include "iperf3_state_wrapper.h"
+#include "iperf3_java_callback.h"
 #include "iperf_api.h"
 
 #include <vector>
 
-static IperfStateWrapper iperf_wrapper = IperfStateWrapper();
+extern "C" {
 
-struct iperf_test_state * new_client_wrapper() {
-    return iperf_wrapper.create_new_test();
+void
+send_interval_report(float start, float end, char sent_bytes[], char bandwidth[]) {
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Got interval report callback");
+    // TODO(matt9j) Plumb to global...
+    // iperf_wrapper.send_interval_report(start, end, sent_bytes, bandwidth);
 }
 
-int run_wrapper()
-{
-    return iperf_wrapper.run_test();
+void
+send_summary_report(float start, float end, char sent_bytes[], char bandwidth[]) {
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Got summary report callback");
+    // TODO(matt9j) Plumb to global...
+    //iperf_wrapper.send_summary_report(start, end, sent_bytes, bandwidth);
 }
 
-
-int stop_wrapper() {
-    return iperf_wrapper.stop_test();
+int
+stop_wrapper() {
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Got stop wrapper global call!");
+    // TODO(matt9j) Plumb to global...
+    return 0;
 }
 
-void delete_client_wrapper() {
-    iperf_wrapper.finalize_test();
 }
 
 IperfStateWrapper::IperfStateWrapper() noexcept:
         _test_state(),
         _run_mutex(),
-        _stop_signal_mutex() {}
-
-struct iperf_test_state * IperfStateWrapper::create_new_test() {
-    _run_mutex.lock();
-    std::scoped_lock lock(_stop_signal_mutex);
+        _stop_signal_mutex() {
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Constructing a state wrapper");
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Test pointer is %p", _test_state.iperf_test);
     _test_state.iperf_test = iperf_new_test();
     if (!_test_state.iperf_test) {
-        _run_mutex.unlock();
-        return nullptr;
+        __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Failed to allocate a new iperf test");
+        __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Intentionally crashing with nonzero exit");
+        exit(1);
     }
-
-    // Intentionally do not unlock the run mutex, will be released as part of the close function.
-    return &_test_state;
+    iperf_defaults(_test_state.iperf_test);    /* sets defaults */
 }
 
-int IperfStateWrapper::run_test() {
+IperfStateWrapper::~IperfStateWrapper() noexcept {
+    if (_test_state.iperf_test) {
+        iperf_free_test(_test_state.iperf_test);
+        _test_state.iperf_test = nullptr;
+    }
+}
+
+bool
+IperfStateWrapper::register_callbacks(JNIEnv *javaEnv, jobject iperfConfig, jobject callback, jstring cacheDirTemplate) {
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering register_callbacks");
+    parse_java_config(javaEnv, &_test_state, iperfConfig, cacheDirTemplate);
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "parsed java config");
+    if (construct_java_callback(javaEnv, &_test_state, callback) < 0) {
+        return false;
+    }
+
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "constructed callback structure");
+
+    iperf_set_external_interval_report_callback(_test_state.iperf_test, ::send_interval_report);
+    iperf_set_external_summary_report_callback(_test_state.iperf_test, ::send_summary_report);
+
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "registered test callbacks");
+
+    __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Exiting register_callbacks");
+    return true;
+}
+
+int
+IperfStateWrapper::run_test() {
     __android_log_print(ANDROID_LOG_VERBOSE, __FILE_NAME__, "Entering run_wrapper");
-    std::scoped_lock lock(_run_mutex);
 
     /* Ignore SIGPIPE to simplify error handling */
     signal(SIGPIPE, SIG_IGN);
@@ -57,10 +87,16 @@ int IperfStateWrapper::run_test() {
             if (iperf_create_pidfile(test) < 0) {
                 __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Failed to create pidfile");
                 i_errno = IEPIDFILE;
-                iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
+                signal(SIGPIPE, SIG_DFL);
+                return -1;
             }
             if (iperf_run_client(test) < 0) {
                 __android_log_print(ANDROID_LOG_ERROR, __FILE_NAME__, "Failed to run client: %s", iperf_strerror(i_errno));
+
+                // jni callback
+                char *err_str = iperf_strerror(i_errno);
+                _test_state.jniCallback.on_error(&_test_state, err_str);
+
                 iperf_delete_pidfile(test);
                 signal(SIGPIPE, SIG_DFL);
                 return -1;
@@ -79,8 +115,9 @@ int IperfStateWrapper::run_test() {
     return 0;
 }
 
-int IperfStateWrapper::stop_test() {
-    std::scoped_lock lock(_stop_signal_mutex);
+int
+IperfStateWrapper::stop_test() {
+    // TODO(matt9j) Ensure this is robust when called from a different thread context!
     __android_log_print(ANDROID_LOG_INFO, __FILE_NAME__, "Entering stop_wrapper");
     if (_test_state.iperf_test) {
         // TODO(matt9j) Done really needs to be atomic : /
@@ -90,8 +127,12 @@ int IperfStateWrapper::stop_test() {
     return 0;
 }
 
-void IperfStateWrapper::finalize_test() {
-    std::scoped_lock lock(_run_mutex, _stop_signal_mutex);
-    iperf_free_test(_test_state.iperf_test);
-    _run_mutex.unlock();
+void
+IperfStateWrapper::send_interval_report(float start, float end, char sent_bytes[], char bandwidth[]) {
+    _test_state.jniCallback.on_interval(&_test_state, start, end, sent_bytes, bandwidth);
+}
+
+void
+IperfStateWrapper::send_summary_report(float start, float end, char sent_bytes[], char bandwidth[]) {
+    _test_state.jniCallback.on_result(&_test_state, start, end, sent_bytes, bandwidth);
 }

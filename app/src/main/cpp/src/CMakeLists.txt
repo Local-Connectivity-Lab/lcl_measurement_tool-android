@@ -3,14 +3,11 @@ add_library( # Sets the name of the library.
         # Use shared linking
         SHARED
         # Paths to all source files
-        iperf3_jni_api.c
         iperf3_java_callback.c
-        iperf3_state_wrapper.cpp
         common_jni_util.c
-        ../include/common_jni_util.h
-        ../include/iperf3_java_callback.h
-        ../include/iperf3_jni_api.h
-        ../include/iperf3_state_wrapper.h
+        # Using a mix of c and c++
+        iperf3_state_wrapper.cpp
+        iperf3_jni_api.cpp
         )
 
 target_include_directories(lcl_measurement_tool_native PUBLIC ../include)

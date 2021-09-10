@@ -20,13 +20,11 @@ struct jni_callback;
 /* ------------------------- */
 /* - Function declarations - */
 /* ------------------------- */
-
-// Allocates a new iperf client and backing data structures.
-// If a test state pointer is returned, delete_client_wrapper must be called.
-struct iperf_test_state * new_client_wrapper();
-int run_wrapper();
 int stop_wrapper();
-void delete_client_wrapper();
+
+// Callback functions to report statistics
+void send_interval_report(float start, float end, char sent_bytes[], char bandwidth[]);
+void send_summary_report(float start, float end, char sent_bytes[], char bandwidth[]);
 
 /* ------------------------- */
 /* --- Struct definitions -- */
@@ -58,8 +56,8 @@ struct jni_callback {
 };
 
 struct iperf_test_state {
-    struct iperf_test * iperf_test ;
-    struct jni_callback * jniCallback;
+    struct iperf_test* iperf_test;
+    struct jni_callback jniCallback;
 };
 
 #ifdef __cplusplus

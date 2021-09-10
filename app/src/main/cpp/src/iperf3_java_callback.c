@@ -8,9 +8,8 @@
 
 /******************************** Java 方法回调 start ********************************/
 void call_java_method(struct iperf_test_state *test, jmethodID  method_id, int argc, ...) {
-    JNIEnv *env = test->jniCallback->env;
-    struct jni_callback *jniCallback = test->jniCallback;
-    jobject callbackObj = jniCallback->callbackObj;
+    JNIEnv *env = test->jniCallback.env;
+    jobject callbackObj = test->jniCallback.callbackObj;
 
     va_list arg_list;
     va_start(arg_list, argc);
@@ -18,49 +17,30 @@ void call_java_method(struct iperf_test_state *test, jmethodID  method_id, int a
     va_end(arg_list);
 }
 
-void on_connecting_java(struct iperf_test_state *test, char * ipr, int port) {
-    JNIEnv *env = test->jniCallback->env;
-    call_java_method(test, test->jniCallback->connectingMethod, 2, charToJstring(env, ipr), port);
-}
-
-void on_connected_java(struct iperf_test_state *test, char ipl[], int portl, char ipr[], int portr) {
-    JNIEnv *env = test->jniCallback->env;
-    call_java_method(test, test->jniCallback->connectedMethod, 4, charToJstring(env, ipl), portl,
-                     charToJstring(env, ipr), portr);
-}
-
 /* 共用报告带宽方法 */
 void on_report_bandwidth(struct iperf_test_state *test, jmethodID  method_id,
                     float start, float end, char send_bytes[], char band_width[]) {
-    JNIEnv *env = test->jniCallback->env;
+    JNIEnv *env = test->jniCallback.env;
     call_java_method(test, method_id, 4, start, end,
                      charToJstring(env, send_bytes), charToJstring(env, band_width), test->iperf_test->reverse);
 }
 
 void on_interval_java(struct iperf_test_state *test, float start, float end, char send_bytes[], char band_width[]) {
-    on_report_bandwidth(test, test->jniCallback->intervalMethod, start, end, send_bytes, band_width);
+    on_report_bandwidth(test, test->jniCallback.intervalMethod, start, end, send_bytes, band_width);
 }
 
 void on_result_java(struct iperf_test_state *test, float start, float end, char send_bytes[], char band_width[]) {
-    on_report_bandwidth(test, test->jniCallback->resultMethod, start, end, send_bytes, band_width);
+    on_report_bandwidth(test, test->jniCallback.resultMethod, start, end, send_bytes, band_width);
 }
 
 void on_error_java(struct iperf_test_state *test, char *err_msg) {
-    JNIEnv *env = test->jniCallback->env;
-    call_java_method(test, test->jniCallback->errorMethod, 1, charToJstring(env, err_msg));
+    JNIEnv *env = test->jniCallback.env;
+    call_java_method(test, test->jniCallback.errorMethod, 1, charToJstring(env, err_msg));
 }
 /******************************** Java 方法回调 end ********************************/
 
 /* 构造回调Java方法需要的参数 */
-int construct_java_callback(JNIEnv *env, struct iperf_test_state *test, jobject callback) {
-    test->jniCallback = (struct jni_callback *) malloc(sizeof(struct jni_callback));
-    if (!test->jniCallback) {
-        free(test);
-        i_errno = IENEWTEST;
-        return -1;
-    }
-    memset(test->jniCallback, 0, sizeof(struct jni_callback));
-
+int construct_java_callback(JNIEnv *javaEnv, struct iperf_test_state *test, jobject callback) {
     /*
     public interface com.cmii.iperf3.Iperf3Callback {
         public abstract void onConnecting(java.lang.String, int);
@@ -79,28 +59,21 @@ int construct_java_callback(JNIEnv *env, struct iperf_test_state *test, jobject 
         descriptor: (Ljava/lang/String;)V
     }
      */
-    jclass class = (*env)->GetObjectClass(env, callback);
-    jmethodID connectingMethod  = (*env)->GetMethodID(env, class, "onConnecting",
-                                                      "(Ljava/lang/String;I)V");
-    jmethodID connectedMethod   = (*env)->GetMethodID(env, class, "onConnected",
-                                                      "(Ljava/lang/String;ILjava/lang/String;I)V");
-    jmethodID intervalMethod    = (*env)->GetMethodID(env, class, "onInterval",
-                                                      "(FFLjava/lang/String;Ljava/lang/String;Z)V");
-    jmethodID resultMethod      = (*env)->GetMethodID(env, class, "onResult",
-                                                      "(FFLjava/lang/String;Ljava/lang/String;Z)V");
-    jmethodID errorMethod       = (*env)->GetMethodID(env, class, "onError", "(Ljava/lang/String;)V");
-    test->jniCallback->env = env;
-    test->jniCallback->callbackObj = callback;
-    test->jniCallback->connectingMethod = connectingMethod;
-    test->jniCallback->connectedMethod = connectedMethod;
-    test->jniCallback->intervalMethod = intervalMethod;
-    test->jniCallback->resultMethod = resultMethod;
-    test->jniCallback->errorMethod = errorMethod;
-    test->jniCallback->on_connecting = on_connecting_java;
-    test->jniCallback->on_connected = on_connected_java;
-    test->jniCallback->on_interval = on_interval_java;
-    test->jniCallback->on_result = on_result_java;
-    test->jniCallback->on_error = on_error_java;
+    jclass class = (*javaEnv)->GetObjectClass(javaEnv, callback);
+    jmethodID intervalMethod    = (*javaEnv)->GetMethodID(javaEnv, class, "onInterval",
+                                                          "(FFLjava/lang/String;Ljava/lang/String;Z)V");
+    jmethodID resultMethod      = (*javaEnv)->GetMethodID(javaEnv, class, "onResult",
+                                                          "(FFLjava/lang/String;Ljava/lang/String;Z)V");
+    jmethodID errorMethod       = (*javaEnv)->GetMethodID(javaEnv, class, "onError", "(Ljava/lang/String;)V");
+    test->jniCallback.env = javaEnv;
+    test->jniCallback.callbackObj = callback;
+    test->jniCallback.intervalMethod = intervalMethod;
+    test->jniCallback.resultMethod = resultMethod;
+    test->jniCallback.errorMethod = errorMethod;
+
+    test->jniCallback.on_interval = on_interval_java;
+    test->jniCallback.on_result = on_result_java;
+    test->jniCallback.on_error = on_error_java;
 
     return 0;
 }

@@ -5,16 +5,19 @@
 #include <jni.h>
 #include <mutex>
 
+#include "iperf3_java_callback.h"
 #include "iperf_state_wrapper_interface.h"
 
 // C++ management class exposed above via iperf_state_wrapper_interface C API
 class IperfStateWrapper {
 public:
     IperfStateWrapper() noexcept;
-    struct iperf_test_state * create_new_test();
+    ~IperfStateWrapper() noexcept;
+    bool register_callbacks(JNIEnv *javaEnv, jobject iperfConfig, jobject callback, jstring cacheDirTemplate);
     int run_test();
     int stop_test();
-    void finalize_test();
+    void send_interval_report(float, float, char[], char[]);
+    void send_summary_report(float, float, char[], char[]);
 private:
     struct iperf_test_state _test_state;
     std::mutex _stop_signal_mutex;

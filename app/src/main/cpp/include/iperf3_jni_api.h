@@ -3,9 +3,8 @@
 
 #ifndef _INCLUDED_CMII_IPERF3
 #define _INCLUDED_CMII_IPERF3
-#ifdef __cplusplus
+
 extern "C" {
-#endif
 
 JNIEXPORT jint JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_runIperfTest
         (JNIEnv *, jobject, jobject , jobject, jstring);
@@ -13,7 +12,6 @@ JNIEXPORT jint JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Clien
 JNIEXPORT void JNICALL Java_com_lcl_lclmeasurementtool_Functionality_Iperf3Client_stopIperfTest
     (JNIEnv *, jobject);
 
-#ifdef __cplusplus
 }
-#endif
+
 #endif // _INCLUDED_CMII_IPERF3

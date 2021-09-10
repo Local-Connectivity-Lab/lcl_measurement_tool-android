@@ -8,8 +8,16 @@
 #ifndef INC_5GMPORTAL_CMII_JAVA_CALLBACK_H
 #define INC_5GMPORTAL_CMII_JAVA_CALLBACK_H
 
-extern int construct_java_callback(JNIEnv *env, struct iperf_test_state *test, jobject callback);
+#ifdef __cplusplus
+extern "C" { /* open extern "C" */
+#endif
 
-extern int parse_java_config(JNIEnv *env, struct iperf_test_state *test, jobject config, jstring cacheDir);
+int construct_java_callback(JNIEnv *javaEnv, struct iperf_test_state *test, jobject callback);
+
+int parse_java_config(JNIEnv *env, struct iperf_test_state *test, jobject config, jstring cacheDir);
+
+#ifdef __cplusplus
+} /* close extern "C" */
+#endif
 
 #endif //INC_5GMPORTAL_CMII_JAVA_CALLBACK_H
