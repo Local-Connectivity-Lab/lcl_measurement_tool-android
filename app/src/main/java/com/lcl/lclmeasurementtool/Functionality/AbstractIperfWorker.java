@@ -36,20 +36,20 @@ public abstract class AbstractIperfWorker extends Worker {
             @Override
             public void onInterval(float timeStart, float timeEnd, String sendBytes, String bandWidth, boolean isDown) {
                 Log.i(TAG, "on interval " + bandWidth + " isDown=" + isDown);
-//                setProgressAsync(new Data.Builder()
-//                        .putString("INTERVAL_BANDWIDTH", bandWidth)
-//                        .putBoolean("IS_DOWN_MODE", isDown)
-//                        .build()
-//                );
+                setProgressAsync(new Data.Builder()
+                        .putString("INTERVAL_BANDWIDTH", bandWidth)
+                        .putBoolean("IS_DOWN_MODE", isDown)
+                        .build()
+                );
             }
 
             @Override
             public void onResult(float timeStart, float timeEnd, String sendBytes, String bandWidth, boolean isDown) {
                 Log.i(TAG, "final result " + bandWidth + " isDown:" + isDown);
-//                finalData = new Data.Builder()
-//                        .putString("FINAL_RESULT", bandWidth)
-//                        .putBoolean("IS_DOWN_MODE", isDown)
-//                        .build();
+                finalData = new Data.Builder()
+                        .putString("FINAL_RESULT", bandWidth)
+                        .putBoolean("IS_DOWN_MODE", isDown)
+                        .build();
             }
 
             @Override
@@ -61,11 +61,11 @@ public abstract class AbstractIperfWorker extends Worker {
 
     @Override
     public void onStopped() {
-        Log.d(TAG, "iperf3 worker stopping in thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
+        Log.d(TAG, "Stopping in thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
 
-        // Note: this might run in a different thread than the doWork context depending on the WorkManager executor
+        // Note: this might run in a different thread than the doWork context depending on the
+        // WorkManager executor
         client.cancelTest();
-        Log.d(TAG, "Finished cancel test JNI call " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
 
         try {
             Log.d(TAG, "Awaiting shutdown notification" + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());

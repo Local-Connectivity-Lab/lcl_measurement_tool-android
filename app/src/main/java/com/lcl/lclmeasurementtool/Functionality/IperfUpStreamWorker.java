@@ -33,15 +33,12 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
         prepareConfig();
         prepareCallback();
 
-        Log.d(TAG, "Beginning background test");
         try {
             client.exec(config, callback, context.getCacheDir());
         } catch (RuntimeException e) {
             // TODO(matt9j) Propagate the error cause to some kind of error reporting or app metrics!
             Log.e(TAG, "Background test failed");
             return Result.failure();
-        } catch (Exception e) {
-            Log.e(TAG, "Fell through to generic handler");
         } finally {
             Log.d(TAG, "Work finally statement");
             doneSignal.countDown();
