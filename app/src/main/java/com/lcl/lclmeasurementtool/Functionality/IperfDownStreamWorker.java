@@ -4,12 +4,10 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.work.Data;
-import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.lcl.lclmeasurementtool.R;
-import com.lcl.lclmeasurementtool.Utils.UIUtils;
+import java.lang.Thread;
+
 
 public class IperfDownStreamWorker extends AbstractIperfWorker {
 
@@ -20,23 +18,38 @@ public class IperfDownStreamWorker extends AbstractIperfWorker {
     }
 
     void prepareConfig() {
-        Log.i(TAG, "now preparing config for downstream");
+        Log.d(TAG, "Preparing downstream test config");
         config = new Iperf3Config();
         config.mServerAddr = getInputData().getString("SERVER_ADDR");
         config.mServerPort = getInputData().getInt("SERVER_PORT", 5201);
-        config.isDownMode = false;
-        Log.i(TAG, config.mServerAddr + ":" + config.mServerPort + " isDown="+config.isDownMode);
+        config.isDownMode = true;
+        Log.d(TAG, config.mServerAddr + ":" + config.mServerPort + " isDown="+config.isDownMode);
     }
 
     @NonNull
     @Override
     public Result doWork() {
-
+        Log.d(TAG, "Beginning synchronous downstream work in thread " + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
         prepareConfig();
         prepareCallback();
 
-        client.exec(config, callback);
-        return isTestFailed ?
-                Result.failure() : ( finalData == null ? Result.success() : Result.success(finalData));
+        try {
+            client.exec(config, callback, context.getCacheDir());
+        } catch (RuntimeException e) {
+            // TODO(matt9j) Propagate the error cause to some kind of error reporting or app metrics!
+            Log.e(TAG, "Background test failed");
+            return Result.failure();
+        } finally {
+            Log.d(TAG, "Work finally statement");
+            doneSignal.countDown();
+        }
+
+        if (finalData == null) {
+            Log.w(TAG, "Iperf worker completed successfully without returning final data");
+            return Result.success();
+        } else {
+            Log.i(TAG, "Iperf worker completed successfully");
+            return Result.success(finalData);
+        }
     }
 }

@@ -54,3 +54,6 @@ captures/
 .idea
 # Keystore files
 *.jks
+
+# External native build objects
+.cxx/

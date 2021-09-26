@@ -1,69 +1,45 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
-import android.os.Looper;
 import android.util.Log;
+import java.io.File;
+import java.lang.Thread;
 
-import java.util.concurrent.Executor;
-
+/**
+ * A wrapper narrowly translating the c-language iperf API to/from java.
+ */
 public class Iperf3Client {
+    private static final String TAG = "Iperf3Client";
 
     static {
-        System.loadLibrary("iperf3");
+        System.loadLibrary("lcl_measurement_tool_native");
     }
 
-    private Iperf3Callback mCallback;
-    private Iperf3Config mConfig;
-    private boolean stopTesting;
-    Thread iperfThread;
+    public Iperf3Client() {};
 
-    public Iperf3Client(Iperf3Callback callback, Iperf3Config config) {
-        this();
-        mCallback = callback;
-        mConfig = config;
-    }
+    ///////////////////// NATIVE FUNCTIONS //////////////////////////
 
-    public Iperf3Client(Iperf3Callback callback) {
-        this();
-        mCallback = callback;
-    }
-
-    public Iperf3Client() {
-        this.stopTesting = false;
-    }
-
-    ///////////////////// NATIVE FUNCTION //////////////////////////
-
-    private native void simpleTest(String serverIp, String serverPort, boolean isDownMode, Iperf3Callback callback);
-
-    public native void exec(Iperf3Config testConfig, Iperf3Callback callback);
-
-    public native void stop();
+    private native int runIperfTest(Iperf3Config testConfig, Iperf3Callback callback, String cacheDir);
+    private native void stopIperfTest();
 
     ////////////////////// JAVA INVOCATION ////////////////////////
 
-    public void exec(Iperf3Config testConfig) {
-//        iperfThread = new Thread(() -> {
-//                Looper.prepare();
-//                Looper.loop();
-//        });
-//        System.out.println("Current thread started is " + iperfThread.getName());
-//        iperfThread.start();
-        exec(testConfig, mCallback);
-        Log.i("IPERF CLIENT", String.valueOf(stopTesting));
-    }
+    public void exec(Iperf3Config testConfig, Iperf3Callback callback, File cacheDir) {
+        Log.i(TAG, "Running iperf client exec");
+        Log.d(TAG, "testConfig: " + testConfig.toString());
+        Log.d(TAG, "callback: " + callback.toString());
 
-    public void exec(String serverIp, String serverPort, boolean isDownMode) {
-        simpleTest(serverIp, serverPort, isDownMode, mCallback);
+        String cacheTemplate = cacheDir.toString() + "/iperf3.XXXXXX";
+
+        // Translate from the "c-style" error return codes to java-style exceptions so calling code
+        // can operate cleanly.
+        if (runIperfTest(testConfig, callback, cacheTemplate) != 0) {
+            // TODO(matt9j) Propagate the error cause in the exception
+            throw new RuntimeException("Iperf test failed to run");
+        }
     }
 
     public void cancelTest() {
-//        System.out.println("stop " + Thread.currentThread().getName());
-//        cancelTest();
-        System.out.println("cancel test");
-        stop();
-//        iperfThread.interrupt();
-//        if (iperfThread.getState() == Thread.State.RUNNABLE) {
-//
-//        }
+        Log.v(TAG, "Iperf cancel in thread" + Thread.currentThread().getName() + ":" + Thread.currentThread().getState());
+        stopIperfTest();
     }
 }

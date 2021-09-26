@@ -5,6 +5,7 @@ plugins {
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
+    ndkVersion "21.4.7075529"
     defaultConfig {
         applicationId "com.lcl.lclmeasurementtool"
         minSdkVersion 24
@@ -13,7 +14,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64v-v8a'
+            abiFilters 'armeabi-v7a', 'arm64-v8a', "x86", "x86_64"
         }
     }
 
@@ -31,7 +32,10 @@ android {
         viewBinding true
     }
     externalNativeBuild {
-
+        cmake {
+            path file("src/main/cpp/CMakeLists.txt")
+            version '3.18.1'
+        }
     }
 }
 
