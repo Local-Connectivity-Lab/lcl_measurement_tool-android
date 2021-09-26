@@ -1,22 +1,28 @@
 package com.lcl.lclmeasurementtool;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.net.NetworkCapabilities;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.work.Data;
+import androidx.work.WorkInfo;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -25,6 +31,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.Managers.CellularChangeListener;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
@@ -39,6 +46,7 @@ import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
 import java.time.ZoneId;
+import java.util.List;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private HomeFragmentBinding binding;
@@ -55,6 +63,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private boolean isTestStarted;
     private boolean isCellularConnected;
+    private NetworkTestViewModel mNetworkTestViewModel;
 
     @Nullable
     @Override
@@ -86,11 +95,17 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
         // prepare necessary information managers
         mNetworkManager = NetworkManager.getManager(this.context);
         mCellularManager = CellularManager.getManager(this.context);
         mLocationManager = LocationServiceManager.getManager(this.context);
         locationServiceListener = new LocationServiceListener(this.context, getLifecycle());
+        mNetworkTestViewModel = new NetworkTestViewModel(this.context);
+        mNetworkTestViewModel.getmSavedIperfDownInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
+        mNetworkTestViewModel.getmSavedIperfUpInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
+
+
         getLifecycle().addObserver(locationServiceListener);
 
         this.isTestStarted = false;
@@ -99,6 +114,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         // update and listen to signal strength changes
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
         mCellularManager.listenToSignalStrengthChange(new CellularChangeListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onChange(SignalStrengthLevel level, int dBm) {
                 updateSignalStrengthTexts(level, dBm);
@@ -118,6 +134,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         } else {
             Log.e(TAG, "Map Fragment is null");
         }
+
+        setupTestView();
 
         // set up FAB
         setUpFAB();
@@ -179,6 +197,18 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     ///////////////////// HELPER /////////////////////////
+    private void setupTestView() {
+        binding.upload.icon.setImageResource(R.drawable.upload);
+        binding.upload.data.setText("0.0 Mbit");
+        binding.upload.data.setTextColor(this.activity.getColor(R.color.light_gray));
+        binding.download.icon.setImageResource(R.drawable.download);
+        binding.download.data.setText("0.0 Mbit");
+        binding.download.data.setTextColor(this.activity.getColor(R.color.light_gray));
+        binding.ping.icon.setImageResource(R.drawable.ping);
+        binding.ping.data.setText("0.0 ms");
+        binding.ping.data.setTextColor(this.activity.getColor(R.color.light_gray));
+    }
+
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
         this.activity.runOnUiThread(() -> {
             binding.SignalStrengthValue.setText(String.valueOf(dBm));
@@ -243,6 +273,54 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
             this.isTestStarted = false;
         });
+    }
+
+    @SuppressLint("RestrictedApi")
+    private void parseWorkInfo(List<WorkInfo> workInfoList) {
+        // if there are no matching work info, do nothing
+        if (workInfoList == null || workInfoList.isEmpty()) return;
+
+        WorkInfo workInfo = workInfoList.get(0);
+        Data progress = workInfo.getProgress();
+        Data output = workInfo.getOutputData();
+        switch (workInfo.getState()) {
+            case FAILED:
+
+                if (output.size() == 1) {
+                    boolean isTestCancelled = output.getBoolean("IS_CANCELLED", false);
+                    Toast.makeText(this.context, "test is cancelled: " + isTestCancelled, Toast.LENGTH_SHORT).show();
+                }
+
+                if (isTestStarted) {
+                    UIUtils.showDialog(context, R.string.error, R.string.iperf_error, android.R.string.ok, null, android.R.string.cancel, null);
+                    mNetworkTestViewModel.cancel();
+
+                    // TODO: update based on network condition
+                    updateFAB(true);
+                }
+            case RUNNING:
+                if (progress.size() == 0) break;
+                String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
+                boolean isDownModeInProgress = progress.getBoolean("IS_DOWN_MODE", false);
+                this.activity.runOnUiThread(() -> {
+                    TextView speedTest = (isDownModeInProgress) ? this.activity.findViewById(R.id.download).findViewById(R.id.data) : this.activity.findViewById(R.id.upload).findViewById(R.id.data);
+                    speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
+                    speedTest.setText(bandWidth);
+                });
+            case SUCCEEDED:
+                if (output.size() == 0) break;
+                String finalResult = output.getString("FINAL_RESULT");
+                boolean isDownModeInSucceeded = output.getBoolean("IS_DOWN_MODE", false);
+                this.activity.runOnUiThread(() -> {
+                    TextView speedTest = (isDownModeInSucceeded) ? this.activity.findViewById(R.id.download).findViewById(R.id.data) : this.activity.findViewById(R.id.upload).findViewById(R.id.data);
+                    speedTest.setTextColor(this.activity.getColor(R.color.white));
+                    speedTest.setText(finalResult);
+                    if (workInfo.getTags().contains("IPERF_UP")) {
+                        // TODO: update according to network status
+                        updateFAB(true);
+                    }
+                });
+        }
     }
 
     @Override
