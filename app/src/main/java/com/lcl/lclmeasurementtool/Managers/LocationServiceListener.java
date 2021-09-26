@@ -42,7 +42,7 @@ public class LocationServiceListener implements LifecycleObserver {
      */
     public LocationServiceListener(@NonNull Context context, Lifecycle lifecycle) {
         this.context = context;
-        this.mLocationManager = LocationServiceManager.getManager(context);
+        this.mLocationManager = LocationServiceManager.getManager(this.context);
         this.lifecycle = lifecycle;
     }
 
@@ -52,7 +52,7 @@ public class LocationServiceListener implements LifecycleObserver {
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     void checkLocationPermission() {
-        if (!mLocationManager.isLocationPermissionGranted()) {
+        if (!this.mLocationManager.isLocationPermissionGranted()) {
             requestLocationPermission();
         }
     }
@@ -62,7 +62,7 @@ public class LocationServiceListener implements LifecycleObserver {
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     void checkLocationMode() {
-        if (!mLocationManager.isLocationModeOn() && lifecycle.getCurrentState().equals(Lifecycle.State.RESUMED) && !checkLocationModeLock) {
+        if (!this.mLocationManager.isLocationModeOn() && lifecycle.getCurrentState().equals(Lifecycle.State.RESUMED) && !checkLocationModeLock) {
             checkLocationModeLock = true;
             // TODO turn off start FAB if canceled
             UIUtils.showDialog(context, R.string.location_message_title, R.string.enable_location_message,

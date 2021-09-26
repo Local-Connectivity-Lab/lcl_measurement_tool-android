@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/data_list"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_gray"
+    tools:context=".ConnectivityDataFragment">
+    <TableRow
+        android:id="@+id/header">
+        <TextView
+            android:text="Time Stamp"
+            android:textSize="12dp"
+            android:fontFamily="monospace"
+            android:textColor="@color/white"
+            android:layout_weight="1">
+        </TextView>
+        <TextView
+            android:text="ping/ms"
+            android:textSize="12dp"
+            android:fontFamily="monospace"
+            android:textColor="@color/white"
+            android:layout_weight="1">
+        </TextView>
+        <TextView
+            android:text="upload/Mb/s"
+            android:textSize="12dp"
+            android:fontFamily="monospace"
+            android:textColor="@color/white"
+            android:layout_weight="1">
+        </TextView>
+        <TextView
+            android:text="download/Mb/s"
+            android:textSize="12dp"
+            android:fontFamily="monospace"
+            android:textColor="@color/white"
+            android:layout_weight="1">
+        </TextView>
+        <TextView
+            android:text="packet loss"
+            android:textSize="12dp"
+            android:fontFamily="monospace"
+            android:textColor="@color/white"
+            android:layout_weight="1">
+        </TextView>
+    </TableRow>
+
+</TableLayout>

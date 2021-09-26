@@ -1,22 +1,33 @@
 package com.lcl.lclmeasurementtool.Managers;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.lcl.lclmeasurementtool.R;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 public class LocationServiceManager {
 
@@ -26,16 +37,18 @@ public class LocationServiceManager {
     private static LocationServiceManager locationServiceManager = null;
 
     // the fused location client provided by Google Play Service
-    private final FusedLocationProviderClient mFusedLocationClient;
+    private FusedLocationProviderClient mFusedLocationClient;
 
     // the instance of the location manager
-    private final LocationManager locationManager;
+    private LocationManager locationManager;
 
     // the weak reference of the current context of the Application
     private final WeakReference<Context> context;
 
     // the location object that contains the information of user's location
     private Location mLastLocation;
+
+    private LocationCallback callback;
 
     /**
      * Initialize a Location Service Manager following the context
@@ -45,7 +58,7 @@ public class LocationServiceManager {
     private LocationServiceManager(@NonNull Context context) {
         this.context = new WeakReference<>(context);
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this.context.get());
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
     }
 
     /**
@@ -65,8 +78,12 @@ public class LocationServiceManager {
      * Return whether the device's location mode is on.
      * @return whether the device's location mode is on.
      */
+    @RequiresApi(api = Build.VERSION_CODES.P)
     public boolean isLocationModeOn() {
-        return locationManager.isLocationEnabled();
+        if (locationManager != null) {
+            return locationManager.isLocationEnabled();
+        }
+        return false;
     }
 
     /**
@@ -85,19 +102,74 @@ public class LocationServiceManager {
      * If last location is null, a new location request will be initiated.
      */
     @SuppressWarnings("MissingPermission")
-    public void getLastLocation() {
+    public void getLastLocation(LocationUpdatesListener listener) {
         mFusedLocationClient.getLastLocation()
-                .addOnCompleteListener((Activity) context.get(), task -> {
+                .addOnCompleteListener((Activity) this.context.get(), task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         mLastLocation = task.getResult();
-
+                        listener.onUpdate(mLastLocation);
                         // TODO: log the location latitude and longitude
-                        Log.i(TAG, String.valueOf(mLastLocation.getLatitude()));
-                        Log.i(TAG, String.valueOf(mLastLocation.getLongitude()));
+//                        Log.i(TAG, String.valueOf(mLastLocation.getLatitude()));
+//                        Log.i(TAG, String.valueOf(mLastLocation.getLongitude()));
                     } else {
                         Log.w(TAG, "getLastLocation:exception", task.getException());
-                        Toast.makeText(context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this.context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    @SuppressWarnings("MissingPermission")
+    public void requestLocationUpdates(LocationUpdatesListener listener) {
+        Criteria locationUpdateCriteria = new Criteria();
+        locationUpdateCriteria.setPowerRequirement(Criteria.POWER_MEDIUM);
+        locationUpdateCriteria.setAccuracy(Criteria.ACCURACY_FINE);
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                listener.onUpdate(location);
+            }
+
+            @Override
+            public void onProviderDisabled(@NonNull String provider) {
+                Log.e(TAG, provider + " has been disabled");
+            }
+        };
+        new Thread(() -> {
+            Looper.prepare();
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, (float) 10.0, locationListener, Looper.myLooper());
+//          locationManager.requestLocationUpdates(5000, 10, locationUpdateCriteria, locationListener, Looper.myLooper());
+            Looper.loop();
+        }).start();
+    }
+
+    @SuppressLint("MissingPermission")
+    public void startLocationUpdates(LocationUpdatesListener listener) {
+        LocationRequest locationRequest = LocationRequest
+                .create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setFastestInterval(5000)
+                .setInterval(20000)
+                .setSmallestDisplacement(5);
+        callback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                for (Location location : locationResult.getLocations()) {
+                    // update the map
+                    listener.onUpdate(location);
+                }
+            }
+        };
+
+        mFusedLocationClient.requestLocationUpdates(locationRequest, callback, Looper.myLooper());
+    }
+
+    /**
+     * Stop receiving location information.
+     */
+    public void stop() {
+        mFusedLocationClient.removeLocationUpdates(callback);
+        this.locationManager = null;
+        this.mFusedLocationClient = null;
     }
 }

@@ -2,6 +2,7 @@ package com.lcl.lclmeasurementtool.Utils;
 
 import android.graphics.Color;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
@@ -12,8 +13,8 @@ import com.lcl.lclmeasurementtool.R;
  * received from the mobile network system.
  */
 public enum SignalStrengthLevel {
-    NONE(0),      // the signal strength is none or unknown
-    POOR(1),      // the signal strength is poor
+    POOR(0),      // the signal strength is poor or unknown
+    WEAK(1),      // the signal strength is weak
     MODERATE(2),  // the signal strength is moderate
     GOOD(3),      // the signal strength is good
     GREAT(4);     // the signal strength is great
@@ -33,11 +34,12 @@ public enum SignalStrengthLevel {
      * @return a SignalStrengthLevel Enum associated with the input levelCode.
      */
     public static SignalStrengthLevel init(int levelCode) {
+        Log.i("SIG", "levelCode is :" + levelCode);
         switch (levelCode) {
             case 0:
-                return SignalStrengthLevel.NONE;
-            case 1:
                 return SignalStrengthLevel.POOR;
+            case 1:
+                return SignalStrengthLevel.WEAK;
             case 2:
                 return SignalStrengthLevel.MODERATE;
             case 3:
@@ -69,10 +71,10 @@ public enum SignalStrengthLevel {
      */
     public String getName() {
         switch (this) {
-            case NONE:
-                return "No Signal";
             case POOR:
                 return "Poor";
+            case WEAK:
+                return "Weak";
             case MODERATE:
                 return "Moderate";
             case GOOD:
@@ -99,9 +101,9 @@ public enum SignalStrengthLevel {
                 return ContextCompat.getColor(context, R.color.light_green);
             case MODERATE:
                 return ContextCompat.getColor(context, R.color.orange);
-            case POOR:
+            case WEAK:
                 return Color.RED;
-            case NONE:
+            case POOR:
                 return ContextCompat.getColor(context, R.color.light_gray);
             default:break;
         }

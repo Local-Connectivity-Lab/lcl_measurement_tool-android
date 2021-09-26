@@ -2,15 +2,12 @@ package com.lcl.lclmeasurementtool.Managers;
 import android.content.Context;
 import android.os.Looper;
 import android.telephony.CellSignalStrength;
+import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.util.Log;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
@@ -86,7 +83,7 @@ public class CellularManager {
             return SignalStrengthLevel.init(level);
         }
 
-        return SignalStrengthLevel.NONE;
+        return SignalStrengthLevel.POOR;
     }
 
     /**
@@ -105,7 +102,23 @@ public class CellularManager {
      *         If no cellular connection, 0.
      */
     public int getDBM() {
-        return this.report != null ? this.report.getDbm() : 0;
+        if (this.report != null) {
+            return this.report.getDbm() == Integer.MAX_VALUE ? 0 : this.report.getDbm();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Return the state of sim card in the phone
+     * @return true if the sim card is absent; otherwise false;
+     */
+    public boolean isSimCardAbsence() {
+        if (this.telephonyManager != null) {
+            return this.telephonyManager.getSimState() == TelephonyManager.SIM_STATE_ABSENT;
+        }
+
+        return true;
     }
 
     /**
@@ -123,8 +136,8 @@ public class CellularManager {
                     @Override
                     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                         super.onSignalStrengthsChanged(signalStrength);
-                        List<CellSignalStrength> reports = signalStrength.getCellSignalStrengths();
-
+                        List<CellSignalStrength> reports = signalStrength.
+                                                                getCellSignalStrengths();
 
                         int dBm;
                         SignalStrengthLevel level;
@@ -133,10 +146,11 @@ public class CellularManager {
                             level = SignalStrengthLevel.init(report.getLevel());
                             dBm = report.getDbm();
                         } else {
-                            level = SignalStrengthLevel.NONE;
+                            level = SignalStrengthLevel.POOR;
                             dBm = level.getLevelCode();
                         }
 
+                        if (dBm == Integer.MAX_VALUE) dBm = 0;
                         listener.onChange(level, dBm);
 
                         if (stopListening) {

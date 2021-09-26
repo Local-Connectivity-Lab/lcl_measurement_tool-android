@@ -1,5 +1,14 @@
 package com.lcl.lclmeasurementtool;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +18,17 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+
+import com.android.volley.BuildConfig;
+import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
+import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
+import com.lcl.lclmeasurementtool.Utils.UIUtils;
+
+import java.util.UUID;
+
+import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,26 +56,37 @@ import java.util.UUID;
 
 // https://blog.csdn.net/China_Style/article/details/109660170
 public class MainActivity extends AppCompatActivity {
-
     public static final String TAG = "MAIN_ACTIVITY";
+    private AppBarConfiguration appBarConfiguration;
+    private NavController navController;
+    private ActivityMainBinding binding;
+
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    private NetworkTestViewModel mNetworkTestViewModel;
 
     private Context context;
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
     LocationServiceManager mLocationManager;
     LocationServiceListener locationServiceListener;
-
-    private NetworkTestViewModel mNetworkTestViewModel;
-
     private boolean isTestStarted;
 
     @SuppressLint("RestrictedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        setSupportActionBar(binding.toolbar);
+
+        navController = Navigation.findNavController(this, R.id.nav_host);
+        appBarConfiguration = new AppBarConfiguration.Builder(R.id.HomeFragment).build();
+        NavigationUI.setupWithNavController(binding.toolbar, navController, appBarConfiguration);
+        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+
+        // set up UUID
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         if (!preferences.contains(getString(R.string.USER_UUID))) {
             String uuid = UUID.randomUUID().toString();
@@ -63,6 +94,9 @@ public class MainActivity extends AppCompatActivity {
             editor.putString(getString(R.string.USER_UUID), uuid);
             editor.apply();
         }
+
+//        // set up DB
+        MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
 
         mNetworkManager = NetworkManager.getManager(this);
         mCellularManager = CellularManager.getManager(this);
@@ -80,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         this.isTestStarted = false;
 
         if (!this.mNetworkManager.isCellularConnected()) {
-            updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+            updateSignalStrengthTexts(SignalStrengthLevel.POOR, 0);
         }
 
         setUpFAB();
@@ -103,14 +137,14 @@ public class MainActivity extends AppCompatActivity {
             public void onLost() {
                 mCellularManager.stopListening();
                 Log.e(TAG, "on lost");
-                updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+                updateSignalStrengthTexts(SignalStrengthLevel.POOR, 0);
                 updateFAB(false);
             }
 
             @Override
             public void onUnavailable() {
                 Log.e(TAG, "on unavailable");
-                updateSignalStrengthTexts(SignalStrengthLevel.NONE, 0);
+                updateSignalStrengthTexts(SignalStrengthLevel.POOR, 0);
                 updateFAB(false);
             }
 
@@ -123,6 +157,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
@@ -183,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
     private void updateFAB(boolean state) {
         runOnUiThread(() -> {
             FloatingActionButton fab = findViewById(R.id.fab);
@@ -198,8 +238,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     // TODO: update FAB Icon and State when tests are done
-
-
     // TODO: pre-test check should be here ...
 
     @Override
@@ -247,12 +285,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Fetch the last location from the device
-     */
-    private void getLastLocation() {
-        mLocationManager.getLastLocation();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        binding.toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.HomeFragment:
+                        Fragment home = new HomeFragment();
+                        return NavigationUI.onNavDestinationSelected(item, navController);
+//                        show(home);
+                    case R.id.SpeedTestFragment:
+                        SignalDataFragment fConn = new SignalDataFragment();
+                        fConn.type = EntityEnum.CONNECTIVITY;
+//                        show(fConn);
+                        return NavigationUI.onNavDestinationSelected(item, navController);
+                    case R.id.SignalStrengthFragment:
+                        SignalDataFragment fSig = new SignalDataFragment();
+                        fSig.type = EntityEnum.SIGNALSTRENGTH;
+                        return NavigationUI.onNavDestinationSelected(item, navController);
+                    default: return false;
+                }
+            }
+        });
+        return true;
     }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host);
+        return NavigationUI.navigateUp(navController, appBarConfiguration)
+                || super.onSupportNavigateUp();
+    }
+
 
     @SuppressLint("RestrictedApi")
     private void parseWorkInfo(List<WorkInfo> workInfoList) {

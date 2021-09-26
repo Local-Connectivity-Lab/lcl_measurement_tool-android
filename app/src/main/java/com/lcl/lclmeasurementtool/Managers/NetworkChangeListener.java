@@ -1,5 +1,7 @@
 package com.lcl.lclmeasurementtool.Managers;
 
+import android.net.NetworkCapabilities;
+
 /**
  * An interface that listens to the changes in the network status.
  */
@@ -23,7 +25,7 @@ public interface NetworkChangeListener {
     /**
      * callback function when the cellular network status gets changed.
      *
-     * @param isConnected boolean parameter indicating whether there is cellular connection.
+     * @param capabilities NetworkCapabilities parameter indicating device's network capabilities.
      */
-    void onCellularNetworkChanged(boolean isConnected);
+    void onCellularNetworkChanged(NetworkCapabilities capabilities);
 }
