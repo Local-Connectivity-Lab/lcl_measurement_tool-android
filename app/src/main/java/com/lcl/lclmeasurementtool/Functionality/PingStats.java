@@ -6,7 +6,7 @@ package com.lcl.lclmeasurementtool.Functionality;
  */
 public class PingStats {
     private String host;
-    private String loss;
+    private double loss;
     private double averageLatency;
     private double minLatency;
     private double maxLatency;
@@ -25,7 +25,7 @@ public class PingStats {
         this.fullOutput = fullOutput;
     }
 
-    public void setLoss(String loss) {
+    public void setLoss(double loss) {
         this.loss = loss;
     }
 
@@ -53,7 +53,7 @@ public class PingStats {
         maxLatency = d;
     }
 
-    public String getLoss() {
+    public double getLoss() {
         return loss;
     }
 

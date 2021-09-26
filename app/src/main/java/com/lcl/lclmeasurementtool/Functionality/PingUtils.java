@@ -53,33 +53,26 @@ public class PingUtils {
         pingStats.setFullOutput(s);
 
         String[] sLoss = s.split(",");
-        pingStats.setLoss(sLoss[2]);
         String[] sStats = s.split("/");
         String minStr = sStats[3];
         String actualMinStr = sStats[3].substring(sStats[3].indexOf("=")+2);
         String avgStr = sStats[4];
         String maxStr = sStats[5];
+        String packetLoss = sLoss[2].trim().split("%")[0];
 
         // convert strings to double
         pingStats.setMinLatency(Double.parseDouble(actualMinStr));
         pingStats.setAverageLatency(Double.parseDouble(avgStr));
         pingStats.setMaxLatency(Double.parseDouble(maxStr));
-
+        pingStats.setLoss(Double.parseDouble(packetLoss));
 
         PingError pingError = new PingError();
         pingError.setCode(0);
-        if (s.contains("0% packet loss")) {
-            pingError.setMessage("0% packet loss");
-        } else if (s.contains("100% packet loss")) {
-            pingError.setMessage("100% packet loss");
-        } else if (s.contains("% packet loss")) {
-            pingError.setMessage("partial packet loss");
-        } else if (s.contains("unknown host")) {
+        if (s.contains("unknown host")) {
             pingError.setMessage("unknown host");
         } else {
             pingError.setMessage("unknown error in getPingStats");
         }
-
         pingStats.setError(pingError);
 
         return pingStats;
