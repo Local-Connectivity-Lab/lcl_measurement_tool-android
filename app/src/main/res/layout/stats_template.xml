@@ -28,14 +28,4 @@
         app:layout_constraintStart_toEndOf="@id/icon"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/unit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="monospace"
-        android:textColor="@color/light_gray"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/data"
-        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
