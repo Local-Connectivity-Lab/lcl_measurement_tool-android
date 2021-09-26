@@ -24,10 +24,10 @@ public class SignalStrength {
     @ColumnInfo(name = "signal_strength_level")
     public int level;
 
-    @Nullable
+    @NonNull
     public LatLng location;
 
-    public SignalStrength(@NonNull String timestamp, int signalStrength, int level, LatLng location) {
+    public SignalStrength(@NonNull String timestamp, int signalStrength, int level, @NonNull LatLng location) {
         this.timestamp = timestamp;
         this.signalStrength = signalStrength;
         this.level = level;
@@ -47,8 +47,12 @@ public class SignalStrength {
         return level;
     }
 
-    @Nullable
+    @NonNull
     public LatLng getLocation() {
         return location;
+    }
+
+    public String getLocationString() {
+        return location.latitude + "|" + location.longitude;
     }
 }

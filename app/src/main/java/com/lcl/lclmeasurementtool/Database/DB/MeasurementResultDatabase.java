@@ -23,7 +23,7 @@ public abstract class MeasurementResultDatabase extends RoomDatabase {
 
     private static volatile MeasurementResultDatabase instance;
     private static final int NUMBER_OF_THREADS = 5;
-    static final ExecutorService databaseWriteExecutor =
+    public static final ExecutorService databaseWriteExecutor =
             Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
     public static MeasurementResultDatabase getInstance(final Context context) {

@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.Database.Entity;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -21,13 +22,13 @@ public interface SignalStrengthDAO {
 
     // READ
     @Query("SELECT * FROM signal_strength_table")
-    public List<SignalStrength> retrieveAllSignalStrengths();
+    public LiveData<List<SignalStrength>> retrieveAllSignalStrengths();
 
     @Query("SELECT * FROM signal_strength_table WHERE time_stamp >= :d1 AND time_stamp <= :d2")
-    public List<SignalStrength> retrieveSignalStrengthBetweenDates(String d1, String d2);
+    public LiveData<List<SignalStrength>> retrieveSignalStrengthBetweenDates(String d1, String d2);
 
-    @RawQuery
-    public List<SignalStrength> query(SupportSQLiteQuery query);
+//    @RawQuery
+//    public LiveData<List<SignalStrength>> query(SupportSQLiteQuery query);
 
     // UPDATE
 

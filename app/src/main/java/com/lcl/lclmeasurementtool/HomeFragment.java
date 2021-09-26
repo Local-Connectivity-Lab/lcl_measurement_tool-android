@@ -1,6 +1,5 @@
 package com.lcl.lclmeasurementtool;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -11,8 +10,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,7 +25,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
-import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Managers.CellularChangeListener;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
@@ -40,12 +36,12 @@ import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
-import com.lcl.lclmeasurementtool.databinding.FirstFragmentBinding;
+import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
 import java.time.ZoneId;
 
-public class FirstFragment extends Fragment implements OnMapReadyCallback {
-    private FirstFragmentBinding binding;
+public class HomeFragment extends Fragment implements OnMapReadyCallback {
+    private HomeFragmentBinding binding;
     private FragmentActivity activity;
     private Context context;
     public static final String TAG = "MAIN_FRAGMENT";
@@ -63,7 +59,7 @@ public class FirstFragment extends Fragment implements OnMapReadyCallback {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FirstFragmentBinding.inflate(inflater, container, false);
+        binding = HomeFragmentBinding.inflate(inflater, container, false);
         this.activity = getActivity();
         this.context = getContext();
         return binding.getRoot();

@@ -6,15 +6,15 @@
         android:id="@+id/group1"
         android:checkableBehavior="none">
         <item
-            android:id="@+id/item0"
+            android:id="@+id/HomeFragment"
             android:icon="@drawable/main"
             android:title="Home"/>
         <item
-            android:id="@+id/item1"
+            android:id="@+id/SpeedTestFragment"
             android:icon="@drawable/speed_test"
             android:title="History Speed Test Data"/>
         <item
-            android:id="@+id/item2"
+            android:id="@+id/SignalStrengthFragment"
             android:icon="@drawable/signal_strength_indicator"
             android:title="History Signal Strength Data"/>
     </group>
@@ -22,7 +22,7 @@
         android:id="@+id/group2"
         android:checkableBehavior="none">
         <item
-            android:id="@+id/item3"
+            android:id="@+id/setting"
             android:title="Settings"/>
     </group>
 </menu>

@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.Database.Entity;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -21,13 +22,14 @@ public interface ConnectivityDAO {
 
     // READ
     @Query("SELECT * FROM connectivity_table")
-    public List<Connectivity> retrieveAllConnectivities();
+    public LiveData<List<Connectivity>> retrieveAllConnectivities();
+
 
     @Query("SELECT * FROM connectivity_table WHERE time_stamp >= :d1 AND time_stamp <= :d2")
-    public List<Connectivity> retrieveConnectivitiesBetweenDates(String d1, String d2);
+    public LiveData<List<Connectivity>> retrieveConnectivitiesBetweenDates(String d1, String d2);
 
-    @RawQuery
-    public List<Connectivity> query(SupportSQLiteQuery query);
+//    @RawQuery
+//    public LiveData<List<Connectivity>> query(SupportSQLiteQuery query);
 
     // UPDATE
     @Update

@@ -23,14 +23,17 @@ public class Connectivity {
 
     public double download;
 
+    public double packetLoss;
+
     @NonNull
     public LatLng location;
 
-    public Connectivity(@NonNull String timestamp, double ping, double upload, double download, @NonNull LatLng location) {
+    public Connectivity(@NonNull String timestamp, double ping, double upload, double download, double packetLoss, @NonNull LatLng location) {
         this.timestamp = timestamp;
         this.ping = ping;
         this.upload = upload;
         this.download = download;
+        this.packetLoss = packetLoss;
         this.location = location;
     }
 
@@ -54,6 +57,14 @@ public class Connectivity {
     @NonNull
     public LatLng getLocation() {
         return location;
+    }
+
+    public String getLocationString() {
+        return location.latitude + "|" + location.longitude;
+    }
+
+    public double getPacketLoss() {
+        return packetLoss;
     }
 }
 
