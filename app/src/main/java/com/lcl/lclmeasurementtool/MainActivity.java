@@ -9,8 +9,6 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -29,32 +27,7 @@ import com.lcl.lclmeasurementtool.Utils.UIUtils;
 import java.util.UUID;
 
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.ContextCompat;
-import androidx.work.Data;
-import androidx.work.WorkInfo;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
-import com.lcl.lclmeasurementtool.Managers.CellularManager;
-import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
-import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
-import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
-import com.lcl.lclmeasurementtool.Managers.NetworkManager;
-import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
-import com.lcl.lclmeasurementtool.Utils.UIUtils;
-import com.lcl.lclmeasurementtool.Utils.UnitUtils;
-
-import java.util.List;
-import java.util.UUID;
-
-// https://blog.csdn.net/China_Style/article/details/109660170
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MAIN_ACTIVITY";
     private AppBarConfiguration appBarConfiguration;
@@ -62,11 +35,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
-    private NetworkTestViewModel mNetworkTestViewModel;
 
-    private boolean isTestStarted;
 
-    @SuppressLint("RestrictedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,18 +64,15 @@ public class MainActivity extends AppCompatActivity {
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
 
 
 
     // TODO: update FAB Icon and State when tests are done
-    // TODO: pre-test check should be here ...
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        this.mCellularManager.stopListening();
-        this.mNetworkManager.removeAllNetworkChangeListeners();
-    }
 
 
     ////////////////// HELPER FUNCTION ///////////////////////
@@ -131,16 +98,16 @@ public class MainActivity extends AppCompatActivity {
                         R.string.settings,
                         (dialogInterface, actionID) -> {
 
-                    // Build intent that displays the App settings screen.
-                    Intent intent = new Intent();
-                    intent.setAction(
-                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                    Uri uri = Uri.fromParts("package",
-                            BuildConfig.APPLICATION_ID, null);
-                    intent.setData(uri);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }, android.R.string.cancel, null);
+                            // Build intent that displays the App settings screen.
+                            Intent intent = new Intent();
+                            intent.setAction(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            Uri uri = Uri.fromParts("package",
+                                    BuildConfig.APPLICATION_ID, null);
+                            intent.setData(uri);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        }, android.R.string.cancel, null);
             }
         }
     }
