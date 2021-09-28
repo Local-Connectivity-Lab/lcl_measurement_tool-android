@@ -102,6 +102,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mNetworkTestViewModel = new NetworkTestViewModel(this.context);
         mNetworkTestViewModel.getmSavedIperfDownInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
         mNetworkTestViewModel.getmSavedIperfUpInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
+        mNetworkTestViewModel.getmSavedPingInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
 
         getLifecycle().addObserver(locationServiceListener);
 
@@ -250,6 +251,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
                 if (this.isTestStarted) {
                     mNetworkTestViewModel.cancel();
+                    setupTestView();
                 } else {
                     mNetworkTestViewModel.run();
                 }
@@ -296,33 +298,44 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     UIUtils.showDialog(context, R.string.error, R.string.iperf_error, android.R.string.ok, null, android.R.string.cancel, null);
                     mNetworkTestViewModel.cancel();
                     binding.progressIndicator.hide();
+                    setupTestView();
                     // TODO: update based on network condition
                     updateFAB(true);
                 }
             case RUNNING:
                 if (progress.size() == 0) break;
-                String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
-                boolean isDownModeInProgress = progress.getBoolean("IS_DOWN_MODE", false);
-                this.activity.runOnUiThread(() -> {
-                    TextView speedTest = (isDownModeInProgress) ? this.activity.findViewById(R.id.download).findViewById(R.id.data) : this.activity.findViewById(R.id.upload).findViewById(R.id.data);
-                    speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
-                    speedTest.setText(bandWidth);
-                });
+                else if (!workInfo.getTags().contains("PING")) {
+                    String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
+                    boolean isDownModeInProgress = progress.getBoolean("IS_DOWN_MODE", false);
+                    this.activity.runOnUiThread(() -> {
+                        TextView speedTest = (isDownModeInProgress) ? this.activity.findViewById(R.id.download).findViewById(R.id.data) : this.activity.findViewById(R.id.upload).findViewById(R.id.data);
+                        speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
+                        speedTest.setText(bandWidth);
+                    });
+                }
             case SUCCEEDED:
                 if (output.size() == 0) break;
                 String finalResult = output.getString("FINAL_RESULT");
-                boolean isDownModeInSucceeded = output.getBoolean("IS_DOWN_MODE", false);
-                this.activity.runOnUiThread(() -> {
-                    TextView speedTest = (isDownModeInSucceeded) ? this.activity.findViewById(R.id.download).findViewById(R.id.data) : this.activity.findViewById(R.id.upload).findViewById(R.id.data);
-                    speedTest.setTextColor(this.activity.getColor(R.color.white));
-                    speedTest.setText(finalResult);
-                    if (workInfo.getTags().contains("IPERF_UP")) {
-                        // TODO: update according to network status
-                        binding.progressIndicator.setProgress(100, true);
-                        binding.progressIndicator.hide();
-                        updateFAB(true);
-                    }
-                });
+                if (workInfo.getTags().contains("PING")) {
+                    this.activity.runOnUiThread(() -> {
+                        TextView pingTest = binding.ping.data;
+                        pingTest.setTextColor(this.activity.getColor(R.color.white));
+                        pingTest.setText(finalResult);
+                    });
+                } else {
+                    boolean isDownModeInSucceeded = output.getBoolean("IS_DOWN_MODE", false);
+                    this.activity.runOnUiThread(() -> {
+                        TextView speedTest = (isDownModeInSucceeded) ? binding.download.data : binding.upload.data;
+                        speedTest.setTextColor(this.activity.getColor(R.color.white));
+                        speedTest.setText(finalResult);
+                        if (workInfo.getTags().contains("IPERF_UP")) {
+                            // TODO: update according to network status
+                            binding.progressIndicator.setProgress(100, true);
+                            binding.progressIndicator.hide();
+                            updateFAB(true);
+                        }
+                    });
+                }
         }
     }
 
