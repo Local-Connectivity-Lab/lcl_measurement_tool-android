@@ -154,7 +154,7 @@ public class CellularManager {
                         listener.onChange(level, dBm);
 
                         if (stopListening) {
-                            Looper.myLooper().quitSafely();
+                            Looper.myLooper().quit();
                         }
                     }
                 }, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
