@@ -218,9 +218,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 progressIndicator.setVisibility(this.isTestStarted ? View.INVISIBLE : View.VISIBLE);
 
                 // TODO: init/cancel ping and iperf based in iTestStart
-                this.mLocationManager.getLastLocation(testLocation::set);
-                LatLng testLatLng = LocationUtils.toLatLng(testLocation);
-                this.map.addMarker(new MarkerOptions().position(testLatLng).draggable(false));
+//                this.mLocationManager.getLastLocation(testLocation::set);
+//                LatLng testLatLng = LocationUtils.toLatLng(testLocation);
+//                this.map.addMarker(new MarkerOptions().position(testLatLng).draggable(false));
 
                 this.isTestStarted = !isTestStarted;
                 Toast.makeText(this.context, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
