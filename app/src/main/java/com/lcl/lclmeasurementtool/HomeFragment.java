@@ -115,6 +115,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onChange(SignalStrengthLevel level, int dBm) {
                 updateSignalStrengthTexts(level, dBm);
+
+                // TODO: Daniel add signal strength data to db based on threshold
 //                String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
 //                mLocationManager.getLastLocation(location -> {
 //                    LatLng latLng = LocationUtils.toLatLng(location);
@@ -257,6 +259,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 }
 
                 // TODO: init/cancel ping and iperf based in iTestStart
+                // TODO: Daniel retrieve location and add a marker on the map
 //                this.mLocationManager.getLastLocation(testLocation::set);
 //                LatLng testLatLng = LocationUtils.toLatLng(testLocation);
 //                this.map.addMarker(new MarkerOptions().position(testLatLng).draggable(false));
