@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
 //        // set up DB
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
+        db.connectivityDAO().insert();
     }
 
     @Override

@@ -22,6 +22,8 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -34,6 +36,7 @@ import com.lcl.lclmeasurementtool.Managers.CellularChangeListener;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
+import com.lcl.lclmeasurementtool.Managers.LocationUpdatesListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.LocationUtils;
@@ -76,6 +79,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onResume() {
         super.onResume();
+
         if (mCellularManager.isSimCardAbsence()) {
             UIUtils.showDialog(this.context,
                     R.string.sim_missing,
@@ -89,6 +93,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     null
             );
         }
+
+
     }
 
     @Override
@@ -117,17 +123,23 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 updateSignalStrengthTexts(level, dBm);
 
                 // TODO: Daniel add signal strength data to db based on threshold
-//                String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
-//                mLocationManager.getLastLocation(location -> {
-//                    LatLng latLng = LocationUtils.toLatLng(location);
-//                    db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode(), latLng));
-//                });
+                // TODO !!!!!!!!!!!!
+                /*
+                String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
+                mLocationManager.getLastLocation(location -> {
+                   LatLng latLng = LocationUtils.toLatLng(location);
+                    db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode(), latLng));
+               });
+               */
+
+                // TODO !!!!!!!!!!
             }
         });
 
         // enable map
-        SupportMapFragment mapFragment = (SupportMapFragment) this.activity.getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+//        SupportMapFragment mapFragment = (SupportMapFragment) this.activity.getSupportFragmentManager()
+//                .findFragmentById(R.id.map);
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         } else {
@@ -224,7 +236,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
         fab.setOnClickListener(button -> {
 
-            if (!this.isCellularConnected) {
+
+            //!this.isCellularConnected
+            if (false) {
                 // raise alert telling user to enable cellular data
                 Log.e(TAG, "not connected to cellular network");
 
@@ -255,15 +269,26 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     mNetworkTestViewModel.cancel();
                     setupTestView();
                 } else {
+                    if (map != null) {
+                        // fetch location
+                        mLocationManager.getLastLocation(location -> {
+                            MarkerOptions marker = new MarkerOptions();
+                            LatLng latLng = new LatLng(location.getLatitude(), location.getLatitude());
+                            marker.position(latLng);
+                            map.addMarker(marker);
+                            map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                        });
+                    }
+
                     mNetworkTestViewModel.run();
                 }
 
                 // TODO: init/cancel ping and iperf based in iTestStart
                 // TODO: Daniel retrieve location and add a marker on the map
-//                this.mLocationManager.getLastLocation(testLocation::set);
-//                LatLng testLatLng = LocationUtils.toLatLng(testLocation);
-//                this.map.addMarker(new MarkerOptions().position(testLatLng).draggable(false));
-
+              // this.mLocationManager.getLastLocation(testLocation::set);
+              //  LatLng testLatLng = LocationUtils.toLatLng(testLocation);
+              //  this.map.addMarker(new MarkerOptions().position(testLatLng).draggable(false));
+                // TODO: !!!!!!!!!!!
                 this.isTestStarted = !isTestStarted;
                 Toast.makeText(this.context, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
             }
@@ -339,6 +364,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                         }
                     });
                 }
+
+                // save all data to DB
+
         }
     }
 
