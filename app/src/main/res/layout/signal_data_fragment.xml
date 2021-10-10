@@ -1,51 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/data_list"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/dark_gray"
+    android:background="@color/dark_black"
     tools:context=".SignalDataFragment">
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/data_list_scroll_view"
+
+    <LinearLayout
+        android:id="@+id/data_list_linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <TableLayout
-            android:id="@+id/data_list_table_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <TableRow
-                android:id="@+id/header"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="15dp">
+    </LinearLayout>
 
-                <TextView
-                    android:layout_weight="1"
-                    android:fontFamily="monospace"
-                    android:text="Time Stamp"
-                    android:textAlignment="center"
-                    android:textColor="@color/white"
-                    android:textSize="14dp"/>
 
-                <TextView
-                    android:layout_weight="1"
-                    android:fontFamily="monospace"
-                    android:text="Strength"
-                    android:textAlignment="center"
-                    android:textColor="@color/white"
-                    android:textSize="14dp"/>
-
-                <TextView
-                    android:layout_weight="1"
-                    android:fontFamily="monospace"
-                    android:text="Code"
-                    android:textAlignment="center"
-                    android:textColor="@color/white"
-                    android:textSize="14dp"/>
-            </TableRow>
-        </TableLayout>
-    </androidx.core.widget.NestedScrollView>
-
-</TableLayout>
+</ScrollView>

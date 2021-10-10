@@ -1,39 +1,32 @@
 package com.lcl.lclmeasurementtool;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
-import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.databinding.SignalDataFragmentBinding;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class SignalDataFragment extends Fragment {
 
     private SignalDataFragmentBinding binding;
     public EntityEnum type;
     private Context context;
-    private SignalViewModel mSignalViewModel;
 
     @Nullable
     @Override
@@ -47,41 +40,27 @@ public class SignalDataFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mSignalViewModel = new ViewModelProvider(requireActivity()).get(SignalViewModel.class);
+        SignalViewModel mSignalViewModel = new ViewModelProvider(requireActivity()).get(SignalViewModel.class);
         mSignalViewModel.getAllConnectivityResults().observe(getViewLifecycleOwner(), signalStrengths -> {
             signalStrengths.forEach(s -> {
-                binding.dataListTableLayout.addView( setupTableRow(s) );
+                binding.dataListLinearLayout.addView(setupRow(s));
             });
         });
     }
 
-    private TableRow setupTableRow(SignalStrength s) {
-        TableRow r = new TableRow(context);
-//        TableRow.LayoutParams layoutParams = new TableRow.LayoutParams();
-//        layoutParams.setMargins(5,5,5,5);
-//        r.setLayoutParams(layoutParams);
-
-        String[] d = new String[]{s.getTimestamp(), String.valueOf(s.getSignalStrength()), String.valueOf(s.getLevel())};
-        TextView[] tvs = new TextView[d.length];
-        for (int i = 0; i < d.length; i++) {
-            tvs[i] = setupTextView(d[i]);
-        }
-
-        for (TextView tv : tvs) {
-            r.addView(tv);
-        }
-
-        return r;
-    }
-
-    private TextView setupTextView(String s) {
-        TextView tv = new TextView(context);
-
-        tv.setText(s);
-        tv.setTypeface(Typeface.MONOSPACE);
-        tv.setTextSize(15);
-        tv.setTextColor(ContextCompat.getColor(context, R.color.white));
-        tv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        return tv;
+    private CardView setupRow(SignalStrength s) {
+        CardView row = (CardView) getLayoutInflater().inflate(R.layout.signal_data_card_template, null);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.leftMargin = 15;
+        layoutParams.rightMargin = 15;
+        layoutParams.bottomMargin = 20;
+        row.setLayoutParams(layoutParams);
+        TextView tvVal = row.findViewById(R.id.val);
+        tvVal.setText(String.valueOf(s.getSignalStrength()));
+        TextView tvCode = row.findViewById(R.id.code);
+        tvCode.setText(String.valueOf(s.getLevel()));
+        TextView tvDate = row.findViewById(R.id.date);
+        tvDate.setText(s.getTimestamp());
+        return row;
     }
 }

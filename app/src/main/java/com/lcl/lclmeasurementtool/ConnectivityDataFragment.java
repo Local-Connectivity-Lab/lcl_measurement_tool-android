@@ -6,11 +6,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
@@ -22,7 +24,9 @@ import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.databinding.ConnectivityDataFragmentBinding;
 import com.lcl.lclmeasurementtool.databinding.SignalDataFragmentBinding;
 
+import java.util.Formatter;
 import java.util.List;
+import java.util.Locale;
 
 public class ConnectivityDataFragment extends Fragment {
 
@@ -43,38 +47,32 @@ public class ConnectivityDataFragment extends Fragment {
         ConnectivityViewModel mConnectivityViewModel = new ViewModelProvider(requireActivity()).get(ConnectivityViewModel.class);
         mConnectivityViewModel.getAllConnectivityResults().observe(getViewLifecycleOwner(), connectivities -> {
             connectivities.forEach(c -> {
-
+                binding.dataListLinearLayout.addView(setupRow(c));
             });
         });
     }
 
-//    private TableRow setupTableRow(Connectivity c) {
-//        TableRow r = new TableRow(context);
-////        TableRow.LayoutParams layoutParams = new TableRow.LayoutParams();
-////        layoutParams.setMargins(5,5,5,5);
-////        r.setLayoutParams(layoutParams);
-//
-//        String[] d = new String[]{s.getTimestamp(), String.valueOf(s.getSignalStrength()), String.valueOf(s.getLevel())};
-//        TextView[] tvs = new TextView[d.length];
-//        for (int i = 0; i < d.length; i++) {
-//            tvs[i] = setupTextView(d[i]);
-//        }
-//
-//        for (TextView tv : tvs) {
-//            r.addView(tv);
-//        }
-//
-//        return r;
-//    }
+    private CardView setupRow(Connectivity c) {
+        CardView row = (CardView) getLayoutInflater().inflate(R.layout.connectivity_data_card_template, null);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.leftMargin = 15;
+        layoutParams.rightMargin = 15;
+        layoutParams.bottomMargin = 20;
+        row.setLayoutParams(layoutParams);
 
-    private TextView setupTextView(String s) {
-        TextView tv = new TextView(context);
+        TextView tvDate = row.findViewById(R.id.connectivity_date);
+        tvDate.setText(c.getTimestamp());
+        TextView tvUpload = row.findViewById(R.id.connectivity_upload);
+        tvUpload.setText(new Formatter().format("%.2f", c.getUpload()).toString());
 
-        tv.setText(s);
-        tv.setTypeface(Typeface.MONOSPACE);
-        tv.setTextSize(15);
-        tv.setTextColor(ContextCompat.getColor(context, R.color.white));
-        tv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        return tv;
+        TextView tvDownload = row.findViewById(R.id.connectivity_download);
+        tvDownload.setText(new Formatter().format("%.2f", c.getDownload()).toString());
+
+        TextView tvPing = row.findViewById(R.id.connectivity_ping);
+        tvPing.setText(new Formatter().format("%.2f", c.getPing()).toString());
+
+        TextView tvPacket = row.findViewById(R.id.connectivity_packet);
+        tvPacket.setText(new Formatter().format("%.2f", c.getPacketLoss()).toString());
+        return row;
     }
 }
