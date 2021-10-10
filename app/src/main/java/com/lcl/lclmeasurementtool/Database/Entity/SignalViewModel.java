@@ -28,4 +28,10 @@ public class SignalViewModel extends AndroidViewModel {
             db.signalStrengthDAO().insert(signalStrength);
         });
     }
+
+    public void deleteAll() {
+        MeasurementResultDatabase.databaseWriteExecutor.execute(() -> {
+            db.signalStrengthDAO().deleteAll();
+        });
+    }
 }

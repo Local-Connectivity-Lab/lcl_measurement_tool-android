@@ -7,6 +7,6 @@ import java.time.format.DateTimeFormatter;
 public class TimeUtils {
 
     public static String getTimeStamp(ZoneId zoneId) {
-        return Instant.now().atZone(zoneId).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        return Instant.now().atZone(zoneId).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     }
 }

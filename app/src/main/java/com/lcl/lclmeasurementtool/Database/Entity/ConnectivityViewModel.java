@@ -28,4 +28,10 @@ public class ConnectivityViewModel extends AndroidViewModel {
             db.connectivityDAO().insert(connectivity);
         });
     }
+
+    public void deleteAll() {
+        MeasurementResultDatabase.databaseWriteExecutor.execute(() -> {
+            db.connectivityDAO().deleteAll();
+        });
+    }
 }

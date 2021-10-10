@@ -9,6 +9,8 @@ import androidx.room.TypeConverters;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.text.SimpleDateFormat;
+
 @Entity(tableName = "signal_strength_table")
 @TypeConverters({Converters.class})
 public class SignalStrength {

@@ -6,31 +6,46 @@
     android:layout_height="match_parent"
     android:background="@color/dark_gray"
     tools:context=".SignalDataFragment">
-    <TableRow
-        android:id="@+id/header"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp">
-        <TextView
-            android:text="Time Stamp"
-            android:textSize="16dp"
-            android:fontFamily="monospace"
-            android:textColor="@color/white"
-            android:layout_weight="1">
-        </TextView>
-        <TextView
-            android:text="Signal Strength/dBm"
-            android:textSize="16dp"
-            android:fontFamily="monospace"
-            android:textColor="@color/white"
-            android:layout_weight="1">
-        </TextView>
-        <TextView
-            android:text="Code"
-            android:textSize="16dp"
-            android:fontFamily="monospace"
-            android:textColor="@color/white"
-            android:layout_weight="1">
-        </TextView>
-    </TableRow>
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/data_list_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TableLayout
+            android:id="@+id/data_list_table_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TableRow
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp">
+
+                <TextView
+                    android:layout_weight="1"
+                    android:fontFamily="monospace"
+                    android:text="Time Stamp"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="14dp"/>
+
+                <TextView
+                    android:layout_weight="1"
+                    android:fontFamily="monospace"
+                    android:text="Strength"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="14dp"/>
+
+                <TextView
+                    android:layout_weight="1"
+                    android:fontFamily="monospace"
+                    android:text="Code"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="14dp"/>
+            </TableRow>
+        </TableLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </TableLayout>

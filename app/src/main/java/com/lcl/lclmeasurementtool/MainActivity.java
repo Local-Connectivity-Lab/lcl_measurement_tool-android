@@ -1,9 +1,11 @@
 package com.lcl.lclmeasurementtool;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -13,6 +15,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -20,10 +23,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.android.volley.BuildConfig;
+import com.google.android.gms.maps.model.LatLng;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
+import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
+import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
+import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
+import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
+import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
+import java.time.ZoneId;
 import java.util.UUID;
 
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
@@ -37,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +73,14 @@ public class MainActivity extends AppCompatActivity {
 
 //        // set up DB
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
+        SignalViewModel signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
+        signalViewModel.deleteAll();
+        for (int i = 0; i < 50; i++) {
+            LatLng location = new LatLng(47.6589432,-122.3112161);
+            String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
+            SignalStrength s = new SignalStrength(ts + i, 100-i*5, i, location);
+            signalViewModel.insert(s);
+        }
     }
 
     @Override
