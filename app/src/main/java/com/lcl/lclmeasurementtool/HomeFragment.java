@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.net.NetworkCapabilities;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -16,9 +17,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
 
@@ -26,11 +29,13 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.BaseProgressIndicator;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
-import com.lcl.lclmeasurementtool.Managers.CellularChangeListener;
+import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
+import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
+import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
+import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
@@ -52,6 +57,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private FragmentActivity activity;
     private Context context;
     public static final String TAG = "MAIN_FRAGMENT";
+    private static final int SIGNAL_THRESHOLD = 5;
 
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
@@ -63,6 +69,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private boolean isTestStarted;
     private boolean isCellularConnected;
     private NetworkTestViewModel mNetworkTestViewModel;
+    private ConnectivityViewModel connectivityViewModel;
+    private SignalViewModel signalViewModel;
+
+    private int prevSignalStrength = 0;
+    private double prevPing = -1.0;
+    private double prevUpload = -1.0;
+    private double prevDownload = -1.0;
 
     @Nullable
     @Override
@@ -91,6 +104,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -103,6 +117,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mNetworkTestViewModel.getmSavedIperfDownInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
         mNetworkTestViewModel.getmSavedIperfUpInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
         mNetworkTestViewModel.getmSavedPingInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
+        connectivityViewModel = new ViewModelProvider(this).get(ConnectivityViewModel.class);
+        signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
 
         getLifecycle().addObserver(locationServiceListener);
 
@@ -111,17 +127,18 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         // update and listen to signal strength changes
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
-        mCellularManager.listenToSignalStrengthChange(new CellularChangeListener() {
-            @Override
-            public void onChange(SignalStrengthLevel level, int dBm) {
-                updateSignalStrengthTexts(level, dBm);
+        mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
+            updateSignalStrengthTexts(level, dBm);
 
+            if (prevSignalStrength != 0 && Math.abs(prevSignalStrength - dBm) > SIGNAL_THRESHOLD) {
+                prevSignalStrength = dBm;
                 // TODO: Daniel add signal strength data to db based on threshold
-//                String curTime = TimeUtils.getTimeStamp(ZoneId.systemDefault());
-//                mLocationManager.getLastLocation(location -> {
-//                    LatLng latLng = LocationUtils.toLatLng(location);
-//                    db.signalStrengthDAO().insert(new SignalStrength(curTime, dBm, level.getLevelCode(), latLng));
-//                });
+                String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
+
+                mLocationManager.getLastLocation(location -> {
+                    LatLng latLng = LocationUtils.toLatLng(location);
+                    signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
+                });
             }
         });
 
@@ -281,6 +298,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("RestrictedApi")
     private void parseWorkInfo(List<WorkInfo> workInfoList) {
         // if there are no matching work info, do nothing
@@ -292,6 +310,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         switch (workInfo.getState()) {
             case FAILED:
 
+                batchConnectivityReset();
                 if (output.size() == 1) {
                     boolean isTestCancelled = output.getBoolean("IS_CANCELLED", false);
                     Toast.makeText(this.context, "test is cancelled: " + isTestCancelled, Toast.LENGTH_SHORT).show();
@@ -320,13 +339,21 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 if (output.size() == 0) break;
                 String finalResult = output.getString("FINAL_RESULT");
                 if (workInfo.getTags().contains("PING")) {
+                    if (finalResult == null) break;
+                    prevPing = Double.parseDouble(finalResult.split(" ")[0]);
                     this.activity.runOnUiThread(() -> {
                         TextView pingTest = binding.ping.data;
                         pingTest.setTextColor(this.activity.getColor(R.color.white));
                         pingTest.setText(finalResult);
                     });
                 } else {
+                    if (finalResult == null) break;
                     boolean isDownModeInSucceeded = output.getBoolean("IS_DOWN_MODE", false);
+                    if (isDownModeInSucceeded) {
+                        prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
+                    } else {
+                        prevUpload = Double.parseDouble(finalResult.split(" ")[0]);
+                    }
                     this.activity.runOnUiThread(() -> {
                         TextView speedTest = (isDownModeInSucceeded) ? binding.download.data : binding.upload.data;
                         speedTest.setTextColor(this.activity.getColor(R.color.white));
@@ -336,10 +363,28 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                             binding.progressIndicator.setProgress(100, true);
                             binding.progressIndicator.hide();
                             updateFAB(true);
+
+                            if (isConnectivityAllSet()) {
+                                String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
+                                mLocationManager.getLastLocation(location -> {
+                                    LatLng latLng = LocationUtils.toLatLng(location);
+                                    connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
+                                });
+                            }
                         }
                     });
                 }
         }
+    }
+
+    private void batchConnectivityReset() {
+        prevDownload = -1.0;
+        prevPing = -1.0;
+        prevUpload = -1.0;
+    }
+
+    private boolean isConnectivityAllSet() {
+        return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
     }
 
     @Override

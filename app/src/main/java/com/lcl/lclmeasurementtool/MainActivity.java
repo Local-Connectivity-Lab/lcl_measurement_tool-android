@@ -73,18 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
 //        // set up DB
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
-        SignalViewModel signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
-        ConnectivityViewModel connectivityViewModel = new ViewModelProvider(this).get(ConnectivityViewModel.class);
-        signalViewModel.deleteAll();
-        connectivityViewModel.deleteAll();
-        for (int i = 0; i < 50; i++) {
-            LatLng location = new LatLng(47.6589432,-122.3112161);
-            String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
-            Connectivity c = new Connectivity(ts + i, i * 10.1, 11.1 * i, 5 * i, 11 * i * 0.1,location);
-//            SignalStrength s = new SignalStrength(ts + i, 100-i*5, i, location);
-//            signalViewModel.insert(s);
-            connectivityViewModel.insert(c);
-        }
     }
 
     @Override

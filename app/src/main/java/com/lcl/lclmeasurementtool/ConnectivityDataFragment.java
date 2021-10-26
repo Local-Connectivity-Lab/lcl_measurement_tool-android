@@ -71,8 +71,8 @@ public class ConnectivityDataFragment extends Fragment {
         TextView tvPing = row.findViewById(R.id.connectivity_ping);
         tvPing.setText(new Formatter().format("%.2f", c.getPing()).toString());
 
-        TextView tvPacket = row.findViewById(R.id.connectivity_packet);
-        tvPacket.setText(new Formatter().format("%.2f", c.getPacketLoss()).toString());
+//        TextView tvPacket = row.findViewById(R.id.connectivity_packet);
+//        tvPacket.setText(new Formatter().format("%.2f", c.getPacketLoss()).toString());
         return row;
     }
 }
