@@ -3,7 +3,6 @@ package com.lcl.lclmeasurementtool;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
 import android.net.NetworkCapabilities;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,7 +26,6 @@ import androidx.work.WorkInfo;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.BaseProgressIndicator;
@@ -36,6 +34,7 @@ import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
+import com.lcl.lclmeasurementtool.Functionality.UploadViewModel;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
@@ -50,27 +49,32 @@ import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private HomeFragmentBinding binding;
     private FragmentActivity activity;
     private Context context;
     public static final String TAG = "MAIN_FRAGMENT";
-    private static final int SIGNAL_THRESHOLD = 5;
+    private static final int SIGNAL_THRESHOLD = 3;
+    private static final int UPLOAD_CONNECTIVITY = 0;
+    private static final int UPLOAD_SIGNAL = 1;
+    private String uuid;
 
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
     LocationServiceManager mLocationManager;
     LocationServiceListener locationServiceListener;
-    Location testLocation;
-    GoogleMap map;
+//    GoogleMap map;
 
     private boolean isTestStarted;
     private boolean isCellularConnected;
     private NetworkTestViewModel mNetworkTestViewModel;
     private ConnectivityViewModel connectivityViewModel;
     private SignalViewModel signalViewModel;
+    private UploadViewModel uploadViewModel;
 
     private int prevSignalStrength = 0;
     private double prevPing = -1.0;
@@ -119,6 +123,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mNetworkTestViewModel.getmSavedPingInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
         connectivityViewModel = new ViewModelProvider(this).get(ConnectivityViewModel.class);
         signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
+        uploadViewModel = new ViewModelProvider(this).get(UploadViewModel.class);
+
+        uuid = this.activity.getPreferences(Context.MODE_PRIVATE)
+                .getString(getString(R.string.USER_UUID), "");
 
         getLifecycle().addObserver(locationServiceListener);
 
@@ -126,13 +134,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         this.isCellularConnected = false;
 
         // update and listen to signal strength changes
-        updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), mCellularManager.getDBM());
+        prevSignalStrength = mCellularManager.getDBM();
+        updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
         mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
+
+            Log.e(TAG, "" + dBm);
             updateSignalStrengthTexts(level, dBm);
 
             if (prevSignalStrength != 0 && Math.abs(prevSignalStrength - dBm) > SIGNAL_THRESHOLD) {
                 prevSignalStrength = dBm;
-                // TODO: Daniel add signal strength data to db based on threshold
                 String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
 
                 mLocationManager.getLastLocation(location -> {
@@ -143,15 +153,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         });
 
         // enable map
-        SupportMapFragment mapFragment = (SupportMapFragment) this.activity.getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
-        } else {
-            Log.e(TAG, "Map Fragment is null");
-        }
+//        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+//        if (mapFragment != null) {
+//            mapFragment.getMapAsync(this);
+//        } else {
+//            Log.e(TAG, "Map Fragment is null");
+//        }
 
         setupTestView();
+
         // set up FAB
         setUpFAB();
         updateFAB(isCellularConnected);
@@ -227,8 +237,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
         this.activity.runOnUiThread(() -> {
-            binding.SignalStrengthValue.setText(String.valueOf(dBm));
-            binding.SignalStrengthStatus.setText(level.getName());
+            if (binding.SignalStrengthValue != null) {
+                binding.SignalStrengthValue.setText(String.valueOf(dBm));
+                binding.SignalStrengthStatus.setText(level.getName());
+            }
             binding.SignalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
             binding.SignalStrengthIndicator.setColorFilter(level.getColor(this.context));
         });
@@ -244,7 +256,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             if (!this.isCellularConnected) {
                 // raise alert telling user to enable cellular data
                 Log.e(TAG, "not connected to cellular network");
-
 
                 UIUtils.showDialog(this.context,
                         R.string.cellular_on_title,
@@ -268,18 +279,24 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 }
                 progressIndicator.setVisibility(this.isTestStarted ? View.INVISIBLE : View.VISIBLE);
 
+                // fetch location
+
                 if (this.isTestStarted) {
                     mNetworkTestViewModel.cancel();
                     setupTestView();
                 } else {
+//                    if (map != null) {
+//                        // fetch location
+//                        mLocationManager.getLastLocation(location -> {
+//                            MarkerOptions marker = new MarkerOptions();
+//                            LatLng latLng = new LatLng(location.getLatitude(), location.getLatitude());
+//                            marker.position(latLng);
+//                            map.addMarker(marker);
+//                            map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+//                        });
+//                    }
                     mNetworkTestViewModel.run();
                 }
-
-                // TODO: init/cancel ping and iperf based in iTestStart
-                // TODO: Daniel retrieve location and add a marker on the map
-//                this.mLocationManager.getLastLocation(testLocation::set);
-//                LatLng testLatLng = LocationUtils.toLatLng(testLocation);
-//                this.map.addMarker(new MarkerOptions().position(testLatLng).draggable(false));
 
                 this.isTestStarted = !isTestStarted;
                 Toast.makeText(this.context, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
@@ -366,9 +383,22 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
                             if (isConnectivityAllSet()) {
                                 String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
+
                                 mLocationManager.getLastLocation(location -> {
                                     LatLng latLng = LocationUtils.toLatLng(location);
+
+                                    Map<String, Object> map = new HashMap<>();
+                                    map.put("latitude", latLng.latitude);
+                                    map.put("longitude", latLng.longitude);
+                                    map.put("timestamp", ts);
+                                    map.put("upload_speed", prevUpload);
+                                    map.put("download_speed", prevDownload);
+                                    map.put("data_since_last_report", "");
+                                    map.put("ping", prevPing);
+                                    map.put("cell_id", "");
+                                    map.put("device_id", uuid);
                                     connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
+                                    uploadViewModel.loadData(map, UPLOAD_CONNECTIVITY);
                                 });
                             }
                         }
@@ -389,10 +419,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        Log.i(TAG, "Map ready");
-        this.map = googleMap;
-        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        googleMap.setMaxZoomPreference(20.0f);
-        googleMap.setMinZoomPreference(6.0f);
+//        Log.i(TAG, "Map ready");
+//        this.map = googleMap;
+//        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+//        googleMap.setMaxZoomPreference(20.0f);
+//        googleMap.setMinZoomPreference(6.0f);
     }
 }

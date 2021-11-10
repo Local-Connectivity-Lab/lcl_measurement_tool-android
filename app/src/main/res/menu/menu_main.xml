@@ -18,11 +18,11 @@
             android:icon="@drawable/signal_strength_indicator"
             android:title="History Signal Strength Data"/>
     </group>
-    <group
-        android:id="@+id/group2"
-        android:checkableBehavior="none">
-        <item
-            android:id="@+id/setting"
-            android:title="Settings"/>
-    </group>
+<!--    <group-->
+<!--        android:id="@+id/group2"-->
+<!--        android:checkableBehavior="none">-->
+<!--        <item-->
+<!--            android:id="@+id/setting"-->
+<!--            android:title="Settings"/>-->
+<!--    </group>-->
 </menu>

@@ -94,7 +94,7 @@ public class NetworkTestViewModel extends ViewModel {
         Data.Builder builder = new Data.Builder();
         // TODO Determine the correct server(s) based on the network we are attached to?
         builder.putInt("SERVER_PORT", 5201);
-        builder.putString("SERVER_ADDR", "iperf.scottlinux.com");
+        builder.putString("SERVER_ADDR", "iperf.he.net");
         return builder.build();
     }
 

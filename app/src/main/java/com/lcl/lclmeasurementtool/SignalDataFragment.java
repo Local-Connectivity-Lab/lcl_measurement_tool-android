@@ -42,6 +42,7 @@ public class SignalDataFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         SignalViewModel mSignalViewModel = new ViewModelProvider(requireActivity()).get(SignalViewModel.class);
         mSignalViewModel.getAllConnectivityResults().observe(getViewLifecycleOwner(), signalStrengths -> {
+//            binding.dataListLinearLayout.removeAllViews();
             signalStrengths.forEach(s -> {
                 binding.dataListLinearLayout.addView(setupRow(s));
             });
