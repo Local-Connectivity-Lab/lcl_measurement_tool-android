@@ -1,5 +1,7 @@
 package com.lcl.lclmeasurementtool.Managers;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +16,8 @@ public class UploadManager {
 
     private static UploadManager instance;
     private static final MediaType MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
-    private static final String url = "https://api-dev.seattlecommunitynetwork.org/";
+//    private static final String url = "https://api-dev.seattlecommunitynetwork.org/";
+    private static final String url = "https://homes.cs.washington.edu/~zhouz46/cookieEater.php";
     private Map<String, Object> map;
 
     private OkHttpClient client;
@@ -34,6 +37,7 @@ public class UploadManager {
 
         RequestBody body = RequestBody.create(json, MEDIA_TYPE);
         Request request = new Request.Builder().url(url + endpoint).post(body).build();
+
         Response response = client.newCall(request).execute();
     }
 
@@ -55,7 +59,7 @@ public class UploadManager {
         }
 
         int type = (int) map.get("TYPE");
-        map.remove("TYPE");
+        // map.remove("TYPE");
         switch (type) {
             case 0:
                 endpoint = "api/data";

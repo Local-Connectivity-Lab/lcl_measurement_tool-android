@@ -58,7 +58,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private FragmentActivity activity;
     private Context context;
     public static final String TAG = "MAIN_FRAGMENT";
-    private static final int SIGNAL_THRESHOLD = 3;
+    private static final int SIGNAL_THRESHOLD = 2;
     private static final int UPLOAD_CONNECTIVITY = 0;
     private static final int UPLOAD_SIGNAL = 1;
     private String uuid;
@@ -74,7 +74,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private NetworkTestViewModel mNetworkTestViewModel;
     private ConnectivityViewModel connectivityViewModel;
     private SignalViewModel signalViewModel;
-    private UploadViewModel uploadViewModel;
+    private UploadViewModel uploadViewModelSignalStrength;
+    private UploadViewModel uploadViewModelConnectivity;
 
     private int prevSignalStrength = 0;
     private double prevPing = -1.0;
@@ -123,7 +124,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mNetworkTestViewModel.getmSavedPingInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
         connectivityViewModel = new ViewModelProvider(this).get(ConnectivityViewModel.class);
         signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
-        uploadViewModel = new ViewModelProvider(this).get(UploadViewModel.class);
+        uploadViewModelSignalStrength = new ViewModelProvider(this).get(UploadViewModel.class);
+        uploadViewModelConnectivity = new ViewModelProvider(this).get(UploadViewModel.class);
 
         uuid = this.activity.getPreferences(Context.MODE_PRIVATE)
                 .getString(getString(R.string.USER_UUID), "");
@@ -141,12 +143,23 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             Log.e(TAG, "" + dBm);
             updateSignalStrengthTexts(level, dBm);
 
-            if (prevSignalStrength != 0 && Math.abs(prevSignalStrength - dBm) > SIGNAL_THRESHOLD) {
+            if (prevSignalStrength != 0 && Math.abs(prevSignalStrength - dBm) >= SIGNAL_THRESHOLD) {
                 prevSignalStrength = dBm;
                 String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
 
                 mLocationManager.getLastLocation(location -> {
                     LatLng latLng = LocationUtils.toLatLng(location);
+
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("latitude", latLng.latitude);
+                    map.put("longitude", latLng.longitude);
+                    map.put("timestamp", ts);
+                    map.put("dBm", dBm);
+                    map.put("level_code", level.getLevelCode());
+                    map.put("cell_id", "");
+                    map.put("device_id", uuid);
+                    uploadViewModelSignalStrength.loadData(map, UPLOAD_SIGNAL);
+                    uploadViewModelSignalStrength.upload();
                     signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
                 });
             }
@@ -397,8 +410,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                                     map.put("ping", prevPing);
                                     map.put("cell_id", "");
                                     map.put("device_id", uuid);
+                                    uploadViewModelConnectivity.loadData(map, UPLOAD_CONNECTIVITY);
+                                    uploadViewModelConnectivity.upload();
                                     connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
-                                    uploadViewModel.loadData(map, UPLOAD_CONNECTIVITY);
                                 });
                             }
                         }
