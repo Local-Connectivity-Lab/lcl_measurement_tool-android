@@ -12,12 +12,14 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.security.keystore.KeyProperties;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,9 +32,18 @@ import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
+import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
 import java.time.ZoneId;
 import java.util.UUID;
 
@@ -45,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    private static final String SIM_STATE_CHANGED = "android.intent.action.SIM_STATE_CHANGED";
+    private SimStatesReceiver simStatesReceiver;
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -73,17 +86,22 @@ public class MainActivity extends AppCompatActivity {
 
 //        // set up DB
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
+        try {
+            simStatesReceiver = new SimStatesReceiver(this);
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException | KeyStoreException | CertificateException | IOException e) {
+            e.printStackTrace();
+        }
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(SIM_STATE_CHANGED);
+        this.registerReceiver(simStatesReceiver, filter);
+
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        this.unregisterReceiver(simStatesReceiver);
     }
-
-
-
-
-    // TODO: update FAB Icon and State when tests are done
 
 
     ////////////////// HELPER FUNCTION ///////////////////////
@@ -155,5 +173,22 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    /**
+     * Generate asymmetric key pairs and store in keystore in android
+     */
+    private void initAsymmetricKeys() throws NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore");
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+    }
+
+    /**
+     * Check whether the key is still valid
+     *
+     * @return true if the key is still valid; false otherwise
+     */
+    private boolean checkKeys() {
+        return false;
     }
 }

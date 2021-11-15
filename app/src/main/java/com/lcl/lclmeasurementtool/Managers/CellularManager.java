@@ -1,15 +1,20 @@
 package com.lcl.lclmeasurementtool.Managers;
+
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Looper;
 import android.telephony.CellSignalStrength;
 import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.PhoneStateListener;
+import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 
@@ -122,6 +127,30 @@ public class CellularManager {
     }
 
     /**
+     * Read the IMEI code of the sim card
+     * @return the IMEI code in string; null if CellularManager failed to initialize;
+     */
+    public String getIMEI() {
+        if (this.telephonyManager != null) {
+            return this.telephonyManager.getImei();
+        }
+
+        return null;
+    }
+
+    /**
+     * Read the Sim card ID code of the sim card
+     * @return the Siim card ID code in string; null if CellularManager failed to initialize;
+     */
+    public String getSIMCardID() {
+        if (this.telephonyManager != null) {
+            return this.telephonyManager.getSimSerialNumber();
+        }
+
+        return null;
+    }
+
+    /**
      * Start listen to signal strength change and display onto the corresponding TextView.
      *
      */
@@ -163,6 +192,21 @@ public class CellularManager {
             }
         }).start();
     }
+
+//    public void listenToSimCardState() {
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                telephonyManager.listen(new PhoneStateListener() {
+//                    @Override
+//                    public void onServiceStateChanged(ServiceState serviceState) {
+//                        super.onServiceStateChanged(serviceState);
+//                        serviceState.getState()
+//                    }
+//                });
+//            }
+//        });
+//    }
 
     /**
      * Stop listening the changes on signal strength.
