@@ -94,6 +94,20 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onResume() {
         super.onResume();
+//        if (mCellularManager.isSimCardAbsence()) {
+
+//            UIUtils.showDialog(this.context,
+//                    R.string.sim_missing,
+//                    R.string.sim_missing_message,
+//                    android.R.string.ok,
+//                    (dialog, which) -> {
+//                        this.activity.finishAndRemoveTask();
+//                        System.exit(0);
+//                    },
+//                    -1,
+//                    null
+//            );
+//        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)

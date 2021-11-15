@@ -78,6 +78,8 @@ public class SimStatesReceiver extends BroadcastReceiver {
                     } catch (NoSuchProviderException | NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException e) {
                         e.printStackTrace();
                     }
+                } else if (extraState.equals(SimCardConstants.INTENT_VALUE_ICC_IMSI) || extraState.equals(SimCardConstants.INTENT_VALUE_ICC_READY)) {
+                    // do nothing
                 } else {
                     try {
                         Log.i(TAG, "remove current keypair");
