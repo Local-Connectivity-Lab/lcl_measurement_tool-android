@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.Utils;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -38,7 +39,26 @@ public class SecurityUtils {
      */
     public static byte[] digest(String data, String algorithm) throws NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
-        messageDigest.update(data.getBytes());
+        messageDigest.update(data.getBytes(StandardCharsets.UTF_8));
         return messageDigest.digest();
+    }
+
+    /**
+     * Verify a signed data with public key and given algorithm
+     *
+     * @param data               the data to be verified
+     * @param publicKey          the public key to verify the the signed data
+     * @param signatureBytes     the signature
+     * @param algorithm          the algorithm used for the signature
+     * @return
+     * @throws InvalidKeyException
+     * @throws SignatureException
+     * @throws NoSuchAlgorithmException
+     */
+    public static boolean verify(byte[] data, PublicKey publicKey, byte[] signatureBytes, String algorithm) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+        Signature signature = Signature.getInstance(algorithm);
+        signature.initVerify(publicKey);
+        signature.update(data);
+        return signature.verify(signatureBytes);
     }
 }

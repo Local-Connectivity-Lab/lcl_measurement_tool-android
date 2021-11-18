@@ -6,7 +6,7 @@
 #include "iperf3_java_callback.h"
 #include "iperf_state_wrapper_interface.h"
 
-/******************************** Java 方法回调 start ********************************/
+
 void call_java_method(struct iperf_test_state *test, jmethodID  method_id, int argc, ...) {
     JNIEnv *env = test->jniCallback.env;
     jobject callbackObj = test->jniCallback.callbackObj;
@@ -37,9 +37,7 @@ void on_error_java(struct iperf_test_state *test, char *err_msg) {
     JNIEnv *env = test->jniCallback.env;
     call_java_method(test, test->jniCallback.errorMethod, 1, charToJstring(env, err_msg));
 }
-/******************************** Java 方法回调 end ********************************/
 
-/* 构造回调Java方法需要的参数 */
 int construct_java_callback(JNIEnv *javaEnv, struct iperf_test_state *test, jobject callback) {
     /*
     public interface com.cmii.iperf3.Iperf3Callback {
@@ -139,13 +137,6 @@ int parse_java_config(JNIEnv *env, struct iperf_test_state *test_wrapper, jobjec
     double interval = (*env)->GetDoubleField(env, config, interval_field);
     iperf_set_test_stats_interval(test, interval);
     iperf_set_test_reporter_interval(test, interval);
-    // -u，没有使用需要，先不支持udp
-//    jfieldID is_udp_field = (*env)->GetFieldID(env, class, "isUdp", "Z");
-//    jboolean is_udp = (*env)->GetBooleanField(env, config, is_udp_field);
-//    if (is_udp) {
-//        set_protocol(test, Pudp);
-//        iperf_set_test_blksize(test, DEFAULT_UDP_BLKSIZE);
-//    }
 
     return 0;
 }
