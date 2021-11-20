@@ -1,3 +1,4 @@
+#include <iperf_config.h>
 #include <iperf_api.h>
 #include <malloc.h>
 #include <string.h>
@@ -17,7 +18,6 @@ void call_java_method(struct iperf_test_state *test, jmethodID  method_id, int a
     va_end(arg_list);
 }
 
-/* 共用报告带宽方法 */
 void on_report_bandwidth(struct iperf_test_state *test, jmethodID  method_id,
                     float start, float end, char send_bytes[], char band_width[]) {
     JNIEnv *env = test->jniCallback.env;
@@ -137,6 +137,22 @@ int parse_java_config(JNIEnv *env, struct iperf_test_state *test_wrapper, jobjec
     double interval = (*env)->GetDoubleField(env, config, interval_field);
     iperf_set_test_stats_interval(test, interval);
     iperf_set_test_reporter_interval(test, interval);
+
+    // username
+    const char* user_name = get_java_string_field(env,
+                                                  class,
+                                                  config,
+                                                  "userName",
+                                                  "Ljava/lang/String;");
+    iperf_set_test_client_username(test, user_name);
+
+    // password
+    const char* password = get_java_string_field(env, class, config, "password", "Ljava/lang/String;");
+    iperf_set_test_client_password(test, password);
+
+    // rsa key
+    const char* rsa_key = get_java_string_field(env, class, config, "rsaKey", "Ljava/lang/String;");
+    iperf_set_test_client_rsa_pubkey(test, rsa_key);
 
     return 0;
 }

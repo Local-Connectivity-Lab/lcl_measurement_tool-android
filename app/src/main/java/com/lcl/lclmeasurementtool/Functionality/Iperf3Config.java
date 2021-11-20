@@ -13,6 +13,9 @@ public class Iperf3Config {
     public long bandwidth = BANDWIDTH_1000M;
     public char formatUnit = 'm';
     public int parallels = 1;
+    public String userName;
+    public String password;
+    public String rsaKey;
 
     public Iperf3Config() {
     }
