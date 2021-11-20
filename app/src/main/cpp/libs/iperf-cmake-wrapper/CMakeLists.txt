@@ -34,16 +34,22 @@ endif()
 SET(AUTOMAKE_EXT_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -fPIC")
 SET(AUTOMAKE_EXT_C_FLAGS "${CMAKE_C_FLAGS} -static -fPIC")
 
+# Need to pass the location of the precompiled openssl library to the external autotools project, in
+# addition to the usual linked library properties propagated via cmake dependencies.
+get_target_property(OPENSSL_LOCATION openssl INTERFACE_OPENSSL_LOCATION)
+
 include(ExternalProject)
 ExternalProject_Add(
         iperf_autotools
         SOURCE_DIR ${IPERF_DIRECTORY_NAME}
-        CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${IPERF_DIRECTORY_NAME}/configure --host ${AUTOTOOLS_EXT_TARGET} AR=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/llvm-ar CC=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/${AUTOTOOLS_EXT_TARGET}${AUTOTOOLS_EXT_ABI}-clang AS=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/${AUTOTOOLS_EXT_TARGET}${AUTOTOOLS_EXT_ABI}-clang CXX=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/${AUTOTOOLS_EXT_TARGET}${AUTOTOOLS_EXT_ABI}-clang++ LD=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/ld RANLIB=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/llvm-ranlib STRIP=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/llvm-strip CFLAGS=${AUTOMAKE_EXT_C_FLAGS} CXXFLAGS=${AUTOMAKE_EXT_CXX_FLAGS} --without-openssl --prefix=${CMAKE_CURRENT_BINARY_DIR}/${IPERF_DIRECTORY_NAME}
+        CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LDFLAGS=-ldl ${CMAKE_CURRENT_SOURCE_DIR}/${IPERF_DIRECTORY_NAME}/configure --host ${AUTOTOOLS_EXT_TARGET} AR=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/llvm-ar CC=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/${AUTOTOOLS_EXT_TARGET}${AUTOTOOLS_EXT_ABI}-clang AS=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/${AUTOTOOLS_EXT_TARGET}${AUTOTOOLS_EXT_ABI}-clang CXX=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/${AUTOTOOLS_EXT_TARGET}${AUTOTOOLS_EXT_ABI}-clang++ LD=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/ld RANLIB=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/llvm-ranlib STRIP=${AUTOTOOLS_EXT_TOOLCHAIN}/bin/llvm-strip CFLAGS=${AUTOMAKE_EXT_C_FLAGS} CXXFLAGS=${AUTOMAKE_EXT_CXX_FLAGS} --with-openssl=${OPENSSL_LOCATION} --prefix=${CMAKE_CURRENT_BINARY_DIR}/${IPERF_DIRECTORY_NAME}
         PREFIX ${IPERF_DIRECTORY_NAME}
         BUILD_COMMAND make
         BUILD_IN_SOURCE 1
         BUILD_BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/${IPERF_DIRECTORY_NAME}/lib/libiperf.a
 )
+
+add_dependencies(iperf_autotools openssl)
 
 # Create a CMake "imported" "interface" library representing the outputs from the autotools process.
 add_library(iperf INTERFACE IMPORTED GLOBAL)
@@ -59,6 +65,7 @@ target_link_libraries(iperf INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/${IPERF_DIREC
 
 # Make sure the iperf interface library target triggers the autotools build.
 add_dependencies(iperf iperf_autotools)
+target_link_libraries(iperf INTERFACE openssl)
 
 # Add extra includes based on the current structure of the wrapper codebase.
 # This somewhat breaks the API encapsulation.
