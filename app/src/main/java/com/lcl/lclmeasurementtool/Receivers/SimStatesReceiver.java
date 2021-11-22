@@ -5,12 +5,15 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
+
 import com.lcl.lclmeasurementtool.Managers.KeyStoreManager;
 import com.lcl.lclmeasurementtool.R;
-import com.lcl.lclmeasurementtool.Utils.SimCardConstants;
+import com.lcl.lclmeasurementtool.Constants.SimCardConstants;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
 import java.io.IOException;
@@ -28,11 +31,13 @@ public class SimStatesReceiver extends BroadcastReceiver {
     private Activity activity;
     private KeyStoreManager securityManager;
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     public SimStatesReceiver(Activity activity) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException, KeyStoreException, CertificateException, IOException {
         this.activity = activity;
         securityManager = KeyStoreManager.getInstance();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
     public void onReceive(Context context, Intent intent) {
         this.context = context;

@@ -3,6 +3,7 @@ package com.lcl.lclmeasurementtool.Managers;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Looper;
 import android.telephony.CellSignalStrength;
 import android.telephony.CellSignalStrengthCdma;
@@ -14,6 +15,7 @@ import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
@@ -45,11 +47,14 @@ public class CellularManager {
     // the flag that controls when to stop listening to signal strength change.
     private boolean stopListening;
 
+    private Context context;
+
     /**
      * Construct a new CellularManager object based on current context.
      * @param context the context of the application.
      */
     private CellularManager(@NonNull Context context) {
+        this.context = context;
         this.telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         this.signalStrength = this.telephonyManager.getSignalStrength();
         if (this.signalStrength.getCellSignalStrengths().size() > 0) {
@@ -130,6 +135,7 @@ public class CellularManager {
      * Read the IMEI code of the sim card
      * @return the IMEI code in string; null if CellularManager failed to initialize;
      */
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public String getIMEI() {
         if (this.telephonyManager != null) {
             return this.telephonyManager.getImei();

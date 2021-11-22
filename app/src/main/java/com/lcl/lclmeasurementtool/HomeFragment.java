@@ -30,17 +30,20 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.BaseProgressIndicator;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.jsoniter.output.JsonStream;
 import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
 import com.lcl.lclmeasurementtool.Functionality.UploadViewModel;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
+import com.lcl.lclmeasurementtool.Managers.KeyStoreManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Utils.LocationUtils;
+import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
@@ -48,6 +51,13 @@ import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +77,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     NetworkManager mNetworkManager;
     LocationServiceManager mLocationManager;
     LocationServiceListener locationServiceListener;
+    KeyStoreManager mKeyStoreManager;
 //    GoogleMap map;
 
     private boolean isTestStarted;
@@ -110,7 +121,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 //        }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+    @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -118,6 +129,21 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mNetworkManager = NetworkManager.getManager(this.context);
         mCellularManager = CellularManager.getManager(this.context);
         mLocationManager = LocationServiceManager.getManager(this.context);
+        try {
+            mKeyStoreManager = KeyStoreManager.getInstance();
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         locationServiceListener = new LocationServiceListener(this.context, getLifecycle());
         mNetworkTestViewModel = new NetworkTestViewModel(this.context);
         mNetworkTestViewModel.getmSavedIperfDownInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
@@ -159,20 +185,22 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     map.put("level_code", level.getLevelCode());
                     map.put("cell_id", "");
                     map.put("device_id", uuid);
-                    uploadViewModelSignalStrength.loadData(map, UPLOAD_SIGNAL);
+
+                    String json = JsonStream.serialize(map);
+                    byte[] message = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8), mKeyStoreManager.getPrivateKey(), "SHA256withRSA");
+
+                    Map<String, Object> uploadMap = new HashMap<>();
+                    uploadMap.put("message", message);
+                    uploadMap.put("pk", SecurityUtils.digest(mKeyStoreManager.getPublicKey(), "SHA-256"));
+
+
+                    uploadViewModelSignalStrength.loadData(uploadMap, UPLOAD_SIGNAL);
                     uploadViewModelSignalStrength.upload();
                     signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
                 });
             }
         });
 
-        // enable map
-//        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-//        if (mapFragment != null) {
-//            mapFragment.getMapAsync(this);
-//        } else {
-//            Log.e(TAG, "Map Fragment is null");
-//        }
 
         setupTestView();
 
@@ -411,7 +439,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                                     map.put("ping", prevPing);
                                     map.put("cell_id", "");
                                     map.put("device_id", uuid);
-                                    uploadViewModelConnectivity.loadData(map, UPLOAD_CONNECTIVITY);
+
+                                    String json = JsonStream.serialize(map);
+                                    byte[] message = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8), mKeyStoreManager.getPrivateKey(), "SHA256withRSA");
+
+                                    Map<String, Object> uploadMap = new HashMap<>();
+                                    uploadMap.put("message", message);
+                                    uploadMap.put("pk", SecurityUtils.digest(mKeyStoreManager.getPublicKey(), "SHA-256"));
+
+
+                                    uploadViewModelConnectivity.loadData(uploadMap, UPLOAD_CONNECTIVITY);
                                     uploadViewModelConnectivity.upload();
                                     connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
                                 });

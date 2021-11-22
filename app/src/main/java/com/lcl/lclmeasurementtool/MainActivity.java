@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -11,6 +12,8 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -20,34 +23,55 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.security.keystore.KeyProperties;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.android.volley.BuildConfig;
 import com.google.android.gms.maps.model.LatLng;
+import com.jsoniter.output.JsonStream;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
+import com.lcl.lclmeasurementtool.Managers.CellularManager;
+import com.lcl.lclmeasurementtool.Managers.KeyStoreManager;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
+import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.Security;
+import java.security.SignatureException;
+import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
+
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MAIN_ACTIVITY";
@@ -60,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private SimStatesReceiver simStatesReceiver;
 
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+    @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,7 +118,79 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(SIM_STATE_CHANGED);
         this.registerReceiver(simStatesReceiver, filter);
+        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        String simcardID = "1234";
+//                telephonyManager.getSimSerialNumber();
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+////            ActivityCompat.requestPermissions(this, );
+//            // TODO: Consider calling
+//            //    ActivityCompat#requestPermissions
+//            // here to request the missing permissions, and then overriding
+//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//            //                                          int[] grantResults)
+//            // to handle the case where the user grants the permission. See the documentation
+//            // for ActivityCompat#requestPermissions for more details.
+//            return;
+//        }
+        String phoneNumber = "5678";
+//                telephonyManager.getLine1Number();
+        try {
+            Log.i(TAG, "generate byte array now ...");
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
+            KeyStoreManager keyStoreManager = KeyStoreManager.getInstance();
+            byte[] pk = keyStoreManager.getPublicKey();
+            byte[][] pi = keyStoreManager.getAttestation();
+
+            byteArrayOutputStream.write(pk);
+            Arrays.stream(pi).iterator().forEachRemaining(bytes -> {
+                try {
+                    byteArrayOutputStream.write(bytes);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            byteArrayOutputStream.write(SecurityUtils.digest(simcardID, "SHA-256"));
+            byteArrayOutputStream.write(SecurityUtils.digest(phoneNumber, "SHA-256"));
+            byte[] registrationMessage = byteArrayOutputStream.toByteArray();
+
+            byte[] sigma = SecurityUtils.sign(registrationMessage, keyStoreManager.getPrivateKey(), "SHA256withRSA");
+            Map<String, Object> map = new HashMap<>();
+            map.put("sigma", sigma);
+            map.put("registrationMessage", registrationMessage);
+            String json = JsonStream.serialize(map);
+
+            OkHttpClient httpClient = new OkHttpClient();
+            RequestBody requestBody = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+            Request request = new Request.Builder()
+                    .url("https://api-dev.seattlecommunitynetwork.org/register")
+                    .post(requestBody)
+                    .build();
+            Response response = httpClient.newCall(request).execute();
+            if (!response.isSuccessful()) {
+                Log.e(TAG, "Invalid user");
+                System.exit(1);
+            }
+
+
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (UnrecoverableEntryException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -173,22 +269,5 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
-    }
-
-    /**
-     * Generate asymmetric key pairs and store in keystore in android
-     */
-    private void initAsymmetricKeys() throws NoSuchAlgorithmException, NoSuchProviderException {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore");
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-    }
-
-    /**
-     * Check whether the key is still valid
-     *
-     * @return true if the key is still valid; false otherwise
-     */
-    private boolean checkKeys() {
-        return false;
     }
 }

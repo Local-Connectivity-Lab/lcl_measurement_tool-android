@@ -25,7 +25,14 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.lcl.lclmeasurementtool.R;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
@@ -107,10 +114,23 @@ public class LocationServiceManager {
                 .addOnCompleteListener((Activity) this.context.get(), task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         mLastLocation = task.getResult();
-                        listener.onUpdate(mLastLocation);
-                        // TODO: log the location latitude and longitude
-//                        Log.i(TAG, String.valueOf(mLastLocation.getLatitude()));
-//                        Log.i(TAG, String.valueOf(mLastLocation.getLongitude()));
+                        try {
+                            listener.onUpdate(mLastLocation);
+                        } catch (CertificateException e) {
+                            e.printStackTrace();
+                        } catch (NoSuchAlgorithmException e) {
+                            e.printStackTrace();
+                        } catch (KeyStoreException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (UnrecoverableEntryException e) {
+                            e.printStackTrace();
+                        } catch (SignatureException e) {
+                            e.printStackTrace();
+                        } catch (InvalidKeyException e) {
+                            e.printStackTrace();
+                        }
                     } else {
                         Log.w(TAG, "getLastLocation:exception", task.getException());
                         Toast.makeText(this.context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
@@ -126,7 +146,23 @@ public class LocationServiceManager {
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(@NonNull Location location) {
-                listener.onUpdate(location);
+                try {
+                    listener.onUpdate(location);
+                } catch (CertificateException e) {
+                    e.printStackTrace();
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (KeyStoreException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (UnrecoverableEntryException e) {
+                    e.printStackTrace();
+                } catch (SignatureException e) {
+                    e.printStackTrace();
+                } catch (InvalidKeyException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -156,7 +192,23 @@ public class LocationServiceManager {
                 super.onLocationResult(locationResult);
                 for (Location location : locationResult.getLocations()) {
                     // update the map
-                    listener.onUpdate(location);
+                    try {
+                        listener.onUpdate(location);
+                    } catch (CertificateException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (KeyStoreException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (UnrecoverableEntryException e) {
+                        e.printStackTrace();
+                    } catch (SignatureException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeyException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         };

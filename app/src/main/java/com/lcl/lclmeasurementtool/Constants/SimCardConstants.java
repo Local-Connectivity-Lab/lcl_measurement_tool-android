@@ -1,4 +1,4 @@
-package com.lcl.lclmeasurementtool.Utils;
+package com.lcl.lclmeasurementtool.Constants;
 
 public class SimCardConstants {
 

@@ -44,6 +44,20 @@ public class SecurityUtils {
     }
 
     /**
+     * Digest the message with given algorithm
+     *
+     * @param data          the data to be hashed
+     * @param algorithm     the algorithm used to digest the message
+     * @return              the digested message in byte array
+     * @throws NoSuchAlgorithmException
+     */
+    public static byte[] digest(byte[] data, String algorithm) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
+        messageDigest.update(data);
+        return messageDigest.digest();
+    }
+
+    /**
      * Verify a signed data with public key and given algorithm
      *
      * @param data               the data to be verified

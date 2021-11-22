@@ -1,10 +1,14 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.work.WorkerParameters;
+
+import com.lcl.lclmeasurementtool.Constants.IperfConstants;
 
 import java.lang.Thread;
 
@@ -16,15 +20,24 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
         super(context, workerParams);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void prepareConfig() {
         Log.d(TAG, "Preparing upstream test config");
         config = new Iperf3Config();
-        config.mServerAddr = getInputData().getString("SERVER_ADDR");
-        config.mServerPort = getInputData().getInt("SERVER_PORT", 5201);
+        config.mServerAddr = IperfConstants.IC_serverAddr;
+        config.mServerPort = IperfConstants.IC_serverPort;
         config.isDownMode = false;
+
+        // TODO(johnnzhou) update security config
+        config.userName = IperfConstants.IC_isDebug ?
+                IperfConstants.IC_test_username : getInputData().getString("userName");
+        config.password = IperfConstants.IC_isDebug ?
+                IperfConstants.IC_test_password : getInputData().getString("password");
+        config.rsaKey = IperfConstants.Base64Encode(IperfConstants.IC_SSL_PK);;
         Log.d(TAG, config.mServerAddr + ":" + config.mServerPort + " isDown="+config.isDownMode);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @NonNull
     @Override
     public Result doWork() {

@@ -16,8 +16,8 @@ public class UploadManager {
 
     private static UploadManager instance;
     private static final MediaType MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
-//    private static final String url = "https://api-dev.seattlecommunitynetwork.org/";
-    private static final String url = "https://homes.cs.washington.edu/~zhouz46/cookieEater.php";
+    private static final String url = "https://api-dev.seattlecommunitynetwork.org/";
+//    private static final String url = "https://homes.cs.washington.edu/~zhouz46/cookieEater.php";
     private Map<String, Object> map;
 
     private OkHttpClient client;
