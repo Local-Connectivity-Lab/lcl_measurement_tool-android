@@ -39,7 +39,6 @@ public class KeyStoreManager {
             InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
         ks = KeyStore.getInstance(provider);
         ks.load(null);
-        generate();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.P)
@@ -63,7 +62,11 @@ public class KeyStoreManager {
     }
 
     public byte[] getPublicKey() throws CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException, UnrecoverableEntryException {
-        return getPublicKeyObject().getEncoded();
+        PublicKey pk = getPublicKeyObject();
+        if (pk == null) {
+            return new byte[0];
+        }
+        return pk.getEncoded();
     }
 
     public PublicKey getPublicKeyObject() throws NoSuchAlgorithmException, CertificateException, UnrecoverableEntryException, KeyStoreException, IOException {
@@ -107,7 +110,7 @@ public class KeyStoreManager {
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     public void generate() throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, provider);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, provider);
         KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN)
                 .setDigests(KeyProperties.DIGEST_SHA256)
                 .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)

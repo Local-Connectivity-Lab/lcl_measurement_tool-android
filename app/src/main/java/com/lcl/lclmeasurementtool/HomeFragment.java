@@ -57,13 +57,14 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HomeFragment extends Fragment implements OnMapReadyCallback {
+public class HomeFragment extends Fragment {
     private HomeFragmentBinding binding;
     private FragmentActivity activity;
     private Context context;
@@ -187,11 +188,21 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     map.put("device_id", uuid);
 
                     String json = JsonStream.serialize(map);
-                    byte[] message = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8), mKeyStoreManager.getPrivateKey(), "SHA256withRSA");
+                    PrivateKey sk = mKeyStoreManager.getPrivateKey();
+                    if (sk == null) {
+                        Log.e(TAG, "unable to get sk");
+                        this.activity.finishAndRemoveTask();
+                    }
+                    byte[] message = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8), sk, SecurityUtils.SHA256ECDSA);
 
                     Map<String, Object> uploadMap = new HashMap<>();
                     uploadMap.put("message", message);
-                    uploadMap.put("pk", SecurityUtils.digest(mKeyStoreManager.getPublicKey(), "SHA-256"));
+                    byte[] pk = mKeyStoreManager.getPublicKey();
+                    if (pk.length == 0) {
+                        Log.e(TAG, "unable to get pk");
+                        this.activity.finishAndRemoveTask();
+                    }
+                    uploadMap.put("pk", SecurityUtils.digest(pk, SecurityUtils.SHA256));
 
 
                     uploadViewModelSignalStrength.loadData(uploadMap, UPLOAD_SIGNAL);
@@ -314,31 +325,23 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
                 fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
                 progressIndicator.setActivated(this.isTestStarted);
+                setupTestView();
                 if (this.isTestStarted) {
                     progressIndicator.setShowAnimationBehavior(BaseProgressIndicator.SHOW_OUTWARD);
+                    mNetworkTestViewModel.cancel();
                 } else {
                     progressIndicator.setHideAnimationBehavior(BaseProgressIndicator.HIDE_INWARD);
-                }
-                progressIndicator.setVisibility(this.isTestStarted ? View.INVISIBLE : View.VISIBLE);
-
-                // fetch location
-
-                if (this.isTestStarted) {
-                    mNetworkTestViewModel.cancel();
-                    setupTestView();
-                } else {
-//                    if (map != null) {
-//                        // fetch location
-//                        mLocationManager.getLastLocation(location -> {
-//                            MarkerOptions marker = new MarkerOptions();
-//                            LatLng latLng = new LatLng(location.getLatitude(), location.getLatitude());
-//                            marker.position(latLng);
-//                            map.addMarker(marker);
-//                            map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-//                        });
-//                    }
                     mNetworkTestViewModel.run();
                 }
+                progressIndicator.setVisibility(this.isTestStarted ? View.GONE : View.VISIBLE);
+
+                // fetch location
+//
+//                if (this.isTestStarted) {
+//
+//                } else {
+//
+//                }
 
                 this.isTestStarted = !isTestStarted;
                 Toast.makeText(this.context, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
@@ -400,15 +403,17 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 if (workInfo.getTags().contains("PING")) {
                     if (finalResult == null) break;
                     prevPing = Double.parseDouble(finalResult.split(" ")[0]);
+                    Log.i(TAG, "ping is: " + prevPing);
                     this.activity.runOnUiThread(() -> {
                         TextView pingTest = binding.ping.data;
                         pingTest.setTextColor(this.activity.getColor(R.color.white));
                         pingTest.setText(finalResult);
                     });
                 } else {
+
                     if (finalResult == null) break;
                     boolean isDownModeInSucceeded = output.getBoolean("IS_DOWN_MODE", false);
-                    if (isDownModeInSucceeded) {
+                    if (isDownModeInSucceeded && !finalResult.equals("")) {
                         prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
                     } else {
                         prevUpload = Double.parseDouble(finalResult.split(" ")[0]);
@@ -418,12 +423,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                         speedTest.setTextColor(this.activity.getColor(R.color.white));
                         speedTest.setText(finalResult);
                         if (workInfo.getTags().contains("IPERF_UP")) {
-                            // TODO: update according to network status
+
                             binding.progressIndicator.setProgress(100, true);
-                            binding.progressIndicator.hide();
+                            binding.progressIndicator.setVisibility(View.GONE);
                             updateFAB(true);
 
                             if (isConnectivityAllSet()) {
+                                Log.i(TAG, "prepare for upload");
                                 String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
 
                                 mLocationManager.getLastLocation(location -> {
@@ -441,11 +447,21 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                                     map.put("device_id", uuid);
 
                                     String json = JsonStream.serialize(map);
-                                    byte[] message = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8), mKeyStoreManager.getPrivateKey(), "SHA256withRSA");
+                                    PrivateKey sk = mKeyStoreManager.getPrivateKey();
+                                    if (sk == null) {
+                                        Log.e(TAG, "unable to get sk");
+                                        this.activity.finishAndRemoveTask();
+                                    }
+                                    byte[] message = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8), sk, SecurityUtils.SHA256ECDSA);
 
                                     Map<String, Object> uploadMap = new HashMap<>();
                                     uploadMap.put("message", message);
-                                    uploadMap.put("pk", SecurityUtils.digest(mKeyStoreManager.getPublicKey(), "SHA-256"));
+                                    byte[] pk = mKeyStoreManager.getPublicKey();
+                                    if (pk.length == 0) {
+                                        Log.e(TAG, "unable to get pk");
+                                        this.activity.finishAndRemoveTask();
+                                    }
+                                    uploadMap.put("pk", SecurityUtils.digest(pk, SecurityUtils.SHA256));
 
 
                                     uploadViewModelConnectivity.loadData(uploadMap, UPLOAD_CONNECTIVITY);
@@ -467,14 +483,5 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private boolean isConnectivityAllSet() {
         return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-//        Log.i(TAG, "Map ready");
-//        this.map = googleMap;
-//        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-//        googleMap.setMaxZoomPreference(20.0f);
-//        googleMap.setMinZoomPreference(6.0f);
     }
 }

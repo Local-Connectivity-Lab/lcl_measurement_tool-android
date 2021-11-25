@@ -24,13 +24,13 @@ public class IperfConstants {
     public static String IC_test_username = "secrettestuser";
     public static String IC_test_password = "secrettestuser";
 
-    public static String IC_serverAddr = "http://othello-iperf.westus2.cloudapp.azure.com";
+    public static String IC_serverAddr = "othello-iperf.westus2.cloudapp.azure.com";
     public static int IC_serverPort = 40404;
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static String Base64Encode(String input) {
-        byte[] buffer = input.getBytes(StandardCharsets.UTF_8);
+        byte[] buffer = input.getBytes(StandardCharsets.US_ASCII);
         return Base64.getEncoder().encodeToString(buffer);
     }
 }

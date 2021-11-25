@@ -33,7 +33,7 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
                 IperfConstants.IC_test_username : getInputData().getString("userName");
         config.password = IperfConstants.IC_isDebug ?
                 IperfConstants.IC_test_password : getInputData().getString("password");
-        config.rsaKey = IperfConstants.Base64Encode(IperfConstants.IC_SSL_PK);;
+        config.rsaKey = IperfConstants.Base64Encode(IperfConstants.IC_SSL_PK);
         Log.d(TAG, config.mServerAddr + ":" + config.mServerPort + " isDown="+config.isDownMode);
     }
 

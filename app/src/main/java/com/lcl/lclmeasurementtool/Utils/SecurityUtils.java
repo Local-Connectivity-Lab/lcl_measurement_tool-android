@@ -11,6 +11,10 @@ import java.security.SignatureException;
 
 public class SecurityUtils {
 
+
+    public static final String SHA256 = "SHA-256";
+    public static final String SHA256ECDSA = "SHA256withECDSA";
+
     /**
      * Sign the data with given private key and algorithm
      * @param data         the data to be signed

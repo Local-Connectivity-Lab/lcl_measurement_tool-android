@@ -64,7 +64,7 @@ public class UploadManager {
             case 0:
                 endpoint = "api/data";
             case 1:
-                endpoint = "";
+                endpoint = "api/upload";
         }
         this.map = map;
         return this;

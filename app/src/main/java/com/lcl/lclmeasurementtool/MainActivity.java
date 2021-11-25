@@ -110,87 +110,15 @@ public class MainActivity extends AppCompatActivity {
 
 //        // set up DB
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
+        String simcardID = "1234";
         try {
-            simStatesReceiver = new SimStatesReceiver(this);
+            simStatesReceiver = new SimStatesReceiver(this, simcardID);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException | KeyStoreException | CertificateException | IOException e) {
             e.printStackTrace();
         }
         IntentFilter filter = new IntentFilter();
         filter.addAction(SIM_STATE_CHANGED);
         this.registerReceiver(simStatesReceiver, filter);
-        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        String simcardID = "1234";
-//                telephonyManager.getSimSerialNumber();
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-////            ActivityCompat.requestPermissions(this, );
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//            return;
-//        }
-        String phoneNumber = "5678";
-//                telephonyManager.getLine1Number();
-        try {
-            Log.i(TAG, "generate byte array now ...");
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-            KeyStoreManager keyStoreManager = KeyStoreManager.getInstance();
-            byte[] pk = keyStoreManager.getPublicKey();
-            byte[][] pi = keyStoreManager.getAttestation();
-
-            byteArrayOutputStream.write(pk);
-            Arrays.stream(pi).iterator().forEachRemaining(bytes -> {
-                try {
-                    byteArrayOutputStream.write(bytes);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-
-            byteArrayOutputStream.write(SecurityUtils.digest(simcardID, "SHA-256"));
-            byteArrayOutputStream.write(SecurityUtils.digest(phoneNumber, "SHA-256"));
-            byte[] registrationMessage = byteArrayOutputStream.toByteArray();
-
-            byte[] sigma = SecurityUtils.sign(registrationMessage, keyStoreManager.getPrivateKey(), "SHA256withRSA");
-            Map<String, Object> map = new HashMap<>();
-            map.put("sigma", sigma);
-            map.put("registrationMessage", registrationMessage);
-            String json = JsonStream.serialize(map);
-
-            OkHttpClient httpClient = new OkHttpClient();
-            RequestBody requestBody = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
-            Request request = new Request.Builder()
-                    .url("https://api-dev.seattlecommunitynetwork.org/register")
-                    .post(requestBody)
-                    .build();
-            Response response = httpClient.newCall(request).execute();
-            if (!response.isSuccessful()) {
-                Log.e(TAG, "Invalid user");
-                System.exit(1);
-            }
-
-
-        } catch (NoSuchAlgorithmException | IOException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (UnrecoverableEntryException e) {
-            e.printStackTrace();
-        } catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (SignatureException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
