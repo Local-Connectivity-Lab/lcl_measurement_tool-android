@@ -1,19 +1,5 @@
 package com.lcl.lclmeasurementtool;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -22,56 +8,36 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.security.keystore.KeyProperties;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
-import com.android.volley.BuildConfig;
-import com.google.android.gms.maps.model.LatLng;
-import com.jsoniter.output.JsonStream;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+
+import com.kongzue.dialogx.dialogs.MessageDialog;
+import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
-import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
-import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
-import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
-import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
-import com.lcl.lclmeasurementtool.Managers.CellularManager;
-import com.lcl.lclmeasurementtool.Managers.KeyStoreManager;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
-import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
-import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
+import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
-import java.security.SignatureException;
-import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
-import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-
-import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
-
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MAIN_ACTIVITY";
@@ -145,22 +111,25 @@ public class MainActivity extends AppCompatActivity {
 
                 // Notify the user via a dialog that they have rejected a core permission for the
                 // app, which makes the Activity useless.
-                UIUtils.showDialog(this,
-                        R.string.location_message_title,
-                        R.string.permission_denied_explanation,
-                        R.string.settings,
-                        (dialogInterface, actionID) -> {
 
-                            // Build intent that displays the App settings screen.
-                            Intent intent = new Intent();
-                            intent.setAction(
-                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                            Uri uri = Uri.fromParts("package",
-                                    BuildConfig.APPLICATION_ID, null);
-                            intent.setData(uri);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        }, android.R.string.cancel, null);
+                MessageDialog.build()
+                        .setTitle(R.string.location_message_title)
+                        .setMessage(R.string.permission_denied_explanation)
+                        .setOkButton(R.string.settings, new OnDialogButtonClickListener<MessageDialog>() {
+                            @Override
+                            public boolean onClick(MessageDialog baseDialog, View v) {
+                                // Build intent that displays the App settings screen.
+                                Intent intent = new Intent();
+                                intent.setAction(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                Uri uri = Uri.fromParts("package",
+                                        BuildConfig.APPLICATION_ID, null);
+                                intent.setData(uri);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                                return true;
+                            }
+                        }).setOkButton(android.R.string.cancel).show();
             }
         }
     }

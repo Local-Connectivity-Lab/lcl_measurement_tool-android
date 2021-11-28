@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +32,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.BaseProgressIndicator;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.jsoniter.output.JsonStream;
+import com.kongzue.dialogx.dialogs.MessageDialog;
+import com.kongzue.dialogx.dialogs.TipDialog;
+import com.kongzue.dialogx.dialogs.WaitDialog;
+import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
@@ -79,7 +84,6 @@ public class HomeFragment extends Fragment {
     LocationServiceManager mLocationManager;
     LocationServiceListener locationServiceListener;
     KeyStoreManager mKeyStoreManager;
-//    GoogleMap map;
 
     private boolean isTestStarted;
     private boolean isCellularConnected;
@@ -94,6 +98,8 @@ public class HomeFragment extends Fragment {
     private double prevUpload = -1.0;
     private double prevDownload = -1.0;
 
+    private WaitDialog waitDialog;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -106,20 +112,6 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-//        if (mCellularManager.isSimCardAbsence()) {
-
-//            UIUtils.showDialog(this.context,
-//                    R.string.sim_missing,
-//                    R.string.sim_missing_message,
-//                    android.R.string.ok,
-//                    (dialog, which) -> {
-//                        this.activity.finishAndRemoveTask();
-//                        System.exit(0);
-//                    },
-//                    -1,
-//                    null
-//            );
-//        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.P)
@@ -301,8 +293,10 @@ public class HomeFragment extends Fragment {
 
     private void setUpFAB() {
         FloatingActionButton fab = binding.fab;
-        CircularProgressIndicator progressIndicator = binding.progressIndicator;
-        progressIndicator.setVisibility(View.INVISIBLE);
+//        CircularProgressIndicator progressIndicator = binding.progressIndicator;
+//        progressIndicator.setVisibility(View.INVISIBLE);
+
+
         fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
         fab.setOnClickListener(button -> {
 
@@ -310,38 +304,32 @@ public class HomeFragment extends Fragment {
                 // raise alert telling user to enable cellular data
                 Log.e(TAG, "not connected to cellular network");
 
-                UIUtils.showDialog(this.context,
-                        R.string.cellular_on_title,
-                        R.string.cellular_on_message,
-                        R.string.settings,
-                        (dialog, which) -> {
+                MessageDialog.build()
+                        .setTitle(R.string.cellular_on_title)
+                        .setMessage(R.string.cellular_on_message)
+                        .setButtonOrientation(LinearLayout.VERTICAL)
+                        .setOkButton(R.string.settings, (baseDialog, v) -> {
                             Intent networkSettings = new Intent(Settings.ACTION_SETTINGS);
                             networkSettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(networkSettings);
-                        },
-                        android.R.string.cancel, null);
+                            return true;
+                        }).setOkButton(android.R.string.cancel, (baseDialog, v) -> false).show();
 
             } else {
                 ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
                 fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
-                progressIndicator.setActivated(this.isTestStarted);
+//                progressIndicator.setActivated(this.isTestStarted);
                 setupTestView();
                 if (this.isTestStarted) {
-                    progressIndicator.setShowAnimationBehavior(BaseProgressIndicator.SHOW_OUTWARD);
+                    WaitDialog.dismiss();
+//                    progressIndicator.setShowAnimationBehavior(BaseProgressIndicator.SHOW_OUTWARD);
                     mNetworkTestViewModel.cancel();
                 } else {
-                    progressIndicator.setHideAnimationBehavior(BaseProgressIndicator.HIDE_INWARD);
+                    WaitDialog.show("Running Tests...");
+//                    progressIndicator.setHideAnimationBehavior(BaseProgressIndicator.HIDE_INWARD);
                     mNetworkTestViewModel.run();
                 }
-                progressIndicator.setVisibility(this.isTestStarted ? View.GONE : View.VISIBLE);
-
-                // fetch location
-//
-//                if (this.isTestStarted) {
-//
-//                } else {
-//
-//                }
+//                progressIndicator.setVisibility(this.isTestStarted ? View.GONE : View.VISIBLE);
 
                 this.isTestStarted = !isTestStarted;
                 Toast.makeText(this.context, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
@@ -379,9 +367,11 @@ public class HomeFragment extends Fragment {
                 }
 
                 if (isTestStarted) {
-                    UIUtils.showDialog(context, R.string.error, R.string.iperf_error, android.R.string.ok, null, android.R.string.cancel, null);
+                    MessageDialog.show(R.string.error, R.string.iperf_error, android.R.string.ok);
                     mNetworkTestViewModel.cancel();
-                    binding.progressIndicator.hide();
+//                    binding.progressIndicator.hide();
+                    WaitDialog.dismiss();
+                    TipDialog.show("Test Failed.", WaitDialog.TYPE.ERROR);
                     setupTestView();
                     // TODO: update based on network condition
                     updateFAB(true);
@@ -424,8 +414,10 @@ public class HomeFragment extends Fragment {
                         speedTest.setText(finalResult);
                         if (workInfo.getTags().contains("IPERF_UP")) {
 
-                            binding.progressIndicator.setProgress(100, true);
-                            binding.progressIndicator.setVisibility(View.GONE);
+//                            binding.progressIndicator.setProgress(100, true);
+//                            binding.progressIndicator.setVisibility(View.GONE);
+                            WaitDialog.dismiss();
+                            TipDialog.show("Test Completed!", WaitDialog.TYPE.SUCCESS);
                             updateFAB(true);
 
                             if (isConnectivityAllSet()) {

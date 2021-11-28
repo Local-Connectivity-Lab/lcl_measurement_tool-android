@@ -4,14 +4,19 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.provider.Settings;
+import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.OnLifecycleEvent;
 
+import com.kongzue.dialogx.dialogs.MessageDialog;
+import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.lcl.lclmeasurementtool.MainActivity;
 import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
@@ -60,19 +65,21 @@ public class LocationServiceListener implements LifecycleObserver {
     /**
      * Check the location service during on_resume in app's lifecycle
      */
+    @RequiresApi(api = Build.VERSION_CODES.P)
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     void checkLocationMode() {
         if (!this.mLocationManager.isLocationModeOn() && lifecycle.getCurrentState().equals(Lifecycle.State.RESUMED) && !checkLocationModeLock) {
             checkLocationModeLock = true;
             // TODO turn off start FAB if canceled
-            UIUtils.showDialog(context, R.string.location_message_title, R.string.enable_location_message,
-                    R.string.go_to_setting,
-                    (paramDialogInterface, paramInt) -> {
+            MessageDialog.build()
+                    .setTitle(R.string.location_message_title)
+                    .setMessage(R.string.enable_location_message)
+                    .setOkButton(R.string.go_to_setting, (baseDialog, v) -> {
                         context.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                         checkLocationModeLock = false;
-                    },
-                    android.R.string.cancel,
-                    null);
+                        return false;
+                    })
+                    .setOkButton(android.R.string.cancel).show();
         }
     }
 
@@ -85,10 +92,14 @@ public class LocationServiceListener implements LifecycleObserver {
                         Manifest.permission.ACCESS_FINE_LOCATION);
 
         if (shouldProvideRationale) {
-            UIUtils.showDialog(context, R.string.location_message_title, R.string.permission_rationale,
-                    android.R.string.ok,
-                    (a, b) -> startLocationPermissionRequest(),
-                    android.R.string.cancel, null);
+            MessageDialog.build()
+                    .setTitle(R.string.location_message_title)
+                    .setMessage(R.string.permission_rationale)
+                    .setOkButton(android.R.string.ok, (baseDialog, v) -> {
+                        startLocationPermissionRequest();
+                        return true;
+                    })
+                    .setOkButton(android.R.string.cancel).show();
         } else {
             startLocationPermissionRequest();
         }

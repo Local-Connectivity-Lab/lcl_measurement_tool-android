@@ -6,15 +6,22 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Message;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jsoniter.output.JsonStream;
+import com.kongzue.dialogx.dialogs.MessageDialog;
+import com.kongzue.dialogx.dialogs.TipDialog;
+import com.kongzue.dialogx.dialogs.WaitDialog;
+import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.lcl.lclmeasurementtool.Managers.KeyStoreManager;
 import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Constants.SimCardConstants;
@@ -35,7 +42,10 @@ import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Delayed;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -97,13 +107,13 @@ public class SimStatesReceiver extends BroadcastReceiver {
             } else {
                 if (extraState.equals(SimCardConstants.INTENT_VALUE_ICC_LOADED)) {
                     try {
-                        if (!securityManager.contains()) {
-                            Log.i(TAG, "generate new keypair");
-                            securityManager.generate();
-                            validateUser();
-                        } else {
-                            Log.i(TAG, "keypair exists");
-                        }
+                         if (!securityManager.contains()) {
+                             Log.i(TAG, "generate new keypair");
+                             securityManager.generate();
+                             validateUser();
+                         } else {
+                             Log.i(TAG, "keypair exists");
+                         }
                     } catch (NoSuchProviderException | NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException e) {
                         e.printStackTrace();
                     }
@@ -138,33 +148,43 @@ public class SimStatesReceiver extends BroadcastReceiver {
             map.put("sigMessage", sigma);
             String json = JsonStream.serialize(map);
 
+
+            WaitDialog.show("Validating");
+
             OkHttpClient httpClient = new OkHttpClient();
             RequestBody requestBody = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
             Request request = new Request.Builder()
                     .url("https://api-dev.seattlecommunitynetwork.org/register")
                     .post(requestBody)
                     .build();
-            Response response = httpClient.newCall(request).execute();
-//            if (!response.isSuccessful()) {
-//                Log.e(TAG, "Invalid user");
-//                showMessage();
-//            }
+            httpClient.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    WaitDialog.dismiss();
+                    TipDialog.show("Network Connection Lost", WaitDialog.TYPE.ERROR);
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    WaitDialog.dismiss();
+                    if (!response.isSuccessful()) {
+                        Log.e(TAG, "Invalid user");
+                        showMessage();
+                    } else {
+                        TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
+                    }
+                }
+            });
         } catch (NoSuchAlgorithmException | IOException | CertificateException | KeyStoreException | UnrecoverableEntryException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
         }
     }
 
     private void showMessage() {
-        UIUtils.showDialog(this.context,
-                R.string.sim_missing,
-                R.string.sim_missing_message,
-                android.R.string.ok,
-                (dialog, which) -> {
-                    this.activity.finishAndRemoveTask();
-                    System.exit(0);
-                },
-                -1,
-                null
-        );
+        MessageDialog.show(R.string.sim_missing, R.string.sim_missing_message, android.R.string.ok).setOkButton((baseDialog, v) -> {
+            activity.finishAndRemoveTask();
+            System.exit(0);
+            return false;
+        });
     }
 }
