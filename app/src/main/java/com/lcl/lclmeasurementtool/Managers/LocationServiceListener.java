@@ -97,7 +97,7 @@ public class LocationServiceListener implements LifecycleObserver {
                     .setMessage(R.string.permission_rationale)
                     .setOkButton(android.R.string.ok, (baseDialog, v) -> {
                         startLocationPermissionRequest();
-                        return true;
+                        return false;
                     })
                     .setOkButton(android.R.string.cancel).show();
         } else {

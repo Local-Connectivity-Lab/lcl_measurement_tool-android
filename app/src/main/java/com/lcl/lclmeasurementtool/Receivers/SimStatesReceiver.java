@@ -60,6 +60,7 @@ public class SimStatesReceiver extends BroadcastReceiver {
     private Activity activity;
     private KeyStoreManager securityManager;
 
+    // TODO(johnnzhou) retrieve imsi from the system
     private String simcardID;   // imsi
 
     @RequiresApi(api = Build.VERSION_CODES.P)
@@ -133,6 +134,8 @@ public class SimStatesReceiver extends BroadcastReceiver {
     }
 
     private void validateUser() {
+
+        // TODO(sudheesh001) security check
         try {
             byte[] pk = securityManager.getPublicKey();
             byte[][] pi = securityManager.getAttestation();
@@ -147,7 +150,6 @@ public class SimStatesReceiver extends BroadcastReceiver {
             map.put("message", registrationMessage);
             map.put("sigMessage", sigma);
             String json = JsonStream.serialize(map);
-
 
             WaitDialog.show("Validating");
 
@@ -178,6 +180,8 @@ public class SimStatesReceiver extends BroadcastReceiver {
         } catch (NoSuchAlgorithmException | IOException | CertificateException | KeyStoreException | UnrecoverableEntryException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
         }
+
+        // TODO(sudheesh001) security check
     }
 
     private void showMessage() {

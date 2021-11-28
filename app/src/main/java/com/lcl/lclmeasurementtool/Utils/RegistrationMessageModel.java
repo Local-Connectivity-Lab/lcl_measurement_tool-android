@@ -2,6 +2,7 @@ package com.lcl.lclmeasurementtool.Utils;
 
 import com.jsoniter.annotation.JsonProperty;
 
+// TODO(sudheesh001) security check
 public class RegistrationMessageModel {
 
     @JsonProperty("publicKey")
@@ -19,3 +20,4 @@ public class RegistrationMessageModel {
         this.attestation = attestation;
     }
 }
+// TODO(sudheesh001) security check

@@ -115,20 +115,17 @@ public class MainActivity extends AppCompatActivity {
                 MessageDialog.build()
                         .setTitle(R.string.location_message_title)
                         .setMessage(R.string.permission_denied_explanation)
-                        .setOkButton(R.string.settings, new OnDialogButtonClickListener<MessageDialog>() {
-                            @Override
-                            public boolean onClick(MessageDialog baseDialog, View v) {
-                                // Build intent that displays the App settings screen.
-                                Intent intent = new Intent();
-                                intent.setAction(
-                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                Uri uri = Uri.fromParts("package",
-                                        BuildConfig.APPLICATION_ID, null);
-                                intent.setData(uri);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(intent);
-                                return true;
-                            }
+                        .setOkButton(R.string.settings, (baseDialog, v) -> {
+                            // Build intent that displays the App settings screen.
+                            Intent intent = new Intent();
+                            intent.setAction(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            Uri uri = Uri.fromParts("package",
+                                    BuildConfig.APPLICATION_ID, null);
+                            intent.setData(uri);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                            return false;
                         }).setOkButton(android.R.string.cancel).show();
             }
         }

@@ -33,6 +33,7 @@ import com.google.android.material.progressindicator.BaseProgressIndicator;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
+import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
@@ -97,8 +98,6 @@ public class HomeFragment extends Fragment {
     private double prevPing = -1.0;
     private double prevUpload = -1.0;
     private double prevDownload = -1.0;
-
-    private WaitDialog waitDialog;
 
     @Nullable
     @Override
@@ -170,6 +169,7 @@ public class HomeFragment extends Fragment {
                 mLocationManager.getLastLocation(location -> {
                     LatLng latLng = LocationUtils.toLatLng(location);
 
+                    // TODO(sudheesh001) security check
                     Map<String, Object> map = new HashMap<>();
                     map.put("latitude", latLng.latitude);
                     map.put("longitude", latLng.longitude);
@@ -196,6 +196,7 @@ public class HomeFragment extends Fragment {
                     }
                     uploadMap.put("pk", SecurityUtils.digest(pk, SecurityUtils.SHA256));
 
+                    // TODO(sudheesh001) security check
 
                     uploadViewModelSignalStrength.loadData(uploadMap, UPLOAD_SIGNAL);
                     uploadViewModelSignalStrength.upload();
@@ -203,7 +204,6 @@ public class HomeFragment extends Fragment {
                 });
             }
         });
-
 
         setupTestView();
 
@@ -293,8 +293,8 @@ public class HomeFragment extends Fragment {
 
     private void setUpFAB() {
         FloatingActionButton fab = binding.fab;
-//        CircularProgressIndicator progressIndicator = binding.progressIndicator;
-//        progressIndicator.setVisibility(View.INVISIBLE);
+        CircularProgressIndicator progressIndicator = binding.progressIndicator;
+        progressIndicator.setVisibility(View.GONE);
 
 
         fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
@@ -312,27 +312,30 @@ public class HomeFragment extends Fragment {
                             Intent networkSettings = new Intent(Settings.ACTION_SETTINGS);
                             networkSettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(networkSettings);
-                            return true;
+                            return false;
                         }).setOkButton(android.R.string.cancel, (baseDialog, v) -> false).show();
 
             } else {
                 ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
                 fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
-//                progressIndicator.setActivated(this.isTestStarted);
+                progressIndicator.setActivated(this.isTestStarted);
                 setupTestView();
                 if (this.isTestStarted) {
-                    WaitDialog.dismiss();
-//                    progressIndicator.setShowAnimationBehavior(BaseProgressIndicator.SHOW_OUTWARD);
+                    progressIndicator.setShowAnimationBehavior(BaseProgressIndicator.SHOW_OUTWARD);
                     mNetworkTestViewModel.cancel();
                 } else {
-                    WaitDialog.show("Running Tests...");
-//                    progressIndicator.setHideAnimationBehavior(BaseProgressIndicator.HIDE_INWARD);
+                    progressIndicator.setHideAnimationBehavior(BaseProgressIndicator.HIDE_INWARD);
                     mNetworkTestViewModel.run();
                 }
-//                progressIndicator.setVisibility(this.isTestStarted ? View.GONE : View.VISIBLE);
+                progressIndicator.setVisibility(this.isTestStarted ? View.GONE : View.VISIBLE);
 
                 this.isTestStarted = !isTestStarted;
-                Toast.makeText(this.context, "test starts: " + this.isTestStarted, Toast.LENGTH_SHORT).show();
+
+                if (this.isTestStarted) {
+                    PopTip.show("Test started");
+                } else {
+                    PopTip.show("Test canceled.");
+                }
             }
         });
     }
@@ -369,9 +372,8 @@ public class HomeFragment extends Fragment {
                 if (isTestStarted) {
                     MessageDialog.show(R.string.error, R.string.iperf_error, android.R.string.ok);
                     mNetworkTestViewModel.cancel();
-//                    binding.progressIndicator.hide();
-                    WaitDialog.dismiss();
-                    TipDialog.show("Test Failed.", WaitDialog.TYPE.ERROR);
+                    binding.progressIndicator.setVisibility(View.GONE);
+                    binding.progressIndicator.hide();
                     setupTestView();
                     // TODO: update based on network condition
                     updateFAB(true);
@@ -414,11 +416,11 @@ public class HomeFragment extends Fragment {
                         speedTest.setText(finalResult);
                         if (workInfo.getTags().contains("IPERF_UP")) {
 
-//                            binding.progressIndicator.setProgress(100, true);
-//                            binding.progressIndicator.setVisibility(View.GONE);
-                            WaitDialog.dismiss();
-                            TipDialog.show("Test Completed!", WaitDialog.TYPE.SUCCESS);
+                            binding.progressIndicator.setProgress(100, true);
+                            binding.progressIndicator.setVisibility(View.GONE);
+
                             updateFAB(true);
+                            PopTip.show("Test completed");
 
                             if (isConnectivityAllSet()) {
                                 Log.i(TAG, "prepare for upload");
@@ -427,6 +429,7 @@ public class HomeFragment extends Fragment {
                                 mLocationManager.getLastLocation(location -> {
                                     LatLng latLng = LocationUtils.toLatLng(location);
 
+                                    // TODO(sudheesh001) security check
                                     Map<String, Object> map = new HashMap<>();
                                     map.put("latitude", latLng.latitude);
                                     map.put("longitude", latLng.longitude);
@@ -454,7 +457,7 @@ public class HomeFragment extends Fragment {
                                         this.activity.finishAndRemoveTask();
                                     }
                                     uploadMap.put("pk", SecurityUtils.digest(pk, SecurityUtils.SHA256));
-
+                                    // TODO(sudheesh001) security check
 
                                     uploadViewModelConnectivity.loadData(uploadMap, UPLOAD_CONNECTIVITY);
                                     uploadViewModelConnectivity.upload();
