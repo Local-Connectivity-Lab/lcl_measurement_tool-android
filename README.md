@@ -16,23 +16,25 @@ LCL Network Measurement Tool is an Android App that measures a variety of networ
         "cell_id": ""
         "device_id": UUID string (hashed)
     } => (in bytes),
-    "sig_message": byte[]
+    "sig_message": byte[],
+    "pk": hashed pk
 }
 ```
 
 ```json
 {
     "measurement": {
-        latitude: string
-        longitude: string
-        timestamp: string
-        upload_speed: double
-        download_speed: double
-        ping: double
-        cell_id: ""
-        device_id: UUID string (hashed)
+        "latitude": string
+        "longitude": string
+        "timestamp": string
+        "upload_speed": double
+        "download_speed": double
+        "ping": double
+        "cell_id": ""
+        "device_id": UUID string (hashed)
     } => (in bytes),
-    "sig_message": byte[]
+    "sig_message": byte[],
+    "pk": hashed pk
 }
 
 ```
