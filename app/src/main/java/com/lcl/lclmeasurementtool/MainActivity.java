@@ -27,6 +27,7 @@ import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
+import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
@@ -66,19 +67,22 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
         // set up UUID
-        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        if (!preferences.contains(getString(R.string.USER_UUID))) {
-            String uuid = UUID.randomUUID().toString();
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putString(getString(R.string.USER_UUID), uuid);
-            editor.apply();
-        }
+//        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+//        if (!preferences.contains(getString(R.string.USER_UUID))) {
+//            String uuid = UUID.randomUUID().toString();
+//            SharedPreferences.Editor editor = preferences.edit();
+//            editor.putString(getString(R.string.USER_UUID), uuid);
+//            editor.apply();
+//        }
 
 //        // set up DB
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
-        String simcardID = "1234";
+
+//        CellularManager cellularManager = CellularManager.getManager(this);
+//        String imsi = cellularManager.getSIMCardID();
+        String imsi = "12345";
         try {
-            simStatesReceiver = new SimStatesReceiver(this, simcardID);
+            simStatesReceiver = new SimStatesReceiver(this, imsi);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException | KeyStoreException | CertificateException | IOException e) {
             e.printStackTrace();
         }

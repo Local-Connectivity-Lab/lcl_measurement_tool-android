@@ -6,10 +6,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Message;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -21,15 +19,12 @@ import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
-import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.lcl.lclmeasurementtool.Managers.KeyStoreManager;
 import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Constants.SimCardConstants;
-import com.lcl.lclmeasurementtool.Utils.RegistrationMessageModel;
+import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
-import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -39,10 +34,8 @@ import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Delayed;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -61,12 +54,12 @@ public class SimStatesReceiver extends BroadcastReceiver {
     private KeyStoreManager securityManager;
 
     // TODO(johnnzhou) retrieve imsi from the system
-    private String simcardID;   // imsi
+    private String imsi;   // imsi
 
     @RequiresApi(api = Build.VERSION_CODES.P)
-    public SimStatesReceiver(Activity activity, String simcardID) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException, KeyStoreException, CertificateException, IOException {
+    public SimStatesReceiver(Activity activity, String imsi) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException, KeyStoreException, CertificateException, IOException {
         this.activity = activity;
-        this.simcardID = simcardID;
+        this.imsi = imsi;
         securityManager = KeyStoreManager.getInstance();
     }
 
@@ -140,7 +133,7 @@ public class SimStatesReceiver extends BroadcastReceiver {
             byte[] pk = securityManager.getPublicKey();
             byte[][] pi = securityManager.getAttestation();
 
-            RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(pk,SecurityUtils.digest(simcardID, SecurityUtils.SHA256), pi);
+            RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(pk,SecurityUtils.digest(imsi, SecurityUtils.SHA256), pi);
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
             byte[] registrationMessage = objectMapper.writeValueAsBytes(registrationMessageModel);

@@ -25,6 +25,9 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
@@ -48,6 +51,8 @@ import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
+import com.lcl.lclmeasurementtool.Models.ConnectivityMessageModel;
+import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
 import com.lcl.lclmeasurementtool.Utils.LocationUtils;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
@@ -66,6 +71,7 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +84,7 @@ public class HomeFragment extends Fragment {
     private static final int SIGNAL_THRESHOLD = 2;
     private static final int UPLOAD_CONNECTIVITY = 0;
     private static final int UPLOAD_SIGNAL = 1;
-    private String uuid;
+    private String device_id;
 
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
@@ -146,14 +152,14 @@ public class HomeFragment extends Fragment {
         uploadViewModelSignalStrength = new ViewModelProvider(this).get(UploadViewModel.class);
         uploadViewModelConnectivity = new ViewModelProvider(this).get(UploadViewModel.class);
 
-        uuid = this.activity.getPreferences(Context.MODE_PRIVATE)
-                .getString(getString(R.string.USER_UUID), "");
 
         getLifecycle().addObserver(locationServiceListener);
 
         this.isTestStarted = false;
         this.isCellularConnected = false;
 
+//        device_id = mCellularManager.getSIMCardID();
+        device_id = "123456";
         // update and listen to signal strength changes
         prevSignalStrength = mCellularManager.getDBM();
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
@@ -171,30 +177,35 @@ public class HomeFragment extends Fragment {
 
                     // TODO(sudheesh001) security check
 
-                    // Make a object model
-                    // write as bytes => sign it
-                    // make a map for sig_message and measurement and h(pk)
+                    // TODO(johnnzhou) retrieve IMSI from the system
+                    String imsi = "12345";
+                    String device_id = Base64
+                            .getEncoder()
+                            .encodeToString(SecurityUtils.digest(imsi, SecurityUtils.SHA256));
+                    SignalStrengthMessageModel signalStrengthMessageModel =
+                            new SignalStrengthMessageModel(
+                                    latLng.latitude,
+                                    latLng.longitude,
+                                    ts,
+                                    dBm,
+                                    level.getLevelCode(),
+                                    "",
+                                    device_id);
 
 
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("latitude", latLng.latitude);
-                    map.put("longitude", latLng.longitude);
-                    map.put("timestamp", ts);
-                    map.put("dBm", dBm);
-                    map.put("level_code", level.getLevelCode());
-                    map.put("cell_id", "");
-                    map.put("device_id", uuid);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+                    byte[] json = objectMapper.writeValueAsBytes(signalStrengthMessageModel);
 
-                    String json = JsonStream.serialize(map);
                     PrivateKey sk = mKeyStoreManager.getPrivateKey();
                     if (sk == null) {
                         Log.e(TAG, "unable to get sk");
                         this.activity.finishAndRemoveTask();
                     }
-                    byte[] message = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8), sk, SecurityUtils.SHA256ECDSA);
+                    byte[] sig_message = SecurityUtils.sign(json, sk, SecurityUtils.SHA256ECDSA);
 
                     Map<String, Object> uploadMap = new HashMap<>();
-                    uploadMap.put("message", message);
+                    uploadMap.put("sig_message", sig_message);
                     byte[] pk = mKeyStoreManager.getPublicKey();
                     if (pk.length == 0) {
                         Log.e(TAG, "unable to get pk");
@@ -244,7 +255,8 @@ public class HomeFragment extends Fragment {
             }
 
             @Override
-            public void onCellularNetworkChanged(NetworkCapabilities capabilities) { }
+            public void onCellularNetworkChanged(NetworkCapabilities capabilities) {
+            }
 
         }, new NetworkChangeListener() {
             @Override
@@ -256,13 +268,16 @@ public class HomeFragment extends Fragment {
             }
 
             @Override
-            public void onUnavailable() { }
+            public void onUnavailable() {
+            }
 
             @Override
-            public void onLost() { }
+            public void onLost() {
+            }
 
             @Override
-            public void onCellularNetworkChanged(NetworkCapabilities capabilities) { }
+            public void onCellularNetworkChanged(NetworkCapabilities capabilities) {
+            }
         });
     }
 
@@ -322,7 +337,7 @@ public class HomeFragment extends Fragment {
                         }).setOkButton(android.R.string.cancel, (baseDialog, v) -> false).show();
 
             } else {
-                ((FloatingActionButton) button).setImageResource( this.isTestStarted ? R.drawable.start : R.drawable.stop );
+                ((FloatingActionButton) button).setImageResource(this.isTestStarted ? R.drawable.start : R.drawable.stop);
                 fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
                 progressIndicator.setActivated(this.isTestStarted);
                 setupTestView();
@@ -436,27 +451,36 @@ public class HomeFragment extends Fragment {
                                     LatLng latLng = LocationUtils.toLatLng(location);
 
                                     // TODO(sudheesh001) security check
-                                    Map<String, Object> map = new HashMap<>();
-                                    map.put("latitude", latLng.latitude);
-                                    map.put("longitude", latLng.longitude);
-                                    map.put("timestamp", ts);
-                                    map.put("upload_speed", prevUpload);
-                                    map.put("download_speed", prevDownload);
-                                    map.put("data_since_last_report", "");
-                                    map.put("ping", prevPing);
-                                    map.put("cell_id", "");
-                                    map.put("device_id", uuid);
 
-                                    String json = JsonStream.serialize(map);
+                                    // TODO(johnnzhou) retrieve IMSI from the system
+                                    String imsi = "12345";
+                                    String device_id = Base64
+                                            .getEncoder()
+                                            .encodeToString(SecurityUtils.digest(imsi, SecurityUtils.SHA256));
+                                    ConnectivityMessageModel connectivityMessageModel =
+                                            new ConnectivityMessageModel(
+                                                    latLng.latitude,
+                                                    latLng.longitude,
+                                                    ts,
+                                                    prevUpload,
+                                                    prevDownload,
+                                                    prevPing,
+                                                    "", device_id);
+
+                                    ObjectMapper objectMapper = new ObjectMapper();
+                                    objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+                                    byte[] json = objectMapper.writeValueAsBytes(connectivityMessageModel);
+
                                     PrivateKey sk = mKeyStoreManager.getPrivateKey();
                                     if (sk == null) {
                                         Log.e(TAG, "unable to get sk");
                                         this.activity.finishAndRemoveTask();
+                                        System.exit(1);
                                     }
-                                    byte[] message = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8), sk, SecurityUtils.SHA256ECDSA);
+                                    byte[] sig_message = SecurityUtils.sign(json, sk, SecurityUtils.SHA256ECDSA);
 
                                     Map<String, Object> uploadMap = new HashMap<>();
-                                    uploadMap.put("message", message);
+                                    uploadMap.put("sig_message", sig_message);
                                     byte[] pk = mKeyStoreManager.getPublicKey();
                                     if (pk.length == 0) {
                                         Log.e(TAG, "unable to get pk");

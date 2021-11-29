@@ -1,6 +1,6 @@
-package com.lcl.lclmeasurementtool.Utils;
+package com.lcl.lclmeasurementtool.Models;
 
-import com.jsoniter.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 // TODO(sudheesh001) security check
 public class RegistrationMessageModel {

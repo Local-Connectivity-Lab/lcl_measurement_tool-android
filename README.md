@@ -14,7 +14,7 @@ LCL Network Measurement Tool is an Android App that measures a variety of networ
         "dBm": int
         "level_code" : int
         "cell_id": ""
-        "device_id": UUID string (hashed)
+        "device_id": UUID string (hashed, base64)
     } => (in bytes),
     "sig_message": byte[],
     "pk": hashed pk
@@ -31,7 +31,7 @@ LCL Network Measurement Tool is an Android App that measures a variety of networ
         "download_speed": double
         "ping": double
         "cell_id": ""
-        "device_id": UUID string (hashed)
+        "device_id": UUID string (hashed, base64)
     } => (in bytes),
     "sig_message": byte[],
     "pk": hashed pk
