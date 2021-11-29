@@ -147,8 +147,9 @@ public class SimStatesReceiver extends BroadcastReceiver {
 
             byte[] sigma = SecurityUtils.sign(registrationMessage, securityManager.getPrivateKey(), SecurityUtils.SHA256ECDSA);
             Map<String, Object> map = new HashMap<>();
+            
             map.put("message", registrationMessage);
-            map.put("sigMessage", sigma);
+            map.put("sig_message", sigma);
             String json = JsonStream.serialize(map);
 
             WaitDialog.show("Validating");

@@ -170,6 +170,12 @@ public class HomeFragment extends Fragment {
                     LatLng latLng = LocationUtils.toLatLng(location);
 
                     // TODO(sudheesh001) security check
+
+                    // Make a object model
+                    // write as bytes => sign it
+                    // make a map for sig_message and measurement and h(pk)
+
+
                     Map<String, Object> map = new HashMap<>();
                     map.put("latitude", latLng.latitude);
                     map.put("longitude", latLng.longitude);
@@ -195,7 +201,7 @@ public class HomeFragment extends Fragment {
                         this.activity.finishAndRemoveTask();
                     }
                     uploadMap.put("pk", SecurityUtils.digest(pk, SecurityUtils.SHA256));
-
+                    uploadMap.put("measurement", json);
                     // TODO(sudheesh001) security check
 
                     uploadViewModelSignalStrength.loadData(uploadMap, UPLOAD_SIGNAL);
@@ -457,6 +463,7 @@ public class HomeFragment extends Fragment {
                                         this.activity.finishAndRemoveTask();
                                     }
                                     uploadMap.put("pk", SecurityUtils.digest(pk, SecurityUtils.SHA256));
+                                    uploadMap.put("measurement", json);
                                     // TODO(sudheesh001) security check
 
                                     uploadViewModelConnectivity.loadData(uploadMap, UPLOAD_CONNECTIVITY);
