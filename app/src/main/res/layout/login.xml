@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <ImageView
+        android:id="@+id/Logo"
+        android:layout_width="240dp"
+        android:layout_height="380dp"
+        android:src="@drawable/lcl_purple_gold_uw"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/login_textfield"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="18dp"
+        android:layout_marginTop="-32dp"
+        android:layout_marginRight="18dp"
+        android:orientation="vertical"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/Logo">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="@dimen/text_field_margin_bottom"
+            app:boxCornerRadiusBottomEnd="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusBottomStart="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusTopEnd="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusTopStart="@dimen/text_field_corner_radius">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/user_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="User Key" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="@dimen/text_field_margin_bottom"
+            app:boxCornerRadiusBottomEnd="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusBottomStart="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusTopEnd="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusTopStart="@dimen/text_field_corner_radius">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/private_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Private Key" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:boxCornerRadiusBottomEnd="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusBottomStart="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusTopEnd="@dimen/text_field_corner_radius"
+            app:boxCornerRadiusTopStart="@dimen/text_field_corner_radius">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/sigma_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Sigma Key" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/qr_scanner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Scan QR Code"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/login_textfield" />
+
+    <Button
+        android:id="@+id/next"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/qr_scanner"
+        android:layout_marginTop="@dimen/text_field_margin_bottom"
+        android:text="Next" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

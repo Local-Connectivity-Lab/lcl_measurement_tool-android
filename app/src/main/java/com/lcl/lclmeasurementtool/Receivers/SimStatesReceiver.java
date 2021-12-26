@@ -5,45 +5,16 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
-import com.kongzue.dialogx.dialogs.TipDialog;
-import com.kongzue.dialogx.dialogs.WaitDialog;
-import com.lcl.lclmeasurementtool.Managers.KeyStoreManager;
-import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Constants.SimCardConstants;
-import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
-import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
-
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
-import java.security.UnrecoverableEntryException;
-import java.security.cert.CertificateException;
-import java.util.HashMap;
-import java.util.Map;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import com.lcl.lclmeasurementtool.R;
 
 public class SimStatesReceiver extends BroadcastReceiver {
     private final static String TAG = "SIM_RECEIVER";
@@ -51,16 +22,11 @@ public class SimStatesReceiver extends BroadcastReceiver {
 
     private Context context;
     private Activity activity;
-    private KeyStoreManager securityManager;
 
-    // TODO(johnnzhou) retrieve imsi from the system
-    private String imsi;   // imsi
 
     @RequiresApi(api = Build.VERSION_CODES.P)
-    public SimStatesReceiver(Activity activity, String imsi) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException, KeyStoreException, CertificateException, IOException {
+    public SimStatesReceiver(Activity activity) {
         this.activity = activity;
-        this.imsi = imsi;
-        securityManager = KeyStoreManager.getInstance();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.P)
@@ -76,106 +42,132 @@ public class SimStatesReceiver extends BroadcastReceiver {
             if (extraState == null) {
                 switch (state) {
                     case TelephonyManager.SIM_STATE_READY:
-                        try {
-                            if (!securityManager.contains()) {
-                                Log.i(TAG, "generate new keypair");
-                                securityManager.generate();
-                                validateUser();
-                            } else {
-                                Log.i(TAG, "keypair exists");
-                            }
-                        } catch (NoSuchProviderException | NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException e) {
-                            e.printStackTrace();
-                        }
                         break;
                     default:
-                        try {
-                            Log.i(TAG, "remove current keypair");
-                            securityManager.delete();
-                        } catch (KeyStoreException e) {
-                            e.printStackTrace();
-                        }
+                        Log.i(TAG, "remove current keypair");
+                        removeCredentials();
                         showMessage();
                         break;
                 }
             } else {
                 if (extraState.equals(SimCardConstants.INTENT_VALUE_ICC_LOADED)) {
-                    try {
-                         if (!securityManager.contains()) {
-                             Log.i(TAG, "generate new keypair");
-                             securityManager.generate();
-                             validateUser();
-                         } else {
-                             Log.i(TAG, "keypair exists");
-                         }
-                    } catch (NoSuchProviderException | NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException e) {
-                        e.printStackTrace();
-                    }
+                    // currently nothing to do
                 } else if (extraState.equals(SimCardConstants.INTENT_VALUE_ICC_IMSI) || extraState.equals(SimCardConstants.INTENT_VALUE_ICC_READY)) {
                     // do nothing
                 } else {
-                    try {
-                        Log.i(TAG, "remove current keypair");
-                        securityManager.delete();
-                    } catch (KeyStoreException e) {
-                        e.printStackTrace();
-                    }
+                    Log.i(TAG, "remove current keypair");
+                    removeCredentials();
                     showMessage();
                 }
             }
         }
     }
 
-    private void validateUser() {
+//    private void validateUser() {
+//
+//        // TODO(sudheesh001) security check
+//        try {
+//            byte[] pk = securityManager.getPublicKey();
+//            byte[][] pi = securityManager.getAttestation();
+//
+//            RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(pk,SecurityUtils.digest(imsi, SecurityUtils.SHA256), pi);
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+//            byte[] registrationMessage = objectMapper.writeValueAsBytes(registrationMessageModel);
+//
+//            byte[] sigma = SecurityUtils.sign(registrationMessage, securityManager.getPrivateKey(), SecurityUtils.SHA256ECDSA);
+//            Map<String, Object> map = new HashMap<>();
+//
+//            map.put("message", registrationMessage);
+//            map.put("sig_message", sigma);
+//            String json = JsonStream.serialize(map);
+//
+//            WaitDialog.show("Validating");
+//
+//            OkHttpClient httpClient = new OkHttpClient();
+//            RequestBody requestBody = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+//            Request request = new Request.Builder()
+//                    .url("https://api-dev.seattlecommunitynetwork.org/register")
+//                    .post(requestBody)
+//                    .build();
+//            httpClient.newCall(request).enqueue(new Callback() {
+//                @Override
+//                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+//                    WaitDialog.dismiss();
+//                    TipDialog.show("Network Connection Lost", WaitDialog.TYPE.ERROR);
+//                }
+//
+//                @Override
+//                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+//                    WaitDialog.dismiss();
+//                    if (!response.isSuccessful()) {
+//                        Log.e(TAG, "Invalid user");
+//                        showMessage();
+//                    } else {
+//                        TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
+//                    }
+//                }
+//            });
+//        } catch (NoSuchAlgorithmException | IOException | CertificateException | KeyStoreException | UnrecoverableEntryException | InvalidKeyException | SignatureException e) {
+//            e.printStackTrace();
+//        }
+//
+//        // TODO(sudheesh001) security check
+//    }
 
-        // TODO(sudheesh001) security check
-        try {
-            byte[] pk = securityManager.getPublicKey();
-            byte[][] pi = securityManager.getAttestation();
+//    private void showLogInPage() {
+//        DialogX.init(this.context);
+//        ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
+//                new ActivityResultContracts.StartActivityForResult(),
+//                result -> {
+//                    if (result.getResultCode() == RESULT_OK) {
+//                        Intent data = result.getData();
+//                        if (data != null) {
+//                            String content = data.getStringExtra(Constant.CODED_CONTENT);
+//                            System.out.println("scan result is：" + content);
+//                            WaitDialog.show("Validating ...");
+//
+//                            OkHttpClient client = new OkHttpClient();
+//                            Request request = new Request.Builder()
+//                                    .url("https://www.google.com/")
+//                                    .build();
+//                            client.newCall(request).enqueue(new Callback() {
+//                                @Override
+//                                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+//                                    TipDialog.show("Cannot validate code. Please retry or contact the administrator", WaitDialog.TYPE.ERROR);
+//                                }
+//
+//                                @Override
+//                                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+//                                    System.out.println(response.body().string());
+//                                    TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
+//                                    activity.runOnUiThread(() -> fullScreenDialog.dismiss());
+//                                }
+//                            });
+//
+//                        }
+//                    }
+//                }
+//        );
+//    }
+//
+//    private void askPermission() {
+//        AndPermission.with(this.context).runtime().permission(Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE).onDenied(data -> {
+//            Uri packageURI = Uri.parse("package:" + this.context.getPackageName());
+//            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
+//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//
+//            this.activity.startActivity(intent);
+//        }).start();
+//    }
+//
+//
 
-            RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(pk,SecurityUtils.digest(imsi, SecurityUtils.SHA256), pi);
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-            byte[] registrationMessage = objectMapper.writeValueAsBytes(registrationMessageModel);
-
-            byte[] sigma = SecurityUtils.sign(registrationMessage, securityManager.getPrivateKey(), SecurityUtils.SHA256ECDSA);
-            Map<String, Object> map = new HashMap<>();
-            
-            map.put("message", registrationMessage);
-            map.put("sig_message", sigma);
-            String json = JsonStream.serialize(map);
-
-            WaitDialog.show("Validating");
-
-            OkHttpClient httpClient = new OkHttpClient();
-            RequestBody requestBody = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
-            Request request = new Request.Builder()
-                    .url("https://api-dev.seattlecommunitynetwork.org/register")
-                    .post(requestBody)
-                    .build();
-            httpClient.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    WaitDialog.dismiss();
-                    TipDialog.show("Network Connection Lost", WaitDialog.TYPE.ERROR);
-                }
-
-                @Override
-                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    WaitDialog.dismiss();
-                    if (!response.isSuccessful()) {
-                        Log.e(TAG, "Invalid user");
-                        showMessage();
-                    } else {
-                        TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
-                    }
-                }
-            });
-        } catch (NoSuchAlgorithmException | IOException | CertificateException | KeyStoreException | UnrecoverableEntryException | InvalidKeyException | SignatureException e) {
-            e.printStackTrace();
-        }
-
-        // TODO(sudheesh001) security check
+    private void removeCredentials() {
+        SharedPreferences preferences = activity.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.clear();
+        editor.apply();
     }
 
     private void showMessage() {

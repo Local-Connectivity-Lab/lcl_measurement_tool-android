@@ -156,6 +156,14 @@ public class CellularManager {
         return null;
     }
 
+    public String getPhoneNumber() {
+        if (this.telephonyManager != null) {
+            return this.telephonyManager.getLine1Number();
+        }
+
+        return null;
+    }
+
     /**
      * Start listen to signal strength change and display onto the corresponding TextView.
      *

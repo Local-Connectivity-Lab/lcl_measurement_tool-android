@@ -1,23 +1,25 @@
 package com.lcl.lclmeasurementtool.Models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.jsoniter.annotation.JsonProperty;
+
+import org.apache.commons.codec.binary.Hex;
 
 // TODO(sudheesh001) security check
 public class RegistrationMessageModel {
 
-    @JsonProperty("publicKey")
-    byte[] publicKey;
+    @JsonProperty
+    String sigma_r;
 
-    @JsonProperty("identity")
-    byte[] identity; // h(IMSI);
+    @JsonProperty
+    String h;
 
-    @JsonProperty("attestation")
-    byte[][] attestation;
+    @JsonProperty
+    String R;
 
-    public RegistrationMessageModel(byte[] pk, byte[] identity, byte[][] attestation) {
-        this.publicKey = pk;
-        this.identity = identity;
-        this.attestation = attestation;
+    public RegistrationMessageModel(byte[] sigma_r, byte[] h, byte[] R) {
+        this.sigma_r = Hex.encodeHexString(sigma_r, false);
+        this.h = Hex.encodeHexString(h, false);
+        this.R = Hex.encodeHexString(R, false);
     }
 }
 // TODO(sudheesh001) security check

@@ -1,18 +1,24 @@
 package com.lcl.lclmeasurementtool.Utils;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 // TODO(sudheesh001) security check
 public class SecurityUtils {
 
-
+    public static final String RSA = "RSA";
     public static final String SHA256 = "SHA-256";
     public static final String SHA256ECDSA = "SHA256withECDSA";
 
@@ -63,22 +69,39 @@ public class SecurityUtils {
     }
 
     /**
-     * Verify a signed data with public key and given algorithm
      *
-     * @param data               the data to be verified
-     * @param publicKey          the public key to verify the the signed data
-     * @param signatureBytes     the signature
-     * @param algorithm          the algorithm used for the signature
+     * @param sk_t
+     * @param sigma_t
+     * @param pk_a
+     * @param algorithm
      * @return
      * @throws InvalidKeyException
      * @throws SignatureException
      * @throws NoSuchAlgorithmException
      */
-    public static boolean verify(byte[] data, PublicKey publicKey, byte[] signatureBytes, String algorithm) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
-        Signature signature = Signature.getInstance(algorithm);
-        signature.initVerify(publicKey);
-        signature.update(data);
-        return signature.verify(signatureBytes);
+    public static boolean verify(String sk_t, String sigma_t, String pk_a, String algorithm) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+        // TODO: implement it
+//        Signature signature = Signature.getInstance(algorithm);
+//        signature.
+//        signature.update(data);
+//        return signature.verify(signatureBytes);
+        return false;
+    }
+
+    public static PublicKey genPublicKey(String sk_t, String algorithm) throws DecoderException,
+            NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] sk = Hex.decodeHex(sk_t);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(sk);
+        KeyFactory kf = KeyFactory.getInstance(algorithm);
+        return kf.generatePublic(keySpec);
+    }
+
+    public static PrivateKey genPrivateKey(String sk_t, String algorithm) throws DecoderException,
+            NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] sk = Hex.decodeHex(sk_t);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(sk);
+        KeyFactory kf = KeyFactory.getInstance(algorithm);
+        return kf.generatePrivate(keySpec);
     }
 }
 // TODO(sudheesh001) security check
