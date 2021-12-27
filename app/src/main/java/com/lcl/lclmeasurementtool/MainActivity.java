@@ -187,12 +187,12 @@ public class MainActivity extends AppCompatActivity {
                     if (TextUtils.isEmpty(userKey.getText()) || TextUtils.isEmpty(privateKey.getText()) || TextUtils.isEmpty(sigmaKey.getText())) {
                         showMessageOnFailure();
                     } else {
+                        // validate only when all fields have been filled
                         String pk_a = userKey.getText().toString();
                         String sk_t = privateKey.getText().toString();
                         String sigma_t = sigmaKey.getText().toString();
                         validate(sigma_t, pk_a, sk_t);
                     }
-                    // validate only when all fields have been filled
 
                 });
             }
@@ -257,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
             byteArray.write(pk_t.getEncoded());
             byteArray.write(R);
             h_pkr = SecurityUtils.digest(byteArray.toByteArray(), SecurityUtils.SHA256);
+            preferences.edit().putString("h_pkr", Hex.encodeHexString(h_pkr)).apply();
 
             byteArray.reset();
             byteArray.write(Hex.decodeHex(sk_t));

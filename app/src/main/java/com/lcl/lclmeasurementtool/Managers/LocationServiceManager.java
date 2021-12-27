@@ -26,6 +26,8 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.lcl.lclmeasurementtool.R;
 
+import org.apache.commons.codec.DecoderException;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.security.InvalidKeyException;
@@ -34,6 +36,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
@@ -117,19 +120,7 @@ public class LocationServiceManager {
                         mLastLocation = task.getResult();
                         try {
                             listener.onUpdate(mLastLocation);
-                        } catch (CertificateException e) {
-                            e.printStackTrace();
-                        } catch (NoSuchAlgorithmException e) {
-                            e.printStackTrace();
-                        } catch (KeyStoreException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (UnrecoverableEntryException e) {
-                            e.printStackTrace();
-                        } catch (SignatureException e) {
-                            e.printStackTrace();
-                        } catch (InvalidKeyException e) {
+                        } catch (CertificateException | DecoderException | InvalidKeySpecException | InvalidKeyException | SignatureException | UnrecoverableEntryException | IOException | KeyStoreException | NoSuchAlgorithmException e) {
                             e.printStackTrace();
                         }
                     } else {
@@ -149,19 +140,7 @@ public class LocationServiceManager {
             public void onLocationChanged(@NonNull Location location) {
                 try {
                     listener.onUpdate(location);
-                } catch (CertificateException e) {
-                    e.printStackTrace();
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (KeyStoreException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (UnrecoverableEntryException e) {
-                    e.printStackTrace();
-                } catch (SignatureException e) {
-                    e.printStackTrace();
-                } catch (InvalidKeyException e) {
+                } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException | UnrecoverableEntryException | SignatureException | InvalidKeyException | InvalidKeySpecException | DecoderException e) {
                     e.printStackTrace();
                 }
             }
@@ -195,19 +174,7 @@ public class LocationServiceManager {
                     // update the map
                     try {
                         listener.onUpdate(location);
-                    } catch (CertificateException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    } catch (KeyStoreException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (UnrecoverableEntryException e) {
-                        e.printStackTrace();
-                    } catch (SignatureException e) {
-                        e.printStackTrace();
-                    } catch (InvalidKeyException e) {
+                    } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException | UnrecoverableEntryException | SignatureException | InvalidKeyException | InvalidKeySpecException | DecoderException e) {
                         e.printStackTrace();
                     }
                 }

@@ -3,10 +3,12 @@ package com.lcl.lclmeasurementtool;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.NetworkCapabilities;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,14 +64,20 @@ import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.SignatureException;
 import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.ZoneId;
 import java.util.Base64;
 import java.util.HashMap;
@@ -158,8 +166,6 @@ public class HomeFragment extends Fragment {
         this.isTestStarted = false;
         this.isCellularConnected = false;
 
-//        device_id = mCellularManager.getSIMCardID();
-        device_id = "123456";
         // update and listen to signal strength changes
         prevSignalStrength = mCellularManager.getDBM();
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
@@ -176,12 +182,10 @@ public class HomeFragment extends Fragment {
                     LatLng latLng = LocationUtils.toLatLng(location);
 
                     // TODO(sudheesh001) security check
+                    String[] result = retrieveKeysInformation();
+                    String h_pkr = result[0];
+                    String sk_t = result[1];
 
-                    // TODO(johnnzhou) retrieve IMSI from the system
-                    String imsi = "12345";
-                    String device_id = Base64
-                            .getEncoder()
-                            .encodeToString(SecurityUtils.digest(imsi, SecurityUtils.SHA256));
                     SignalStrengthMessageModel signalStrengthMessageModel =
                             new SignalStrengthMessageModel(
                                     latLng.latitude,
@@ -191,33 +195,8 @@ public class HomeFragment extends Fragment {
                                     level.getLevelCode(),
                                     "",
                                     device_id);
-
-
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-                    byte[] json = objectMapper.writeValueAsBytes(signalStrengthMessageModel);
-
-                    PrivateKey sk = mKeyStoreManager.getPrivateKey();
-                    if (sk == null) {
-                        Log.e(TAG, "unable to get sk");
-                        this.activity.finishAndRemoveTask();
-                    }
-                    byte[] sig_message = SecurityUtils.sign(json, sk, SecurityUtils.SHA256ECDSA);
-
-                    Map<String, Object> uploadMap = new HashMap<>();
-                    uploadMap.put("sig_message", sig_message);
-                    byte[] pk = mKeyStoreManager.getPublicKey();
-                    if (pk.length == 0) {
-                        Log.e(TAG, "unable to get pk");
-                        this.activity.finishAndRemoveTask();
-                    }
-                    uploadMap.put("pk", SecurityUtils.digest(pk, SecurityUtils.SHA256));
-                    uploadMap.put("measurement", json);
-                    // TODO(sudheesh001) security check
-
-                    uploadViewModelSignalStrength.loadData(uploadMap, UPLOAD_SIGNAL);
-                    uploadViewModelSignalStrength.upload();
                     signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
+                    uploadData(signalStrengthMessageModel, sk_t, h_pkr, UPLOAD_SIGNAL);
                 });
             }
         });
@@ -451,12 +430,11 @@ public class HomeFragment extends Fragment {
                                     LatLng latLng = LocationUtils.toLatLng(location);
 
                                     // TODO(sudheesh001) security check
+                                    String[] result = retrieveKeysInformation();
+                                    String h_pkr = result[0];
+                                    String sk_t = result[1];
 
-                                    // TODO(johnnzhou) retrieve IMSI from the system
-                                    String imsi = "12345";
-                                    String device_id = Base64
-                                            .getEncoder()
-                                            .encodeToString(SecurityUtils.digest(imsi, SecurityUtils.SHA256));
+
                                     ConnectivityMessageModel connectivityMessageModel =
                                             new ConnectivityMessageModel(
                                                     latLng.latitude,
@@ -466,33 +444,8 @@ public class HomeFragment extends Fragment {
                                                     prevDownload,
                                                     prevPing,
                                                     "", device_id);
-
-                                    ObjectMapper objectMapper = new ObjectMapper();
-                                    objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-                                    byte[] json = objectMapper.writeValueAsBytes(connectivityMessageModel);
-
-                                    PrivateKey sk = mKeyStoreManager.getPrivateKey();
-                                    if (sk == null) {
-                                        Log.e(TAG, "unable to get sk");
-                                        this.activity.finishAndRemoveTask();
-                                        System.exit(1);
-                                    }
-                                    byte[] sig_message = SecurityUtils.sign(json, sk, SecurityUtils.SHA256ECDSA);
-
-                                    Map<String, Object> uploadMap = new HashMap<>();
-                                    uploadMap.put("sig_message", sig_message);
-                                    byte[] pk = mKeyStoreManager.getPublicKey();
-                                    if (pk.length == 0) {
-                                        Log.e(TAG, "unable to get pk");
-                                        this.activity.finishAndRemoveTask();
-                                    }
-                                    uploadMap.put("pk", SecurityUtils.digest(pk, SecurityUtils.SHA256));
-                                    uploadMap.put("measurement", json);
-                                    // TODO(sudheesh001) security check
-
-                                    uploadViewModelConnectivity.loadData(uploadMap, UPLOAD_CONNECTIVITY);
-                                    uploadViewModelConnectivity.upload();
                                     connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
+                                    uploadData(connectivityMessageModel, sk_t, h_pkr, UPLOAD_CONNECTIVITY);
                                 });
                             }
                         }
@@ -509,5 +462,48 @@ public class HomeFragment extends Fragment {
 
     private boolean isConnectivityAllSet() {
         return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
+    }
+
+    private void uploadData(Object data, String sk_t, String h_pkr, int type) throws NoSuchAlgorithmException,
+            InvalidKeySpecException, DecoderException, SignatureException, InvalidKeyException {
+        String json = JsonStream.serialize(data);
+
+        byte[] sig_m = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8),
+                SecurityUtils.genPrivateKey(sk_t, SecurityUtils.RSA),
+                SecurityUtils.SHA256ECDSA);
+
+        Map<String, Object> uploadMap = new HashMap<>();
+        uploadMap.put("M", json);
+        uploadMap.put("sig_m", sig_m);
+        uploadMap.put("h_pkr", h_pkr);
+        // TODO(sudheesh001) security check
+
+        uploadViewModelConnectivity.loadData(uploadMap, type);
+        uploadViewModelConnectivity.upload();
+    }
+
+    private String[] retrieveKeysInformation() {
+        SharedPreferences preferences = this.activity.getPreferences(Context.MODE_PRIVATE);
+        if (!preferences.contains("h_pkr") || !preferences.contains("sk_t")) {
+            exitWhenFailure("Key information missing");
+        }
+        String h_pkr = preferences.getString("h_pkr", "");
+        String sk_t = preferences.getString("sk_t", "");
+        if (TextUtils.equals(h_pkr, "") || TextUtils.equals(sk_t, "")) {
+            preferences.edit().clear().apply();
+            exitWhenFailure("Keys are compromised. Please rescan the QR Code");
+        }
+        return new String[]{h_pkr, sk_t};
+    }
+
+    private void exitWhenFailure(String message) {
+        MessageDialog.show("Error", message, "ok").setOkButton(new OnDialogButtonClickListener<MessageDialog>() {
+            @Override
+            public boolean onClick(MessageDialog baseDialog, View v) {
+                activity.finishAndRemoveTask();
+                System.exit(1);
+                return true;
+            }
+        });
     }
 }
