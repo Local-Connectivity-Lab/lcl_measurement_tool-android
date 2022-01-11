@@ -27,11 +27,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.BaseProgressIndicator;
@@ -39,8 +34,6 @@ import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
-import com.kongzue.dialogx.dialogs.TipDialog;
-import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
@@ -59,13 +52,11 @@ import com.lcl.lclmeasurementtool.Utils.LocationUtils;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
-import com.lcl.lclmeasurementtool.Utils.UIUtils;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
 import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -74,12 +65,10 @@ import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.ZoneId;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -469,7 +458,7 @@ public class HomeFragment extends Fragment {
         String json = JsonStream.serialize(data);
 
         byte[] sig_m = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8),
-                SecurityUtils.genPrivateKey(sk_t, SecurityUtils.RSA),
+                SecurityUtils.decodePrivateKey(sk_t, SecurityUtils.RSA),
                 SecurityUtils.SHA256ECDSA);
 
         Map<String, Object> uploadMap = new HashMap<>();

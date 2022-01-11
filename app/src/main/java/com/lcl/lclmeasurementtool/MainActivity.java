@@ -46,6 +46,7 @@ import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
 import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.BuildConfig;
 import com.yanzhenjie.permission.runtime.Permission;
 import com.yzq.zxinglibrary.android.CaptureActivity;
 import com.yzq.zxinglibrary.bean.ZxingConfig;
@@ -54,18 +55,14 @@ import com.yzq.zxinglibrary.common.Constant;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
-import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -138,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
                             String content = data.getStringExtra(Constant.CODED_CONTENT);
                             System.out.println("scan result is：" + content);
 
-                            // TODO: write key val to shared preferences
                             content = "{\"sigma_t\": \"00AABBCCDDEEFF\", \"sk_t\": \"FFEE000A0A0B0C0D\",\"pk_a\": \"A0B0C0D0\"}";
                             Any jsonObj = JsonIterator.deserialize(content);
                             String sigma_t = jsonObj.get("sigma_t").toString();
@@ -220,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showMessageOnFailure() {
         TipDialog.show("Cannot validate code. Please retry or contact the administrator", WaitDialog.TYPE.ERROR);
+        getPreferences(MODE_PRIVATE).edit().clear().apply();;
     }
 
     private void validate(String sigma_t, String pk_a, String sk_t) {
@@ -269,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
             byteArray.write(h_sec);
             h_concat = byteArray.toByteArray();
             sigma_r = SecurityUtils.sign(h_concat,
-                    SecurityUtils.genPrivateKey(sk_t, SecurityUtils.RSA),
+                    SecurityUtils.decodePrivateKey(sk_t, SecurityUtils.RSA),
                     SecurityUtils.SHA256ECDSA);
         } catch (IOException | NoSuchAlgorithmException |
                 DecoderException |
@@ -298,19 +295,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                //TODO: handle the response from the server
                 System.out.println(response.body().string());
                 TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
                 activity.runOnUiThread(() -> fullScreenDialog.dismiss());
             }
         });
     }
-
-
-
-
-
-
-
 
 
     ////////////////// HELPER FUNCTION ///////////////////////

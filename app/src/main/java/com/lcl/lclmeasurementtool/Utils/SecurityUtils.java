@@ -14,6 +14,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 
 // TODO(sudheesh001) security check
 public class SecurityUtils {
@@ -74,17 +75,21 @@ public class SecurityUtils {
      * @param sigma_t
      * @param pk_a
      * @param algorithm
-     * @return
+     * @return true if the key is valid;  false otherwise
      * @throws InvalidKeyException
      * @throws SignatureException
      * @throws NoSuchAlgorithmException
      */
     public static boolean verify(String sk_t, String sigma_t, String pk_a, String algorithm) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
         // TODO: implement it
-//        Signature signature = Signature.getInstance(algorithm);
-//        signature.
-//        signature.update(data);
-//        return signature.verify(signatureBytes);
+        Signature signature = Signature.getInstance(algorithm);
+        try {
+            signature.initVerify(decodePublicKey(pk_a, SecurityUtils.RSA)); // using the string to generate the public key
+            signature.update(Hex.decodeHex(sk_t));
+            return signature.verify(Hex.decodeHex(sigma_t));
+        } catch (InvalidKeySpecException | DecoderException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -96,7 +101,12 @@ public class SecurityUtils {
         return kf.generatePublic(keySpec);
     }
 
-    public static PrivateKey genPrivateKey(String sk_t, String algorithm) throws DecoderException,
+    public static PublicKey decodePublicKey(String pk_t, String algorithm) throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException {
+        return KeyFactory.getInstance(algorithm)
+                .generatePublic(new PKCS8EncodedKeySpec(Hex.decodeHex(pk_t)));
+    }
+
+    public static PrivateKey decodePrivateKey(String sk_t, String algorithm) throws DecoderException,
             NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] sk = Hex.decodeHex(sk_t);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(sk);
