@@ -12,16 +12,19 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 // TODO(sudheesh001) security check
 public class SecurityUtils {
 
     public static final String RSA = "RSA";
     public static final String SHA256 = "SHA-256";
-    public static final String SHA256ECDSA = "SHA256withECDSA";
+    public static final String SHA256withRSA = "SHA256withRSA";
 
     /**
      * Sign the data with given private key and algorithm
@@ -71,39 +74,33 @@ public class SecurityUtils {
 
     /**
      *
-     * @param sk_t
-     * @param sigma_t
-     * @param pk_a
+     * @param messageInHex
+     * @param receivedSignature
+     * @param publicKey
      * @param algorithm
      * @return true if the key is valid;  false otherwise
      * @throws InvalidKeyException
      * @throws SignatureException
      * @throws NoSuchAlgorithmException
      */
-    public static boolean verify(String sk_t, String sigma_t, String pk_a, String algorithm) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
-        // TODO: implement it
+    public static boolean verify(byte[] messageInHex, byte[] receivedSignature, PublicKey publicKey, String algorithm) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
         Signature signature = Signature.getInstance(algorithm);
-        try {
-            signature.initVerify(decodePublicKey(pk_a, SecurityUtils.RSA)); // using the string to generate the public key
-            signature.update(Hex.decodeHex(sk_t));
-            return signature.verify(Hex.decodeHex(sigma_t));
-        } catch (InvalidKeySpecException | DecoderException e) {
-            e.printStackTrace();
-        }
-        return false;
+        signature.initVerify(publicKey);
+        signature.update(messageInHex);
+        return signature.verify(receivedSignature);
     }
 
     public static PublicKey genPublicKey(String sk_t, String algorithm) throws DecoderException,
             NoSuchAlgorithmException, InvalidKeySpecException {
-        byte[] sk = Hex.decodeHex(sk_t);
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(sk);
+        RSAPrivateCrtKey sk = (RSAPrivateCrtKey) decodePrivateKey(sk_t, algorithm);
+        RSAPublicKeySpec keySpec = new RSAPublicKeySpec(sk.getModulus(), sk.getPublicExponent());
         KeyFactory kf = KeyFactory.getInstance(algorithm);
         return kf.generatePublic(keySpec);
     }
 
     public static PublicKey decodePublicKey(String pk_t, String algorithm) throws DecoderException, NoSuchAlgorithmException, InvalidKeySpecException {
         return KeyFactory.getInstance(algorithm)
-                .generatePublic(new PKCS8EncodedKeySpec(Hex.decodeHex(pk_t)));
+                .generatePublic(new X509EncodedKeySpec(Hex.decodeHex(pk_t)));
     }
 
     public static PrivateKey decodePrivateKey(String sk_t, String algorithm) throws DecoderException,

@@ -459,7 +459,7 @@ public class HomeFragment extends Fragment {
 
         byte[] sig_m = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8),
                 SecurityUtils.decodePrivateKey(sk_t, SecurityUtils.RSA),
-                SecurityUtils.SHA256ECDSA);
+                SecurityUtils.SHA256withRSA);
 
         Map<String, Object> uploadMap = new HashMap<>();
         uploadMap.put("M", json);

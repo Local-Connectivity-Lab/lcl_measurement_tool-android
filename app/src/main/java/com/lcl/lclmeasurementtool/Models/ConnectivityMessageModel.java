@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.Models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.jsoniter.annotation.JsonCreator;
 
 // TODO(sudheesh001) security check
 public class ConnectivityMessageModel {
@@ -29,6 +30,7 @@ public class ConnectivityMessageModel {
     @JsonProperty("device_id")
     String device_id;
 
+    @JsonCreator
     public ConnectivityMessageModel(double latitude,
                                     double longitude,
                                     String timestamp,

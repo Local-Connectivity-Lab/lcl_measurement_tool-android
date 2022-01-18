@@ -41,6 +41,7 @@ import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBindView;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
+import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
@@ -136,10 +137,10 @@ public class MainActivity extends AppCompatActivity {
                             System.out.println("scan result is：" + content);
 
                             content = "{\"sigma_t\": \"00AABBCCDDEEFF\", \"sk_t\": \"FFEE000A0A0B0C0D\",\"pk_a\": \"A0B0C0D0\"}";
-                            Any jsonObj = JsonIterator.deserialize(content);
-                            String sigma_t = jsonObj.get("sigma_t").toString();
-                            String sk_t = jsonObj.get("sk_t").toString();
-                            String pk_a = jsonObj.get("pk_a").toString();
+                            QRCodeKeysModel jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
+                            String sigma_t = jsonObj.getSigma_t();
+                            String sk_t = jsonObj.getSk_t();
+                            String pk_a = jsonObj.getPk_a();
                             saveCredentials(sigma_t, pk_a, sk_t);
 
                             WaitDialog.show("Validating ...");
@@ -216,18 +217,23 @@ public class MainActivity extends AppCompatActivity {
 
     private void showMessageOnFailure() {
         TipDialog.show("Cannot validate code. Please retry or contact the administrator", WaitDialog.TYPE.ERROR);
-        getPreferences(MODE_PRIVATE).edit().clear().apply();;
+        getPreferences(MODE_PRIVATE).edit().clear().apply();
     }
 
     private void validate(String sigma_t, String pk_a, String sk_t) {
         try {
-            if (!SecurityUtils.verify(sk_t, sigma_t, pk_a, SecurityUtils.SHA256)) {
+            if (!SecurityUtils.verify(Hex.decodeHex(sk_t),
+                                        Hex.decodeHex(sigma_t),
+                                        SecurityUtils.decodePublicKey(pk_a, SecurityUtils.RSA),
+                                        SecurityUtils.SHA256)) {
                 showMessageOnFailure();
                 return;
             }
         } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException e) {
             showMessageOnFailure();
             return;
+        } catch (DecoderException | InvalidKeySpecException e) {
+            e.printStackTrace();
         }
 
         PublicKey pk_t;
@@ -267,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
             h_concat = byteArray.toByteArray();
             sigma_r = SecurityUtils.sign(h_concat,
                     SecurityUtils.decodePrivateKey(sk_t, SecurityUtils.RSA),
-                    SecurityUtils.SHA256ECDSA);
+                    SecurityUtils.SHA256withRSA);
         } catch (IOException | NoSuchAlgorithmException |
                 DecoderException |
                 InvalidKeySpecException |
@@ -298,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
                 //TODO: handle the response from the server
                 System.out.println(response.body().string());
                 TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
+                saveCredentials(sigma_t, pk_a, sk_t);
                 activity.runOnUiThread(() -> fullScreenDialog.dismiss());
             }
         });

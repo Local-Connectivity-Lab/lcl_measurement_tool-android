@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.Models;
 
 
+import com.jsoniter.annotation.JsonCreator;
 import com.jsoniter.annotation.JsonProperty;
 
 // TODO(sudheesh001) security check
@@ -26,6 +27,7 @@ public class SignalStrengthMessageModel {
     @JsonProperty
     String device_id;
 
+    @JsonCreator
     public SignalStrengthMessageModel(double latitude,
                                       double longitude,
                                       String timestamp,
