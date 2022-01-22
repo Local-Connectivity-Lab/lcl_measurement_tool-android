@@ -1,7 +1,5 @@
 package com.lcl.lclmeasurementtool;
 
-import android.org.apache.commons.codec.DecoderException;
-import android.org.apache.commons.codec.binary.Hex;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,6 +8,8 @@ import static org.junit.Assert.*;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
+import com.lcl.lclmeasurementtool.Utils.DecoderException;
+import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 
 import java.io.ByteArrayOutputStream;

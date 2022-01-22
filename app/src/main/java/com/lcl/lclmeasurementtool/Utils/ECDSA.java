@@ -57,20 +57,20 @@ public class ECDSA {
         return (ECPublicKey) kf.generatePublic(new X509EncodedKeySpec(rawSPKIEncoded));
     }
 
-    public static boolean Verify(byte[] message, byte[] signature, ECPublicKey pk) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public static boolean Verify(byte[] message, byte[] signature, ECPublicKey pk) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchProviderException {
         // TODO: ECDSA key check
 //        Log.d("ECDSA", pk.toString());
 //        Log.d("ECDSA", Hex.bytesToStringLowercase(pk.getEncoded()));
 //        Log.d("ECDSA", pk.getAlgorithm());
 //        Log.d("ECDSA", pk.getFormat());
-        Signature s = Signature.getInstance(SIGNATURE_ALGORITHM);
+        Signature s = Signature.getInstance(SIGNATURE_ALGORITHM, "BC");
         s.initVerify((PublicKey) pk);
         s.update(message);
         return s.verify(signature);
     }
 
-    public static byte[] Sign(byte[] message, ECPrivateKey sk) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        Signature s = Signature.getInstance(SIGNATURE_ALGORITHM);
+    public static byte[] Sign(byte[] message, ECPrivateKey sk) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchProviderException {
+        Signature s = Signature.getInstance(SIGNATURE_ALGORITHM, "BC");
         s.initSign(sk);
         s.update(message);
         return s.sign();

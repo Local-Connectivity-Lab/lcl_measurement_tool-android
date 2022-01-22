@@ -1,8 +1,5 @@
 package com.lcl.lclmeasurementtool.Utils;
 
-import android.org.apache.commons.codec.DecoderException;
-import android.org.apache.commons.codec.binary.Hex;
-
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -103,7 +100,7 @@ public class SecurityUtils {
     }
 
     public static PrivateKey decodePrivateKey(String sk_t, String algorithm) throws DecoderException,
-            NoSuchAlgorithmException, InvalidKeySpecException {
+            NoSuchAlgorithmException, InvalidKeySpecException, DecoderException {
         byte[] sk = Hex.decodeHex(sk_t);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(sk);
         KeyFactory kf = KeyFactory.getInstance(algorithm);

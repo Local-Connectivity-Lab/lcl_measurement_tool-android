@@ -3,8 +3,7 @@ package com.lcl.lclmeasurementtool.Models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import android.org.apache.commons.codec.binary.Hex;
+import com.lcl.lclmeasurementtool.Utils.Hex;
 
 import java.io.Serializable;
 

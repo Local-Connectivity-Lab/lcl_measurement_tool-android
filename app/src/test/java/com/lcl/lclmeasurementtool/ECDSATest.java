@@ -1,7 +1,5 @@
 package com.lcl.lclmeasurementtool;
 
-import android.org.apache.commons.codec.DecoderException;
-import android.org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -12,11 +10,13 @@ import java.security.spec.InvalidKeySpecException;
 
 import static org.junit.Assert.*;
 
+import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
+import com.lcl.lclmeasurementtool.Utils.Hex;
 
 public class ECDSATest {
     @Test
-    public void Test_ECDSA_PublicKeyConversion() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, DecoderException, InvalidKeySpecException, NoSuchProviderException {
+    public void Test_ECDSA_PublicKeyConversion() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, DecoderException, InvalidKeySpecException, NoSuchProviderException, DecoderException, DecoderException {
         String hexFromServer = "3056301006072a8648ce3d020106052b8104000a03420004da754f3ede85eec8b7dec3fda5dbdc35662f807f29433e2810743c889de15e1f5d4338453fc13c45e856287cc7849554f92aca832c66a094c7f7f231c50afebf";
         byte[] pkBytes = Hex.decodeHex(hexFromServer);
 

@@ -5,12 +5,12 @@ import com.jsoniter.output.JsonStream;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
+import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
+import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 
-import android.org.apache.commons.codec.DecoderException;
-import android.org.apache.commons.codec.binary.Hex;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +54,7 @@ public class PostRequestTest {
                 System.out.println("unable to verify keys");
                 return;
             }
-        } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException | DecoderException | InvalidKeySpecException | NoSuchProviderException e) {
+        } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException | DecoderException e) {
             e.printStackTrace();
             return;
         }
@@ -99,10 +99,7 @@ public class PostRequestTest {
             byteArray.write(h_sec);
             h_concat = byteArray.toByteArray();
             sigma_r = ECDSA.Sign(h_concat, ecPrivateKey);
-        } catch (IOException | NoSuchAlgorithmException |
-                DecoderException |
-                InvalidKeyException |
-                SignatureException e) {
+        } catch (IOException | NoSuchAlgorithmException | DecoderException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
             e.printStackTrace();
             return;
         }
@@ -133,7 +130,7 @@ public class PostRequestTest {
             byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(Hex.decodeHex(sk_t)));
             System.out.println("serialized:" + Hex.encodeHexString(serialized));
             System.out.println("sigma_m:" + Hex.encodeHexString(sig_m));
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException | NoSuchProviderException e) {
             e.printStackTrace();
         }
 //        uploadData(signalStrengthMessageModel, sk_t, Hex.encodeHexString(h_pkr), UploadManager.SIGNAL_ENDPOINT);
@@ -170,7 +167,7 @@ public class PostRequestTest {
 
 
     private void uploadData(MeasurementDataModel data, String sk_t, String h_pkr, String endpoint) throws NoSuchAlgorithmException,
-            InvalidKeySpecException, DecoderException, SignatureException, InvalidKeyException, JsonProcessingException {
+            InvalidKeySpecException, DecoderException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
 
         byte[] serialized = data.serializeToBytes();
 

@@ -29,17 +29,17 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.lcl.lclmeasurementtool.R;
+import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.BuildConfig;
 import com.yanzhenjie.permission.runtime.Permission;
-
-import android.org.apache.commons.codec.DecoderException;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
@@ -149,7 +149,7 @@ public class LocationServiceManager {
                         mLastLocation = task.getResult();
                         try {
                             listener.onUpdate(mLastLocation);
-                        } catch (CertificateException | DecoderException | InvalidKeySpecException | InvalidKeyException | SignatureException | UnrecoverableEntryException | IOException | KeyStoreException | NoSuchAlgorithmException e) {
+                        } catch (CertificateException | DecoderException | InvalidKeySpecException | InvalidKeyException | SignatureException | UnrecoverableEntryException | IOException | KeyStoreException | NoSuchAlgorithmException | NoSuchProviderException e) {
                             e.printStackTrace();
                         }
                     } else {
@@ -169,7 +169,7 @@ public class LocationServiceManager {
             public void onLocationChanged(@NonNull Location location) {
                 try {
                     listener.onUpdate(location);
-                } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException | UnrecoverableEntryException | SignatureException | InvalidKeyException | InvalidKeySpecException | DecoderException e) {
+                } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException | UnrecoverableEntryException | SignatureException | InvalidKeyException | InvalidKeySpecException | DecoderException | NoSuchProviderException e) {
                     e.printStackTrace();
                 }
             }
@@ -203,7 +203,7 @@ public class LocationServiceManager {
                     // update the map
                     try {
                         listener.onUpdate(location);
-                    } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException | UnrecoverableEntryException | SignatureException | InvalidKeyException | InvalidKeySpecException | DecoderException e) {
+                    } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException | UnrecoverableEntryException | SignatureException | InvalidKeyException | InvalidKeySpecException | DecoderException | NoSuchProviderException e) {
                         e.printStackTrace();
                     }
                 }

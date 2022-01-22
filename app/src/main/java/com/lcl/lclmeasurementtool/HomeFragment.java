@@ -51,19 +51,19 @@ import com.lcl.lclmeasurementtool.Managers.UploadManager;
 import com.lcl.lclmeasurementtool.Models.ConnectivityMessageModel;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataModel;
 import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
+import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
+import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.LocationUtils;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
-import android.org.apache.commons.codec.DecoderException;
-import android.org.apache.commons.codec.binary.Hex;
-
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.ZoneId;
@@ -447,7 +447,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
-            InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException {
+            InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
 
         byte[] serialized = data.serializeToBytes();
 

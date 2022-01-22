@@ -6,8 +6,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.org.apache.commons.codec.DecoderException;
-import android.org.apache.commons.codec.binary.Hex;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -46,7 +44,9 @@ import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
 import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
+import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
+import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
 import com.yanzhenjie.permission.AndPermission;
@@ -61,6 +61,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.interfaces.ECPrivateKey;
@@ -103,6 +104,39 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(R.id.HomeFragment).build();
         NavigationUI.setupWithNavController(binding.toolbar, navController, appBarConfiguration);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+
+        // For testing only! Remove TODO:Zhennan
+        String sigHex = "304502201d3ea6680d007b751d4e3c1d928a270a1e5ce06cd9b77a46a95542766bb50cb90221008666a33c7e3362a18795d5b96cc36541f8ca79d9190c4341642145d41feb6605";
+        String invalidSigHex = "304502201d3ea6680d007b751d4e3c1d928a270a1e5ce06cd9b77a46a95542766bb50cb90221008666a33c7e3362a18795d5b96cc36541f8ca79d9190c4341642145d41feb6606"; // changed last byte
+        String messageHex = "308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420798116c5c26ccfd95e4e13fdf4df9e46cf3629223b190da6c891d48e4de5da57a144034200044552ed599a2d855f59286447d687fbd1ed05793025a7994268f29baef5ca1e3432f9b1d48301a85e4bd8ed77e2c6f3e834f947540b144dbc5a71a548c046c9e2";
+        String pkHex = "3056301006072a8648ce3d020106052b8104000a03420004da754f3ede85eec8b7dec3fda5dbdc35662f807f29433e2810743c889de15e1f5d4338453fc13c45e856287cc7849554f92aca832c66a094c7f7f231c50afebf";
+
+        try {
+            // The messageHex is the SK_t encoded which is signed by the server
+            byte[] skBytes = Hex.decodeHex(messageHex);
+            // Obtain the PK_A from the PK sent, this is SPKI Encoded since its directly obtained from the server.
+            byte[] pkABytes = Hex.decodeHex(pkHex);
+            PublicKey pkA = ECDSA.DeserializePublicKey(pkABytes);
+            // Convert the Signature to a byte array
+            byte[] sigBytes = Hex.decodeHex(sigHex);
+            byte[] invalidSigBytes = Hex.decodeHex(invalidSigHex);
+            boolean verifySignature = ECDSA.Verify(skBytes, sigBytes, (ECPublicKey) pkA);
+            System.out.println("Verifying valid signature :" + verifySignature);
+            boolean invalidVerifySignature = ECDSA.Verify(skBytes, invalidSigBytes, (ECPublicKey) pkA);
+            System.out.println("Verifying invalid signature :" + invalidVerifySignature);
+        } catch (DecoderException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        }
 
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         askPermission();
@@ -285,9 +319,7 @@ public class MainActivity extends AppCompatActivity {
             byteArray.write(h_sec);
             h_concat = byteArray.toByteArray();
             sigma_r = ECDSA.Sign(h_concat, ecPrivateKey);
-        } catch (IOException | NoSuchAlgorithmException |
-                InvalidKeyException |
-                SignatureException e) {
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
             showMessageOnFailure();
             return;
         }
