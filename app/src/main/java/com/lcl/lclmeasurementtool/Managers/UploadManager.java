@@ -2,43 +2,36 @@ package com.lcl.lclmeasurementtool.Managers;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
 import com.jsoniter.output.JsonStream;
+import com.kongzue.dialogx.dialogs.TipDialog;
+import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
 
 public class UploadManager {
 
     private static UploadManager instance;
     private static final MediaType MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
-    private static final String url = "https://api-dev.seattlecommunitynetwork.org/";
-//    private static final String url = "https://homes.cs.washington.edu/~zhouz46/cookieEater.php";
-    private Map<String, Object> map;
 
-    private OkHttpClient client;
+    private final OkHttpClient client;
     private String json;
     private String endpoint;
 
 
     private UploadManager() {
         client = new OkHttpClient();
-        map = new HashMap<>();
-    }
-
-    public void post() throws IOException {
-        if (json == null) {
-            throw new IllegalArgumentException("JSON data should not be null");
-        }
-
-        RequestBody body = RequestBody.create(json, MEDIA_TYPE);
-        Request request = new Request.Builder().url(url + endpoint).post(body).build();
-
-        Response response = client.newCall(request).execute();
     }
 
     public static UploadManager Builder() {
@@ -48,36 +41,39 @@ public class UploadManager {
         return instance;
     }
 
-    public UploadManager addField(String key, Object val) {
-        map.putIfAbsent(key, val);
-        return this;
-    }
-
-    public UploadManager addFields(Map<String, Object> map) {
-        if (!map.containsKey("TYPE")) {
-            throw new IllegalArgumentException("input data doesn't specify upload type");
+    public void post() throws IOException {
+        if (json == null) {
+            throw new IllegalArgumentException("JSON data should not be null");
         }
 
-        int type = (int) map.get("TYPE");
-        // map.remove("TYPE");
-        switch (type) {
-            case 0:
-                endpoint = "api/data";
-            case 1:
-                endpoint = "api/upload";
-        }
-        this.map = map;
+        RequestBody body = RequestBody.create(json, MEDIA_TYPE);
+        Request request = new Request.Builder().url(NetworkConstants.URL + endpoint).post(body).build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                e.printStackTrace();
+                TipDialog.show("Data upload failed. Please contact the administrator");
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    TipDialog.show("Data upload failed. Please contact the administrator");
+                }
+
+                response.close();
+            }
+        });
+    }
+
+    public UploadManager addPayload(String json) {
+        this.json = json;
         return this;
     }
 
-
-    public UploadManager serialize() {
-        this.json = JsonStream.serialize(map);
+    public UploadManager addEndpoint(String endpoint) {
+        this.endpoint = endpoint;
         return this;
     }
-
-//    public UploadManager addEndpoint(String endpoint) {
-//        this.endpoint = endpoint;
-//        return this;
-//    }
 }

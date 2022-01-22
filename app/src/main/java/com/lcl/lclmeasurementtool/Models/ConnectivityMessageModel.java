@@ -1,19 +1,10 @@
 package com.lcl.lclmeasurementtool.Models;
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jsoniter.annotation.JsonCreator;
 
 // TODO(sudheesh001) security check
-public class ConnectivityMessageModel {
-
-    @JsonProperty("latitude")
-    double latitude;
-
-    @JsonProperty("longitude")
-    double longitude;
-
-    @JsonProperty("timestamp")
-    String timestamp;
+public class ConnectivityMessageModel extends MeasurementDataModel {
 
     @JsonProperty("upload_speed")
     double upload_speed;
@@ -24,13 +15,6 @@ public class ConnectivityMessageModel {
     @JsonProperty("ping")
     double ping;
 
-    @JsonProperty("cell_id")
-    String cell_id;
-
-    @JsonProperty("device_id")
-    String device_id;
-
-    @JsonCreator
     public ConnectivityMessageModel(double latitude,
                                     double longitude,
                                     String timestamp,

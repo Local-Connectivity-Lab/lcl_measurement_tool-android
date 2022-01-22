@@ -2,7 +2,7 @@ package com.lcl.lclmeasurementtool.Managers;
 
 import android.location.Location;
 
-import org.apache.commons.codec.DecoderException;
+import android.org.apache.commons.codec.DecoderException;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;

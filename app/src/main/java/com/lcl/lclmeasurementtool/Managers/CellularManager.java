@@ -2,9 +2,20 @@ package com.lcl.lclmeasurementtool.Managers;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.PeriodicSync;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
+import android.provider.Settings;
+import android.telephony.CellIdentityCdma;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoCdma;
+import android.telephony.CellInfoGsm;
+import android.telephony.CellInfoLte;
+import android.telephony.CellInfoTdscdma;
+import android.telephony.CellInfoWcdma;
 import android.telephony.CellSignalStrength;
 import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
@@ -18,7 +29,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
+import com.kongzue.dialogx.dialogs.MessageDialog;
+import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
+import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.BuildConfig;
+import com.yanzhenjie.permission.runtime.Permission;
 
 import java.util.List;
 
@@ -131,38 +147,87 @@ public class CellularManager {
         return true;
     }
 
-    /**
-     * Read the IMEI code of the sim card
-     * @return the IMEI code in string; null if CellularManager failed to initialize;
-     */
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public String getIMEI() {
-        if (this.telephonyManager != null) {
-            return this.telephonyManager.getImei();
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    public String getCellID() {
+        if (ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            AndPermission.with(this.context).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> {
+                MessageDialog.build()
+                        .setTitle(R.string.location_message_title)
+                        .setMessage(R.string.permission_denied_explanation)
+                        .setOkButton(R.string.settings, (baseDialog, v) -> {
+                            // Build intent that displays the App settings screen.
+                            Intent intent = new Intent();
+                            intent.setAction(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            Uri uri = Uri.fromParts("package",
+                                    BuildConfig.APPLICATION_ID, null);
+                            intent.setData(uri);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            this.context.startActivity(intent);
+                            return false;
+                        }).setOkButton(android.R.string.cancel).show();
+            }).start();
+        }
+        List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
+        for (CellInfo info : infos) {
+            if (info instanceof CellInfoGsm) {
+                CellInfoGsm gsm = (CellInfoGsm) info;
+                return String.valueOf(gsm.getCellIdentity().getCid());
+            } else if (info instanceof CellInfoLte) {
+                CellInfoLte lte = (CellInfoLte) info;
+                return String.valueOf(lte.getCellIdentity().getCi());
+            } else if (info instanceof CellInfoCdma) {
+                CellInfoCdma cdma = (CellInfoCdma) info;
+                CellIdentityCdma cellIdentity = cdma.getCellIdentity();
+
+                // based on Android's Implementation
+                return String.format("%04x%04x%04x", cellIdentity.getSystemId(), cellIdentity.getNetworkId(), cellIdentity.getBasestationId());
+            } else if (info instanceof CellInfoWcdma) {
+                CellInfoWcdma wcdma = (CellInfoWcdma) info;
+                return String.valueOf(wcdma.getCellIdentity().getCid());
+            } else if (info instanceof CellInfoTdscdma) {
+                CellInfoTdscdma tdscdma = (CellInfoTdscdma) info;
+                return String.valueOf(tdscdma.getCellIdentity().getCid());
+            } else {
+                break;
+            }
         }
 
-        return null;
+        return "unknown";
     }
 
-    /**
-     * Read the Sim card ID code of the sim card
-     * @return the Siim card ID code in string; null if CellularManager failed to initialize;
-     */
-    public String getSIMCardID() {
-        if (this.telephonyManager != null) {
-            return this.telephonyManager.getSimSerialNumber();
-        }
+//    /**
+//     * Read the IMEI code of the sim card
+//     * @return the IMEI code in string; null if CellularManager failed to initialize;
+//     */
+//    @RequiresApi(api = Build.VERSION_CODES.O)
+//    public String getIMEI() {
+//        if (this.telephonyManager != null) {
+//            return this.telephonyManager.getImei();
+//        }
+//
+//        return null;
+//    }
 
-        return null;
-    }
-
-    public String getPhoneNumber() {
-        if (this.telephonyManager != null) {
-            return this.telephonyManager.getLine1Number();
-        }
-
-        return null;
-    }
+//    /**
+//     * Read the Sim card ID code of the sim card
+//     * @return the Siim card ID code in string; null if CellularManager failed to initialize;
+//     */
+//    public String getSIMCardID() {
+//        if (this.telephonyManager != null) {
+//            return this.telephonyManager.getSimSerialNumber();
+//        }
+//
+//        return null;
+//    }
+//
+//    public String getPhoneNumber() {
+//        if (this.telephonyManager != null) {
+//            return this.telephonyManager.getLine1Number();
+//        }
+//
+//        return null;
+//    }
 
     /**
      * Start listen to signal strength change and display onto the corresponding TextView.

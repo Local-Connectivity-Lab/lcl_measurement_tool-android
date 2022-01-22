@@ -1,7 +1,7 @@
 package com.lcl.lclmeasurementtool.Utils;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
+import android.org.apache.commons.codec.DecoderException;
+import android.org.apache.commons.codec.binary.Hex;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -13,7 +13,6 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateCrtKey;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
@@ -23,8 +22,8 @@ import java.security.spec.X509EncodedKeySpec;
 public class SecurityUtils {
 
     public static final String RSA = "RSA";
-    public static final String SHA256 = "SHA-256";
-    public static final String SHA256withRSA = "SHA256withRSA";
+    public static final String SHA_256_HASH = "SHA-256";
+    public static final String SHA_256_WITH_RSA_SIGNATURE = "SHA256withRSA";
 
     /**
      * Sign the data with given private key and algorithm

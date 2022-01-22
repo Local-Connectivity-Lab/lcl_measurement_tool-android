@@ -10,7 +10,7 @@ public class TimeUtilTest {
 
     @Test
     public void testTimeConverter() {
-        String time = TimeUtils.getTimeStamp(ZoneId.systemDefault());
-        System.out.printf(time);
+        String time = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
+        System.out.print(time);
     }
 }

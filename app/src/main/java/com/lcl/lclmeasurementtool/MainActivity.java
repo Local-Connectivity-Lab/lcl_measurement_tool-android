@@ -6,6 +6,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.org.apache.commons.codec.DecoderException;
+import android.org.apache.commons.codec.binary.Hex;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -29,21 +31,22 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.material.textfield.TextInputEditText;
 import com.jsoniter.JsonIterator;
-import com.jsoniter.any.Any;
-import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.dialogs.FullScreenDialog;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBindView;
+import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
 import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
+import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
 import com.yanzhenjie.permission.AndPermission;
@@ -53,16 +56,15 @@ import com.yzq.zxinglibrary.android.CaptureActivity;
 import com.yzq.zxinglibrary.bean.ZxingConfig;
 import com.yzq.zxinglibrary.common.Constant;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.SignatureException;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.spec.InvalidKeySpecException;
 
 import okhttp3.Call;
@@ -77,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MAIN_ACTIVITY";
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
-
     private AppBarConfiguration appBarConfiguration;
     private NavController navController;
     private ActivityMainBinding binding;
@@ -85,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private static final String SIM_STATE_CHANGED = "android.intent.action.SIM_STATE_CHANGED";
-    private final static String ACTION_SIM_STATE = "android.intent.action.SIM_STATE_CHANGED";
     private SimStatesReceiver simStatesReceiver;
     private FullScreenDialog fullScreenDialog;
 
@@ -105,9 +105,9 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        if (!preferences.contains("PK") && !preferences.contains("SK")) {
+        askPermission();
+        if (!preferences.contains("sigma_t") || !preferences.contains("pk_a") || !preferences.contains("sk_t")) {
             Log.e(TAG, "key not in shared preferences");
-            askPermission();
             showLogInPage();
         }
 
@@ -136,12 +136,10 @@ public class MainActivity extends AppCompatActivity {
                             String content = data.getStringExtra(Constant.CODED_CONTENT);
                             System.out.println("scan result is：" + content);
 
-                            content = "{\"sigma_t\": \"00AABBCCDDEEFF\", \"sk_t\": \"FFEE000A0A0B0C0D\",\"pk_a\": \"A0B0C0D0\"}";
                             QRCodeKeysModel jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
                             String sigma_t = jsonObj.getSigma_t();
                             String sk_t = jsonObj.getSk_t();
                             String pk_a = jsonObj.getPk_a();
-                            saveCredentials(sigma_t, pk_a, sk_t);
 
                             WaitDialog.show("Validating ...");
                             validate(sigma_t, pk_a, sk_t);
@@ -166,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
 
-                Button qrScanner = (Button)v.findViewById(R.id.qr_scanner);
+                Button qrScanner = (Button) v.findViewById(R.id.qr_scanner);
 
                 qrScanner.setOnClickListener(v1 -> {
                     Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
@@ -197,13 +195,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void askPermission() {
-        AndPermission.with(this).runtime().permission(Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE).onDenied(data -> {
-            Uri packageURI = Uri.parse("package:" + getPackageName());
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        boolean hasPermissions = AndPermission.hasPermissions(this, Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION);
+        if (hasPermissions) return;
+        AndPermission.with(this).runtime().permission(Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION)
+                .onDenied(data -> {
+                    Uri packageURI = Uri.parse("package:" + getPackageName());
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            this.activity.startActivity(intent);
-        }).start();
+                    this.activity.startActivity(intent);
+                }).start();
     }
 
     private void saveCredentials(String sigma_t, String pk_a, String sk_t) {
@@ -216,30 +217,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showMessageOnFailure() {
+        WaitDialog.dismiss();
         TipDialog.show("Cannot validate code. Please retry or contact the administrator", WaitDialog.TYPE.ERROR);
         getPreferences(MODE_PRIVATE).edit().clear().apply();
     }
 
     private void validate(String sigma_t, String pk_a, String sk_t) {
+
+        // TODO: ECDSA key check
+        byte[] sigma_t_hex;
+        byte[] pk_a_hex;
+        byte[] sk_t_hex;
         try {
-            if (!SecurityUtils.verify(Hex.decodeHex(sk_t),
-                                        Hex.decodeHex(sigma_t),
-                                        SecurityUtils.decodePublicKey(pk_a, SecurityUtils.RSA),
-                                        SecurityUtils.SHA256)) {
+            sigma_t_hex = Hex.decodeHex(sigma_t);
+            pk_a_hex = Hex.decodeHex(pk_a);
+            sk_t_hex = Hex.decodeHex(sk_t);
+
+            // TODO: ECDSA key check: the verify method failed due to public key
+            if (!ECDSA.Verify(sk_t_hex,
+                    sigma_t_hex,
+                    ECDSA.DeserializePublicKey(pk_a_hex)
+            )) {
                 showMessageOnFailure();
                 return;
             }
-        } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException e) {
+        } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException | DecoderException | InvalidKeySpecException | NoSuchProviderException e) {
+            e.printStackTrace();
             showMessageOnFailure();
             return;
-        } catch (DecoderException | InvalidKeySpecException e) {
-            e.printStackTrace();
         }
 
-        PublicKey pk_t;
+        ECPublicKey pk_t;
+        ECPrivateKey ecPrivateKey;
         try {
-            pk_t = SecurityUtils.genPublicKey(sk_t, SecurityUtils.RSA);
-        } catch (DecoderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            ecPrivateKey = ECDSA.DeserializePrivateKey(sk_t_hex);
+            pk_t = ECDSA.DerivePublicKey(ecPrivateKey);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException | NoSuchProviderException e) {
             showMessageOnFailure();
             return;
         }
@@ -259,24 +272,20 @@ public class MainActivity extends AppCompatActivity {
         try {
             byteArray.write(pk_t.getEncoded());
             byteArray.write(R);
-            h_pkr = SecurityUtils.digest(byteArray.toByteArray(), SecurityUtils.SHA256);
+            h_pkr = SecurityUtils.digest(byteArray.toByteArray(), SecurityUtils.SHA_256_HASH);
             preferences.edit().putString("h_pkr", Hex.encodeHexString(h_pkr)).apply();
 
             byteArray.reset();
-            byteArray.write(Hex.decodeHex(sk_t));
+            byteArray.write(sk_t_hex);
             byteArray.write(pk_t.getEncoded());
-            h_sec = SecurityUtils.digest(byteArray.toByteArray(), SecurityUtils.SHA256);
+            h_sec = SecurityUtils.digest(byteArray.toByteArray(), SecurityUtils.SHA_256_HASH);
 
             byteArray.reset();
             byteArray.write(h_pkr);
             byteArray.write(h_sec);
             h_concat = byteArray.toByteArray();
-            sigma_r = SecurityUtils.sign(h_concat,
-                    SecurityUtils.decodePrivateKey(sk_t, SecurityUtils.RSA),
-                    SecurityUtils.SHA256withRSA);
+            sigma_r = ECDSA.Sign(h_concat, ecPrivateKey);
         } catch (IOException | NoSuchAlgorithmException |
-                DecoderException |
-                InvalidKeySpecException |
                 InvalidKeyException |
                 SignatureException e) {
             showMessageOnFailure();
@@ -284,13 +293,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(sigma_r, h_concat, R);
-        String registration = JsonStream.serialize(registrationMessageModel);
+        String registration;
+        try {
+            registration = Hex.encodeHexString(registrationMessageModel.serializeToBytes());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return;
+        }
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(registration, JSON);
 
         Request request = new Request.Builder()
-                .url("https://api-dev.seattlecommunitynetwork.org/register")
+                .url(NetworkConstants.URL + NetworkConstants.REGISTRATION_ENDPOINT)
                 .post(requestBody)
                 .build();
         client.newCall(request).enqueue(new Callback() {
@@ -301,11 +316,14 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                //TODO: handle the response from the server
-                System.out.println(response.body().string());
-                TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
-                saveCredentials(sigma_t, pk_a, sk_t);
-                activity.runOnUiThread(() -> fullScreenDialog.dismiss());
+                if (response.isSuccessful()) {
+                    TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
+                    saveCredentials(sigma_t, pk_a, sk_t);
+                    activity.runOnUiThread(() -> fullScreenDialog.dismiss());
+                } else {
+                    TipDialog.show("Registration failed. Please try again", WaitDialog.TYPE.ERROR);
+                }
+                response.close();
             }
         });
     }
@@ -369,7 +387,8 @@ public class MainActivity extends AppCompatActivity {
                         SignalDataFragment fSig = new SignalDataFragment();
                         fSig.type = EntityEnum.SIGNALSTRENGTH;
                         return NavigationUI.onNavDestinationSelected(item, navController);
-                    default: return false;
+                    default:
+                        return false;
                 }
             }
         });

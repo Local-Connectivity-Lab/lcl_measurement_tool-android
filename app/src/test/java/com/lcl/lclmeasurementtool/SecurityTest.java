@@ -1,7 +1,7 @@
 package com.lcl.lclmeasurementtool;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
+import android.org.apache.commons.codec.DecoderException;
+import android.org.apache.commons.codec.binary.Hex;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +12,10 @@ import com.jsoniter.output.JsonStream;
 import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -22,6 +25,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 
 public class SecurityTest {
@@ -38,19 +42,20 @@ public class SecurityTest {
     public void init() {
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance(SecurityUtils.RSA);
-            generator.initialize(2048);
+            ECGenParameterSpec genKeySpec = new ECGenParameterSpec("secp256k1");
+            generator.initialize(genKeySpec);
             KeyPair masterPair = generator.generateKeyPair();
             pk_a = masterPair.getPublic();
             sk_a = masterPair.getPrivate();
             KeyPair pair = generator.generateKeyPair();
             sk_t = pair.getPrivate();
             pk_t = pair.getPublic();
-            sigma_t = SecurityUtils.sign(sk_t.getEncoded(), sk_a, SecurityUtils.SHA256withRSA);
+            sigma_t = SecurityUtils.sign(sk_t.getEncoded(), sk_a, SecurityUtils.SHA_256_WITH_RSA_SIGNATURE);
             QRCodeKeysModel keysModel = new QRCodeKeysModel(Hex.encodeHexString(sigma_t, false),
                             Hex.encodeHexString(sk_t.getEncoded(), false),
                             Hex.encodeHexString(pk_a.getEncoded(), false));
             json = JsonStream.serialize(keysModel);
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();
         }
     }
@@ -63,6 +68,27 @@ public class SecurityTest {
         pk_t = null;
         sigma_t = null;
         System.out.println("test completes");
+    }
+
+    @Test
+    public void testPrivateDecoding() {
+//        for (String s : Security.getAlgorithms("AlgorithmParameters")) {
+////            p.getService("AlgorithmParameters", "EC").getAttribute("SupportedCurves");
+//            System.out.println(s);
+//        }
+
+//        String s = Security.getProviders("AlgorithmParameters.EC")[0]
+//                .getService("AlgorithmParameters", "EC").getAttribute("SupportedCurves");
+//        System.out.println(s);
+
+//        String sk = "30740201010420b344907a583424a15cd3107a6f0214f85339b55139826ce9e48604ced55588fda00706052b8104000aa14403420004142103104a89071afb74508cccc6107d51054e30ef0635d81cd4b46edcc1f307c158f48f512d0ec64a718472ddf1fca624ccfe2e446b8e3bd65af5fe88c3528d";
+//        try {
+////            ECPrivateKey ecPrivateKey = (ECPrivateKey) SecurityUtils.decodePrivateKey(sk, SecurityUtils.ALGORITHM);
+//
+//        } catch (DecoderException | InvalidKeySpecException | NoSuchAlgorithmException e) {
+//            e.printStackTrace();
+//        }
+
     }
 
     @Test
@@ -92,7 +118,7 @@ public class SecurityTest {
             boolean result = SecurityUtils.verify(sk_t.getEncoded(),
                     sigma_t,
                     pk_a,
-                    SecurityUtils.SHA256withRSA);
+                    SecurityUtils.SHA_256_WITH_RSA_SIGNATURE);
             assertTrue(result);
         } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -103,8 +129,8 @@ public class SecurityTest {
     public void testSign() {
         String test_data = "test!";
         try {
-            byte[] signature = SecurityUtils.sign(test_data.getBytes(StandardCharsets.UTF_8), sk_t, SecurityUtils.SHA256withRSA);
-            boolean result = SecurityUtils.verify(test_data.getBytes(StandardCharsets.UTF_8), signature, pk_t, SecurityUtils.SHA256withRSA);
+            byte[] signature = SecurityUtils.sign(test_data.getBytes(StandardCharsets.UTF_8), sk_t, SecurityUtils.SHA_256_WITH_RSA_SIGNATURE);
+            boolean result = SecurityUtils.verify(test_data.getBytes(StandardCharsets.UTF_8), signature, pk_t, SecurityUtils.SHA_256_WITH_RSA_SIGNATURE);
             assertTrue(result);
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();

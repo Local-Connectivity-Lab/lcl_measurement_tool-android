@@ -1,14 +1,14 @@
 package com.lcl.lclmeasurementtool;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.NetworkCapabilities;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -27,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.BaseProgressIndicator;
@@ -34,39 +34,37 @@ import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
-import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
+import com.kongzue.dialogx.dialogs.TipDialog;
+import com.kongzue.dialogx.dialogs.WaitDialog;
+import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
-import com.lcl.lclmeasurementtool.Functionality.UploadViewModel;
+import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
-import com.lcl.lclmeasurementtool.Managers.KeyStoreManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
+import com.lcl.lclmeasurementtool.Managers.UploadManager;
 import com.lcl.lclmeasurementtool.Models.ConnectivityMessageModel;
+import com.lcl.lclmeasurementtool.Models.MeasurementDataModel;
 import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
+import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.LocationUtils;
-import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
-import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
-import org.apache.commons.codec.DecoderException;
+import android.org.apache.commons.codec.DecoderException;
+import android.org.apache.commons.codec.binary.Hex;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SignatureException;
-import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -79,23 +77,18 @@ public class HomeFragment extends Fragment {
     private Context context;
     public static final String TAG = "MAIN_FRAGMENT";
     private static final int SIGNAL_THRESHOLD = 2;
-    private static final int UPLOAD_CONNECTIVITY = 0;
-    private static final int UPLOAD_SIGNAL = 1;
     private String device_id;
 
     CellularManager mCellularManager;
     NetworkManager mNetworkManager;
     LocationServiceManager mLocationManager;
     LocationServiceListener locationServiceListener;
-    KeyStoreManager mKeyStoreManager;
 
     private boolean isTestStarted;
     private boolean isCellularConnected;
     private NetworkTestViewModel mNetworkTestViewModel;
     private ConnectivityViewModel connectivityViewModel;
     private SignalViewModel signalViewModel;
-    private UploadViewModel uploadViewModelSignalStrength;
-    private UploadViewModel uploadViewModelConnectivity;
 
     private int prevSignalStrength = 0;
     private double prevPing = -1.0;
@@ -116,7 +109,12 @@ public class HomeFragment extends Fragment {
         super.onResume();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.P)
+
+    private boolean systemReady() {
+        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
+        return (!preferences.contains("sigma_t") || !preferences.contains("pk_a") || !preferences.contains("sk_t"));
+    }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -124,21 +122,7 @@ public class HomeFragment extends Fragment {
         mNetworkManager = NetworkManager.getManager(this.context);
         mCellularManager = CellularManager.getManager(this.context);
         mLocationManager = LocationServiceManager.getManager(this.context);
-        try {
-            mKeyStoreManager = KeyStoreManager.getInstance();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         locationServiceListener = new LocationServiceListener(this.context, getLifecycle());
         mNetworkTestViewModel = new NetworkTestViewModel(this.context);
         mNetworkTestViewModel.getmSavedIperfDownInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
@@ -146,8 +130,6 @@ public class HomeFragment extends Fragment {
         mNetworkTestViewModel.getmSavedPingInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
         connectivityViewModel = new ViewModelProvider(this).get(ConnectivityViewModel.class);
         signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
-        uploadViewModelSignalStrength = new ViewModelProvider(this).get(UploadViewModel.class);
-        uploadViewModelConnectivity = new ViewModelProvider(this).get(UploadViewModel.class);
 
 
         getLifecycle().addObserver(locationServiceListener);
@@ -160,20 +142,26 @@ public class HomeFragment extends Fragment {
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
         mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
 
+            if (systemReady()) return;
+
             Log.e(TAG, "" + dBm);
             updateSignalStrengthTexts(level, dBm);
 
             if (prevSignalStrength != 0 && Math.abs(prevSignalStrength - dBm) >= SIGNAL_THRESHOLD) {
                 prevSignalStrength = dBm;
-                String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
-
+                String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
+                String cell_id = mCellularManager.getCellID();
+                System.out.println("cellId:" + cell_id);
                 mLocationManager.getLastLocation(location -> {
                     LatLng latLng = LocationUtils.toLatLng(location);
 
-                    // TODO(sudheesh001) security check
-                    String[] result = retrieveKeysInformation();
-                    String h_pkr = result[0];
-                    String sk_t = result[1];
+                    byte[][] result = retrieveKeysInformation();
+                    if (result.length == 0) {
+                        exitWhenFailure("Keys are compromised. Please rescan the QR Code");
+                    }
+
+                    byte[] h_pkr = result[0];
+                    byte[] sk_t = result[1];
 
                     SignalStrengthMessageModel signalStrengthMessageModel =
                             new SignalStrengthMessageModel(
@@ -182,10 +170,10 @@ public class HomeFragment extends Fragment {
                                     ts,
                                     dBm,
                                     level.getLevelCode(),
-                                    "",
+                                    cell_id,
                                     device_id);
                     signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
-                    uploadData(signalStrengthMessageModel, sk_t, h_pkr, UPLOAD_SIGNAL);
+                    uploadData(signalStrengthMessageModel, sk_t, h_pkr, NetworkConstants.SIGNAL_ENDPOINT);
                 });
             }
         });
@@ -340,7 +328,7 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     @SuppressLint("RestrictedApi")
     private void parseWorkInfo(List<WorkInfo> workInfoList) {
         // if there are no matching work info, do nothing
@@ -410,35 +398,40 @@ public class HomeFragment extends Fragment {
 
                             updateFAB(true);
                             PopTip.show("Test completed");
-
-                            if (isConnectivityAllSet()) {
-                                Log.i(TAG, "prepare for upload");
-                                String ts = TimeUtils.getTimeStamp(ZoneId.of("PST"));
-
-                                mLocationManager.getLastLocation(location -> {
-                                    LatLng latLng = LocationUtils.toLatLng(location);
-
-                                    // TODO(sudheesh001) security check
-                                    String[] result = retrieveKeysInformation();
-                                    String h_pkr = result[0];
-                                    String sk_t = result[1];
-
-
-                                    ConnectivityMessageModel connectivityMessageModel =
-                                            new ConnectivityMessageModel(
-                                                    latLng.latitude,
-                                                    latLng.longitude,
-                                                    ts,
-                                                    prevUpload,
-                                                    prevDownload,
-                                                    prevPing,
-                                                    "", device_id);
-                                    connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
-                                    uploadData(connectivityMessageModel, sk_t, h_pkr, UPLOAD_CONNECTIVITY);
-                                });
-                            }
                         }
                     });
+
+                    if (isConnectivityAllSet()) {
+                        Log.i(TAG, "prepare for upload");
+                        if (systemReady()) return;
+                        String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
+                        String cell_id = mCellularManager.getCellID();
+
+                        mLocationManager.getLastLocation(location -> {
+                            LatLng latLng = LocationUtils.toLatLng(location);
+
+                            // TODO(sudheesh001) security check
+                            byte[][] result = retrieveKeysInformation();
+                            if (result.length == 0) {
+                                exitWhenFailure("Keys are compromised. Please rescan the QR Code");
+                            }
+
+                            byte[] h_pkr = result[0];
+                            byte[] sk_t = result[1];
+
+
+                            ConnectivityMessageModel connectivityMessageModel =
+                                    new ConnectivityMessageModel(
+                                            latLng.latitude,
+                                            latLng.longitude,
+                                            ts,
+                                            prevUpload,
+                                            prevDownload,
+                                            prevPing, cell_id, device_id);
+                            connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
+                            uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
+                        });
+                    }
                 }
         }
     }
@@ -453,46 +446,60 @@ public class HomeFragment extends Fragment {
         return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
     }
 
-    private void uploadData(Object data, String sk_t, String h_pkr, int type) throws NoSuchAlgorithmException,
-            InvalidKeySpecException, DecoderException, SignatureException, InvalidKeyException {
-        String json = JsonStream.serialize(data);
+    private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
+            InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException {
 
-        byte[] sig_m = SecurityUtils.sign(json.getBytes(StandardCharsets.UTF_8),
-                SecurityUtils.decodePrivateKey(sk_t, SecurityUtils.RSA),
-                SecurityUtils.SHA256withRSA);
+        byte[] serialized = data.serializeToBytes();
+
+        byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
 
         Map<String, Object> uploadMap = new HashMap<>();
-        uploadMap.put("M", json);
-        uploadMap.put("sig_m", sig_m);
-        uploadMap.put("h_pkr", h_pkr);
-        // TODO(sudheesh001) security check
+        uploadMap.put("M", Hex.encodeHexString(serialized));
+        uploadMap.put("sig_m", Hex.encodeHexString(sig_m));
+        uploadMap.put("h_pkr", Hex.encodeHex(h_pkr));
 
-        uploadViewModelConnectivity.loadData(uploadMap, type);
-        uploadViewModelConnectivity.upload();
+        // upload data
+        UploadManager upload = UploadManager.Builder()
+                .addPayload(JsonStream.serialize(uploadMap))
+                .addEndpoint(endpoint);
+        try {
+            upload.post();
+        } catch (IOException e) {
+            showMessageOnFailure();
+        }
     }
 
-    private String[] retrieveKeysInformation() {
-        SharedPreferences preferences = this.activity.getPreferences(Context.MODE_PRIVATE);
+    private void showMessageOnFailure() {
+        TipDialog.show("Cannot connect the server. Please retry or contact the administrator", WaitDialog.TYPE.ERROR);
+    }
+
+    private byte[][] retrieveKeysInformation() {
+        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
         if (!preferences.contains("h_pkr") || !preferences.contains("sk_t")) {
             exitWhenFailure("Key information missing");
         }
-        String h_pkr = preferences.getString("h_pkr", "");
-        String sk_t = preferences.getString("sk_t", "");
-        if (TextUtils.equals(h_pkr, "") || TextUtils.equals(sk_t, "")) {
+        byte[] h_pkr;
+        byte[] sk_t;
+        try {
+            h_pkr = Hex.decodeHex(preferences.getString("h_pkr", ""));
+            sk_t = Hex.decodeHex(preferences.getString("sk_t", ""));
+        } catch (DecoderException e) {
+            e.printStackTrace();
+            return new byte[0][];
+        }
+
+        if (h_pkr.length == 0 || sk_t.length == 0) {
             preferences.edit().clear().apply();
             exitWhenFailure("Keys are compromised. Please rescan the QR Code");
         }
-        return new String[]{h_pkr, sk_t};
+        return new byte[][]{h_pkr, sk_t};
     }
 
     private void exitWhenFailure(String message) {
-        MessageDialog.show("Error", message, "ok").setOkButton(new OnDialogButtonClickListener<MessageDialog>() {
-            @Override
-            public boolean onClick(MessageDialog baseDialog, View v) {
-                activity.finishAndRemoveTask();
-                System.exit(1);
-                return true;
-            }
+        MessageDialog.show("Error", message, "ok").setOkButton((baseDialog, v) -> {
+            activity.finishAndRemoveTask();
+            System.exit(1);
+            return true;
         });
     }
 }

@@ -4,14 +4,17 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,9 +27,13 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.lcl.lclmeasurementtool.R;
+import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.BuildConfig;
+import com.yanzhenjie.permission.runtime.Permission;
 
-import org.apache.commons.codec.DecoderException;
+import android.org.apache.commons.codec.DecoderException;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -112,8 +119,30 @@ public class LocationServiceManager {
      * Retrieve the last location from the device.
      * If last location is null, a new location request will be initiated.
      */
-    @SuppressWarnings("MissingPermission")
     public void getLastLocation(LocationUpdatesListener listener) {
+        if (ActivityCompat.checkSelfPermission(context.get(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this.context.get(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            AndPermission.with(context.get())
+                    .runtime()
+                    .permission(Permission.ACCESS_FINE_LOCATION)
+                    .onDenied(data -> {
+                        MessageDialog.build()
+                                .setTitle(R.string.location_message_title)
+                                .setMessage(R.string.permission_denied_explanation)
+                                .setOkButton(R.string.settings, (baseDialog, v) -> {
+                                    // Build intent that displays the App settings screen.
+                                    Intent intent = new Intent();
+                                    intent.setAction(
+                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                    Uri uri = Uri.fromParts("package",
+                                            BuildConfig.APPLICATION_ID, null);
+                                    intent.setData(uri);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    this.context.get().startActivity(intent);
+                                    return false;
+                                }).setOkButton(android.R.string.cancel).show();
+                    })
+                    .start();
+        }
         mFusedLocationClient.getLastLocation()
                 .addOnCompleteListener((Activity) this.context.get(), task -> {
                     if (task.isSuccessful() && task.getResult() != null) {

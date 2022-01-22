@@ -1,33 +1,18 @@
 package com.lcl.lclmeasurementtool.Models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.jsoniter.annotation.JsonCreator;
-import com.jsoniter.annotation.JsonProperty;
+import java.io.Serializable;
 
 // TODO(sudheesh001) security check
-public class SignalStrengthMessageModel {
-    @JsonProperty
-    double latitude;
+public class SignalStrengthMessageModel extends MeasurementDataModel {
 
-    @JsonProperty
-    double longitude;
+    @JsonProperty("dbm")
+    int dbm;
 
-    @JsonProperty
-    String timestamp;
-
-    @JsonProperty
-    int dBm;
-
-    @JsonProperty
+    @JsonProperty("level_code")
     int level_code;
 
-    @JsonProperty
-    String cell_id;
-
-    @JsonProperty
-    String device_id;
-
-    @JsonCreator
     public SignalStrengthMessageModel(double latitude,
                                       double longitude,
                                       String timestamp,
@@ -38,7 +23,7 @@ public class SignalStrengthMessageModel {
         this.latitude = latitude;
         this.longitude = longitude;
         this.timestamp = timestamp;
-        this.dBm = dBm;
+        this.dbm = dBm;
         this.level_code = level_code;
         this.cell_id = cell_id;
         this.device_id = device_id;
