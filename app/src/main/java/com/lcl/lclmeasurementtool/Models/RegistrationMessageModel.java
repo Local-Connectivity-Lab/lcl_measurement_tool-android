@@ -10,13 +10,13 @@ import java.io.Serializable;
 // TODO(sudheesh001) security check
 public class RegistrationMessageModel implements Serializable {
 
-    @JsonProperty
+    @JsonProperty("sigma_r")
     String sigma_r;
 
-    @JsonProperty
+    @JsonProperty("h")
     String h;
 
-    @JsonProperty
+    @JsonProperty("R")
     String R;
 
     public RegistrationMessageModel(byte[] sigma_r, byte[] h, byte[] R) {

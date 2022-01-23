@@ -456,7 +456,7 @@ public class HomeFragment extends Fragment {
         Map<String, Object> uploadMap = new HashMap<>();
         uploadMap.put("M", Hex.encodeHexString(serialized));
         uploadMap.put("sig_m", Hex.encodeHexString(sig_m));
-        uploadMap.put("h_pkr", Hex.encodeHex(h_pkr));
+        uploadMap.put("h_pkr", Hex.encodeHexString(h_pkr));
 
         // upload data
         UploadManager upload = UploadManager.Builder()

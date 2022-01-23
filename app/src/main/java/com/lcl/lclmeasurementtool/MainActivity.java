@@ -32,6 +32,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.material.textfield.TextInputEditText;
 import com.jsoniter.JsonIterator;
+import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.dialogs.FullScreenDialog;
 import com.kongzue.dialogx.dialogs.MessageDialog;
@@ -291,12 +292,27 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] R = new byte[16];
-        secureRandom.nextBytes(R);
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        String RStringInHex = Hex.encodeHexString(R);
-        preferences.edit().putString("R", RStringInHex).apply();
+        byte[] R;
+        if (preferences.contains("R")) {
+            try {
+                R = Hex.decodeHex(preferences.getString("R", ""));
+                if (R.length == 0) {
+                    showMessageOnFailure();
+                    return;
+                }
+            } catch (DecoderException e) {
+                showMessageOnFailure();
+                e.printStackTrace();
+                return;
+            }
+        } else {
+            SecureRandom secureRandom = new SecureRandom();
+            R = new byte[16];
+            secureRandom.nextBytes(R);
+            String RStringInHex = Hex.encodeHexString(R);
+            preferences.edit().putString("R", RStringInHex).apply();
+        }
 
         ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
         byte[] h_pkr;
@@ -325,13 +341,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(sigma_r, h_concat, R);
-        String registration;
-        try {
-            registration = Hex.encodeHexString(registrationMessageModel.serializeToBytes());
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return;
-        }
+        String registration = JsonStream.serialize(registrationMessageModel);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(registration, JSON);
@@ -353,6 +363,7 @@ public class MainActivity extends AppCompatActivity {
                     saveCredentials(sigma_t, pk_a, sk_t);
                     activity.runOnUiThread(() -> fullScreenDialog.dismiss());
                 } else {
+                    System.out.println(response.body().string());
                     TipDialog.show("Registration failed. Please try again", WaitDialog.TYPE.ERROR);
                 }
                 response.close();
