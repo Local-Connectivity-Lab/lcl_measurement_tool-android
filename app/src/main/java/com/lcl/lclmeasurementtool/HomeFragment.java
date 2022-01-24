@@ -29,8 +29,6 @@ import androidx.work.WorkInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.progressindicator.BaseProgressIndicator;
-import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
@@ -101,6 +99,8 @@ public class HomeFragment extends Fragment {
         binding = HomeFragmentBinding.inflate(inflater, container, false);
         this.activity = getActivity();
         this.context = getContext();
+        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
+        device_id = preferences.getString("device_id", "unknown");
         return binding.getRoot();
     }
 
@@ -131,7 +131,6 @@ public class HomeFragment extends Fragment {
         connectivityViewModel = new ViewModelProvider(this).get(ConnectivityViewModel.class);
         signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
 
-
         getLifecycle().addObserver(locationServiceListener);
 
         this.isTestStarted = false;
@@ -141,7 +140,6 @@ public class HomeFragment extends Fragment {
         prevSignalStrength = mCellularManager.getDBM();
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
         mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
-
             if (systemReady()) return;
 
             Log.e(TAG, "" + dBm);
@@ -151,10 +149,8 @@ public class HomeFragment extends Fragment {
                 prevSignalStrength = dBm;
                 String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
                 String cell_id = mCellularManager.getCellID();
-                System.out.println("cellId:" + cell_id);
                 mLocationManager.getLastLocation(location -> {
                     LatLng latLng = LocationUtils.toLatLng(location);
-
                     byte[][] result = retrieveKeysInformation();
                     if (result.length == 0) {
                         exitWhenFailure("Keys are compromised. Please rescan the QR Code");
@@ -179,35 +175,31 @@ public class HomeFragment extends Fragment {
         });
 
         setupTestView();
-
-        // set up FAB
         setUpFAB();
-        updateFAB(isCellularConnected);
+
 
         this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
 
+            // Cellular
             @Override
             public void onAvailable() {
                 Log.i(TAG, "from call back on cellular available");
                 isCellularConnected = true;
-                updateFAB(true);
+                setFABToInitialState();
             }
 
             @Override
             public void onLost() {
-                mCellularManager.stopListening();
                 Log.e(TAG, "on cellular lost");
                 isCellularConnected = false;
-                // TODO cancel test
-                updateFAB(false);
+                setFABToDisabledState();
             }
 
             @Override
             public void onUnavailable() {
                 Log.e(TAG, "on cellular unavailable");
                 isCellularConnected = false;
-                // TODO cancel test
-                updateFAB(false);
+                setFABToDisabledState();
             }
 
             @Override
@@ -215,12 +207,13 @@ public class HomeFragment extends Fragment {
             }
 
         }, new NetworkChangeListener() {
+
+            // WIFI
             @Override
             public void onAvailable() {
                 Log.i(TAG, "from call back on wifi available");
                 isCellularConnected = false;
-                // TODO: cancel test
-                updateFAB(false);
+                setFABToDisabledState();
             }
 
             @Override
@@ -240,23 +233,11 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mCellularManager.stopListening();
         binding = null;
     }
 
-    ///////////////////// HELPER /////////////////////////
-
-    private void setupTestView() {
-        binding.upload.icon.setImageResource(R.drawable.upload);
-        binding.upload.data.setText("0.0 Mbit");
-        binding.upload.data.setTextColor(this.activity.getColor(R.color.light_gray));
-        binding.download.icon.setImageResource(R.drawable.download);
-        binding.download.data.setText("0.0 Mbit");
-        binding.download.data.setTextColor(this.activity.getColor(R.color.light_gray));
-        binding.ping.icon.setImageResource(R.drawable.ping);
-        binding.ping.data.setText("0.0 ms");
-        binding.ping.data.setTextColor(this.activity.getColor(R.color.light_gray));
-    }
-
+    /////////////////////// SIGNAL //////////////////////
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
         this.activity.runOnUiThread(() -> {
             if (binding.SignalStrengthValue != null) {
@@ -268,19 +249,75 @@ public class HomeFragment extends Fragment {
         });
     }
 
+
+    /////////////////////////// Measurement ////////////////////////
+    private void setFABToInitialState() {
+        activity.runOnUiThread(() -> {
+            binding.fab.setSelected(true);
+            binding.fab.setImageResource(R.drawable.start);
+            binding.fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
+            isTestStarted = false;
+            resetConnectivities();
+        });
+    }
+
+    private void setFABToStartedState() {
+        activity.runOnUiThread(() -> {
+            setupTestView();
+            binding.fab.setImageResource(R.drawable.stop);
+        });
+        isTestStarted = true;
+    }
+
+    private void setFABToDisabledState() {
+        activity.runOnUiThread(() -> {
+            binding.fab.setSelected(false);
+            binding.fab.setImageResource(R.drawable.start);
+            binding.fab.setColorFilter(ContextCompat.getColor(this.context, R.color.light_gray));
+            isTestStarted = false;
+            setupTestView();
+            resetConnectivities();
+        });
+    }
+
+    private void resetConnectivities() {
+        prevDownload = -1.0;
+        prevPing = -1.0;
+        prevUpload = -1.0;
+    }
+
+    private void setupTestView() {
+        binding.upload.icon.setImageResource(R.drawable.upload);
+        binding.upload.data.setText("0.0 Mbit");
+        binding.upload.data.setTextColor(this.activity.getColor(R.color.light_gray));
+
+        binding.download.icon.setImageResource(R.drawable.download);
+        binding.download.data.setText("0.0 Mbit");
+        binding.download.data.setTextColor(this.activity.getColor(R.color.light_gray));
+
+        binding.ping.icon.setImageResource(R.drawable.ping);
+        binding.ping.data.setText("0.0 ms");
+        binding.ping.data.setTextColor(this.activity.getColor(R.color.light_gray));
+    }
+
+
     private void setUpFAB() {
         FloatingActionButton fab = binding.fab;
-        CircularProgressIndicator progressIndicator = binding.progressIndicator;
-        progressIndicator.setVisibility(View.GONE);
+        if (isCellularConnected) {
+            setFABToInitialState();
+        } else {
+            setFABToDisabledState();
+        }
+//        CircularProgressIndicator progressIndicator = binding.progressIndicator;
+//        progressIndicator.setVisibility(View.GONE);
+//        setupTestView();
 
 
-        fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
         fab.setOnClickListener(button -> {
-
             if (!this.isCellularConnected) {
                 // raise alert telling user to enable cellular data
                 Log.e(TAG, "not connected to cellular network");
-
+                setFABToDisabledState();
                 MessageDialog.build()
                         .setTitle(R.string.cellular_on_title)
                         .setMessage(R.string.cellular_on_message)
@@ -293,40 +330,35 @@ public class HomeFragment extends Fragment {
                         }).setOkButton(android.R.string.cancel, (baseDialog, v) -> false).show();
 
             } else {
-                ((FloatingActionButton) button).setImageResource(this.isTestStarted ? R.drawable.start : R.drawable.stop);
-                fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
-                progressIndicator.setActivated(this.isTestStarted);
-                setupTestView();
+//                progressIndicator.setActivated(this.isTestStarted);
                 if (this.isTestStarted) {
-                    progressIndicator.setShowAnimationBehavior(BaseProgressIndicator.SHOW_OUTWARD);
+//                    progressIndicator.setShowAnimationBehavior(BaseProgressIndicator.SHOW_OUTWARD);
+                    setFABToInitialState();
                     mNetworkTestViewModel.cancel();
+                    PopTip.show("Test canceled.");
                 } else {
-                    progressIndicator.setHideAnimationBehavior(BaseProgressIndicator.HIDE_INWARD);
+//                    progressIndicator.setHideAnimationBehavior(BaseProgressIndicator.HIDE_INWARD);
+                    setFABToStartedState();
                     mNetworkTestViewModel.run();
+                    PopTip.show("Test started");
                 }
-                progressIndicator.setVisibility(this.isTestStarted ? View.GONE : View.VISIBLE);
+//                progressIndicator.setVisibility(this.isTestStarted ? View.GONE : View.VISIBLE);
 
                 this.isTestStarted = !isTestStarted;
-
-                if (this.isTestStarted) {
-                    PopTip.show("Test started");
-                } else {
-                    PopTip.show("Test canceled.");
-                }
             }
         });
     }
 
-    private void updateFAB(boolean state) {
-        this.activity.runOnUiThread(() -> {
-            FloatingActionButton fab = binding.fab;
-            fab.setSelected(state);
-            fab.setImageResource(R.drawable.start);
-            fab.setColorFilter(state ? ContextCompat.getColor(this.context, R.color.purple_500) :
-                    ContextCompat.getColor(this.context, R.color.light_gray));
-            this.isTestStarted = false;
-        });
-    }
+//    private void updateFAB(boolean state) {
+//        this.activity.runOnUiThread(() -> {
+//            FloatingActionButton fab = binding.fab;
+//            fab.setSelected(state);
+//            fab.setImageResource(R.drawable.start);
+//            fab.setColorFilter(state ? ContextCompat.getColor(this.context, R.color.purple_500) :
+//                    ContextCompat.getColor(this.context, R.color.light_gray));
+//            this.isTestStarted = false;
+//        });
+//    }
 
 
     @SuppressLint("RestrictedApi")
@@ -340,20 +372,18 @@ public class HomeFragment extends Fragment {
         switch (workInfo.getState()) {
             case FAILED:
 
-                batchConnectivityReset();
+                resetConnectivities();
                 if (output.size() == 1) {
-                    boolean isTestCancelled = output.getBoolean("IS_CANCELLED", false);
-                    Toast.makeText(this.context, "test is cancelled: " + isTestCancelled, Toast.LENGTH_SHORT).show();
+//                    boolean isTestCancelled = output.getBoolean("IS_CANCELLED", false);
+                    Toast.makeText(this.context, "test is cancelled: ", Toast.LENGTH_SHORT).show();
                 }
 
                 if (isTestStarted) {
                     MessageDialog.show(R.string.error, R.string.iperf_error, android.R.string.ok);
                     mNetworkTestViewModel.cancel();
-                    binding.progressIndicator.setVisibility(View.GONE);
-                    binding.progressIndicator.hide();
-                    setupTestView();
-                    // TODO: update based on network condition
-                    updateFAB(true);
+//                    binding.progressIndicator.setVisibility(View.GONE);
+//                    binding.progressIndicator.hide();
+                    setFABToInitialState();
                 }
             case RUNNING:
                 if (progress.size() == 0) break;
@@ -361,7 +391,7 @@ public class HomeFragment extends Fragment {
                     String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
                     boolean isDownModeInProgress = progress.getBoolean("IS_DOWN_MODE", false);
                     this.activity.runOnUiThread(() -> {
-                        TextView speedTest = (isDownModeInProgress) ? this.activity.findViewById(R.id.download).findViewById(R.id.data) : this.activity.findViewById(R.id.upload).findViewById(R.id.data);
+                        TextView speedTest = (isDownModeInProgress) ? binding.download.data : binding.upload.data;
                         speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
                         speedTest.setText(bandWidth);
                     });
@@ -369,8 +399,8 @@ public class HomeFragment extends Fragment {
             case SUCCEEDED:
                 if (output.size() == 0) break;
                 String finalResult = output.getString("FINAL_RESULT");
+                if (finalResult == null) break;
                 if (workInfo.getTags().contains("PING")) {
-                    if (finalResult == null) break;
                     prevPing = Double.parseDouble(finalResult.split(" ")[0]);
                     Log.i(TAG, "ping is: " + prevPing);
                     this.activity.runOnUiThread(() -> {
@@ -379,8 +409,6 @@ public class HomeFragment extends Fragment {
                         pingTest.setText(finalResult);
                     });
                 } else {
-
-                    if (finalResult == null) break;
                     boolean isDownModeInSucceeded = output.getBoolean("IS_DOWN_MODE", false);
                     if (isDownModeInSucceeded && !finalResult.equals("")) {
                         prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
@@ -392,11 +420,10 @@ public class HomeFragment extends Fragment {
                         speedTest.setTextColor(this.activity.getColor(R.color.white));
                         speedTest.setText(finalResult);
                         if (workInfo.getTags().contains("IPERF_UP")) {
+//                            binding.progressIndicator.setProgress(100, true);
+//                            binding.progressIndicator.setVisibility(View.GONE);
 
-                            binding.progressIndicator.setProgress(100, true);
-                            binding.progressIndicator.setVisibility(View.GONE);
-
-                            updateFAB(true);
+//                            updateFAB(true);
                             PopTip.show("Test completed");
                         }
                     });
@@ -409,8 +436,6 @@ public class HomeFragment extends Fragment {
 
                         mLocationManager.getLastLocation(location -> {
                             LatLng latLng = LocationUtils.toLatLng(location);
-
-                            // TODO(sudheesh001) security check
                             byte[][] result = retrieveKeysInformation();
                             if (result.length == 0) {
                                 exitWhenFailure("Keys are compromised. Please rescan the QR Code");
@@ -432,16 +457,13 @@ public class HomeFragment extends Fragment {
                             uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
                         });
                     }
+
+                    setFABToInitialState();
                 }
         }
     }
 
-    private void batchConnectivityReset() {
-        prevDownload = -1.0;
-        prevPing = -1.0;
-        prevUpload = -1.0;
-    }
-
+    ///////////////////// HELPER /////////////////////////
     private boolean isConnectivityAllSet() {
         return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
     }
@@ -455,7 +477,7 @@ public class HomeFragment extends Fragment {
 
         Map<String, Object> uploadMap = new HashMap<>();
         uploadMap.put("M", Hex.encodeHexString(serialized));
-        uploadMap.put("sig_m", Hex.encodeHexString(sig_m));
+        uploadMap.put("sigma_m", Hex.encodeHexString(sig_m));
         uploadMap.put("h_pkr", Hex.encodeHexString(h_pkr));
 
         // upload data

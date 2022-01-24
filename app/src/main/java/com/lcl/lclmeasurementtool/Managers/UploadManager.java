@@ -60,6 +60,7 @@ public class UploadManager {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
                     TipDialog.show("Data upload failed. Please contact the administrator");
+                    System.out.println(response.body().string());
                 }
 
                 response.close();

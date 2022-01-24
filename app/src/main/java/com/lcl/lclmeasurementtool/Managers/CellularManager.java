@@ -24,6 +24,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -244,13 +245,15 @@ public class CellularManager {
                     @Override
                     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                         super.onSignalStrengthsChanged(signalStrength);
-                        List<CellSignalStrength> reports = signalStrength.
-                                                                getCellSignalStrengths();
+                        List<CellSignalStrength> reports = signalStrength.getCellSignalStrengths(CellSignalStrength.class);
+//                                signalStrength.
+//                                                                getCellSignalStrengths();
 
                         int dBm;
                         SignalStrengthLevel level;
-                        if (reports.size() > 0) {
+                        if (!reports.isEmpty()) {
                             CellSignalStrength report = reports.get(0);
+                            Log.i(TAG, "report level code is:" + report.getLevel());
                             level = SignalStrengthLevel.init(report.getLevel());
                             dBm = report.getDbm();
                         } else {
@@ -258,10 +261,10 @@ public class CellularManager {
                             dBm = level.getLevelCode();
                         }
 
-                        if (dBm == Integer.MAX_VALUE) dBm = 0;
                         listener.onChange(level, dBm);
 
                         if (stopListening) {
+                            Log.i(TAG, "stop listening signal strength change");
                             Looper.myLooper().quitSafely();
                         }
                     }
