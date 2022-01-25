@@ -68,6 +68,7 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class HomeFragment extends Fragment {
     private HomeFragmentBinding binding;
@@ -149,16 +150,15 @@ public class HomeFragment extends Fragment {
                 prevSignalStrength = dBm;
                 String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
                 String cell_id = mCellularManager.getCellID();
+                byte[][] result = retrieveKeysInformation();
+                if (result.length == 0) {
+                    exitWhenFailure("Keys are compromised. Please rescan the QR Code");
+                }
+
+                byte[] h_pkr = result[0];
+                byte[] sk_t = result[1];
                 mLocationManager.getLastLocation(location -> {
                     LatLng latLng = LocationUtils.toLatLng(location);
-                    byte[][] result = retrieveKeysInformation();
-                    if (result.length == 0) {
-                        exitWhenFailure("Keys are compromised. Please rescan the QR Code");
-                    }
-
-                    byte[] h_pkr = result[0];
-                    byte[] sk_t = result[1];
-
                     SignalStrengthMessageModel signalStrengthMessageModel =
                             new SignalStrengthMessageModel(
                                     latLng.latitude,
@@ -252,21 +252,21 @@ public class HomeFragment extends Fragment {
 
     /////////////////////////// Measurement ////////////////////////
     private void setFABToInitialState() {
+        isTestStarted = false;
         activity.runOnUiThread(() -> {
             binding.fab.setSelected(true);
             binding.fab.setImageResource(R.drawable.start);
             binding.fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
-            isTestStarted = false;
-            resetConnectivities();
         });
     }
 
     private void setFABToStartedState() {
+        isTestStarted = true;
+        resetConnectivities();
         activity.runOnUiThread(() -> {
             setupTestView();
             binding.fab.setImageResource(R.drawable.stop);
         });
-        isTestStarted = true;
     }
 
     private void setFABToDisabledState() {
@@ -308,10 +308,6 @@ public class HomeFragment extends Fragment {
         } else {
             setFABToDisabledState();
         }
-//        CircularProgressIndicator progressIndicator = binding.progressIndicator;
-//        progressIndicator.setVisibility(View.GONE);
-//        setupTestView();
-
 
         fab.setOnClickListener(button -> {
             if (!this.isCellularConnected) {
@@ -330,36 +326,20 @@ public class HomeFragment extends Fragment {
                         }).setOkButton(android.R.string.cancel, (baseDialog, v) -> false).show();
 
             } else {
-//                progressIndicator.setActivated(this.isTestStarted);
                 if (this.isTestStarted) {
-//                    progressIndicator.setShowAnimationBehavior(BaseProgressIndicator.SHOW_OUTWARD);
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
                     PopTip.show("Test canceled.");
                 } else {
-//                    progressIndicator.setHideAnimationBehavior(BaseProgressIndicator.HIDE_INWARD);
                     setFABToStartedState();
                     mNetworkTestViewModel.run();
                     PopTip.show("Test started");
                 }
-//                progressIndicator.setVisibility(this.isTestStarted ? View.GONE : View.VISIBLE);
 
                 this.isTestStarted = !isTestStarted;
             }
         });
     }
-
-//    private void updateFAB(boolean state) {
-//        this.activity.runOnUiThread(() -> {
-//            FloatingActionButton fab = binding.fab;
-//            fab.setSelected(state);
-//            fab.setImageResource(R.drawable.start);
-//            fab.setColorFilter(state ? ContextCompat.getColor(this.context, R.color.purple_500) :
-//                    ContextCompat.getColor(this.context, R.color.light_gray));
-//            this.isTestStarted = false;
-//        });
-//    }
-
 
     @SuppressLint("RestrictedApi")
     private void parseWorkInfo(List<WorkInfo> workInfoList) {
@@ -367,40 +347,32 @@ public class HomeFragment extends Fragment {
         if (workInfoList == null || workInfoList.isEmpty()) return;
 
         WorkInfo workInfo = workInfoList.get(0);
+        Set<String> tags = workInfo.getTags();
+        WorkInfo.State state = workInfo.getState();
         Data progress = workInfo.getProgress();
         Data output = workInfo.getOutputData();
-        switch (workInfo.getState()) {
-            case FAILED:
 
-                resetConnectivities();
-                if (output.size() == 1) {
-//                    boolean isTestCancelled = output.getBoolean("IS_CANCELLED", false);
-                    Toast.makeText(this.context, "test is cancelled: ", Toast.LENGTH_SHORT).show();
-                }
+        if (state == WorkInfo.State.SUCCEEDED && output.size() == 0) return;
 
-                if (isTestStarted) {
-                    MessageDialog.show(R.string.error, R.string.iperf_error, android.R.string.ok);
-                    mNetworkTestViewModel.cancel();
-//                    binding.progressIndicator.setVisibility(View.GONE);
-//                    binding.progressIndicator.hide();
+        if (tags.contains("PING")) {
+            switch (state) {
+                case FAILED:
+                case CANCELLED:
                     setFABToInitialState();
-                }
-            case RUNNING:
-                if (progress.size() == 0) break;
-                else if (!workInfo.getTags().contains("PING")) {
-                    String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
-                    boolean isDownModeInProgress = progress.getBoolean("IS_DOWN_MODE", false);
-                    this.activity.runOnUiThread(() -> {
-                        TextView speedTest = (isDownModeInProgress) ? binding.download.data : binding.upload.data;
-                        speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
-                        speedTest.setText(bandWidth);
-                    });
-                }
-            case SUCCEEDED:
-                if (output.size() == 0) break;
-                String finalResult = output.getString("FINAL_RESULT");
-                if (finalResult == null) break;
-                if (workInfo.getTags().contains("PING")) {
+                    mNetworkTestViewModel.cancel();
+                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
+                    break;
+                case RUNNING:
+                    // do nothing
+                    break;
+                case SUCCEEDED:
+                    String finalResult = output.getString("FINAL_RESULT");
+                    if (finalResult == null || finalResult.isEmpty()) {
+                        setFABToInitialState();
+                        mNetworkTestViewModel.cancel();
+                        return;
+                    }
+
                     prevPing = Double.parseDouble(finalResult.split(" ")[0]);
                     Log.i(TAG, "ping is: " + prevPing);
                     this.activity.runOnUiThread(() -> {
@@ -408,43 +380,55 @@ public class HomeFragment extends Fragment {
                         pingTest.setTextColor(this.activity.getColor(R.color.white));
                         pingTest.setText(finalResult);
                     });
-                } else {
-                    boolean isDownModeInSucceeded = output.getBoolean("IS_DOWN_MODE", false);
-                    if (isDownModeInSucceeded && !finalResult.equals("")) {
-                        prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
-                    } else {
-                        prevUpload = Double.parseDouble(finalResult.split(" ")[0]);
-                    }
+                    break;
+            }
+        } else if (tags.contains("IPERF_UP")) {
+            switch (state) {
+                case CANCELLED:
+                case FAILED:
+                    setFABToInitialState();
+                    mNetworkTestViewModel.cancel();
+                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
+                    break;
+                case RUNNING:
+                    String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
                     this.activity.runOnUiThread(() -> {
-                        TextView speedTest = (isDownModeInSucceeded) ? binding.download.data : binding.upload.data;
+                        TextView speedTest = binding.upload.data;
+                        speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
+                        speedTest.setText(bandWidth);
+                    });
+                    break;
+                case SUCCEEDED:
+                    String finalResult = output.getString("FINAL_RESULT");
+                    if (finalResult == null || finalResult.isEmpty()) {
+                        setFABToInitialState();
+                        mNetworkTestViewModel.cancel();
+                        return;
+                    }
+
+                    prevUpload = Double.parseDouble(finalResult.split(" ")[0]);
+                    this.activity.runOnUiThread(() -> {
+                        TextView speedTest = binding.upload.data;
                         speedTest.setTextColor(this.activity.getColor(R.color.white));
                         speedTest.setText(finalResult);
-                        if (workInfo.getTags().contains("IPERF_UP")) {
-//                            binding.progressIndicator.setProgress(100, true);
-//                            binding.progressIndicator.setVisibility(View.GONE);
-
-//                            updateFAB(true);
-                            PopTip.show("Test completed");
-                        }
+                        PopTip.show("Test completed");
                     });
 
-                    if (isConnectivityAllSet()) {
+                    if (isTestCompleted() && isTestStarted) {
                         Log.i(TAG, "prepare for upload");
                         if (systemReady()) return;
                         String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
                         String cell_id = mCellularManager.getCellID();
+                        byte[][] result = retrieveKeysInformation();
+                        if (result.length == 0) {
+                            exitWhenFailure("Keys are compromised. Please rescan the QR Code");
+                        }
+
+                        byte[] h_pkr = result[0];
+                        byte[] sk_t = result[1];
 
                         mLocationManager.getLastLocation(location -> {
                             LatLng latLng = LocationUtils.toLatLng(location);
-                            byte[][] result = retrieveKeysInformation();
-                            if (result.length == 0) {
-                                exitWhenFailure("Keys are compromised. Please rescan the QR Code");
-                            }
-
-                            byte[] h_pkr = result[0];
-                            byte[] sk_t = result[1];
-
-
                             ConnectivityMessageModel connectivityMessageModel =
                                     new ConnectivityMessageModel(
                                             latLng.latitude,
@@ -459,12 +443,48 @@ public class HomeFragment extends Fragment {
                     }
 
                     setFABToInitialState();
-                }
+                    break;
+            }
+
+        } else if (tags.contains("IPERF_DOWN")) {
+            switch (state) {
+                case CANCELLED:
+                case FAILED:
+                    setFABToInitialState();
+                    mNetworkTestViewModel.cancel();
+                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
+                    break;
+                case RUNNING:
+                    String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
+                    this.activity.runOnUiThread(() -> {
+                        TextView speedTest = binding.download.data;
+                        speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
+                        speedTest.setText(bandWidth);
+                    });
+                    break;
+                case SUCCEEDED:
+                    String finalResult = output.getString("FINAL_RESULT");
+                    if (finalResult == null || finalResult.isEmpty()) {
+                        setFABToInitialState();
+                        mNetworkTestViewModel.cancel();
+                        return;
+                    }
+                    prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
+                    this.activity.runOnUiThread(() -> {
+                        TextView speedTest = binding.download.data;
+                        speedTest.setTextColor(this.activity.getColor(R.color.white));
+                        speedTest.setText(finalResult);
+                    });
+                    break;
+            }
+        } else {
+            // unknown worker
+            PopTip.show("Unknown test.");
         }
     }
 
     ///////////////////// HELPER /////////////////////////
-    private boolean isConnectivityAllSet() {
+    private boolean isTestCompleted() {
         return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
     }
 

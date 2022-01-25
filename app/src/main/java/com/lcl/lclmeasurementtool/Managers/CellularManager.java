@@ -261,6 +261,7 @@ public class CellularManager {
                             dBm = level.getLevelCode();
                         }
 
+                        if (dBm == Integer.MAX_VALUE) dBm = 0;
                         listener.onChange(level, dBm);
 
                         if (stopListening) {

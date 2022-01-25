@@ -108,9 +108,9 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        if (!preferences.contains("device_id")) {
+        if (!preferences.contains(getString(R.string.device_id))) {
             String device_id = UUID.randomUUID().toString();
-            preferences.edit().putString("device_id", device_id).apply();
+            preferences.edit().putString(getString(R.string.device_id), device_id).apply();
         }
 
         askPermission();
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
                         Intent data = result.getData();
                         if (data != null) {
                             String content = data.getStringExtra(Constant.CODED_CONTENT);
-                            System.out.println("scan result is：" + content);
+//                            System.out.println("scan result is：" + content);
 
                             QRCodeKeysModel jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
                             String sigma_t = jsonObj.getSigma_t();
@@ -233,8 +233,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void validate(String sigma_t, String pk_a, String sk_t) {
-
-        // TODO: ECDSA key check
         byte[] sigma_t_hex;
         byte[] pk_a_hex;
         byte[] sk_t_hex;
@@ -243,7 +241,6 @@ public class MainActivity extends AppCompatActivity {
             pk_a_hex = Hex.decodeHex(pk_a);
             sk_t_hex = Hex.decodeHex(sk_t);
 
-            // TODO: ECDSA key check: the verify method failed due to public key
             if (!ECDSA.Verify(sk_t_hex,
                     sigma_t_hex,
                     ECDSA.DeserializePublicKey(pk_a_hex)
