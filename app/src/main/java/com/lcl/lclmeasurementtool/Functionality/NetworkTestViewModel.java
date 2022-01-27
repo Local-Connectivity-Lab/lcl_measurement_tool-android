@@ -91,8 +91,6 @@ public class NetworkTestViewModel extends ViewModel {
 
     private Data prepareIperfWorkerData() {
         Data.Builder builder = new Data.Builder();
-//        builder.putInt("SERVER_PORT", 5201);
-//        builder.putString("SERVER_ADDR", "iperf.he.net");
         return builder.build();
     }
 

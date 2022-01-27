@@ -1,12 +1,11 @@
 package com.lcl.lclmeasurementtool.Managers;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
+import com.kongzue.dialogx.dialogs.TipDialog;
+import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
+
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -16,10 +15,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import com.jsoniter.output.JsonStream;
-import com.kongzue.dialogx.dialogs.TipDialog;
-import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
-
 public class UploadManager {
 
     private static UploadManager instance;
@@ -28,7 +23,6 @@ public class UploadManager {
     private final OkHttpClient client;
     private String json;
     private String endpoint;
-
 
     private UploadManager() {
         client = new OkHttpClient();
@@ -60,7 +54,6 @@ public class UploadManager {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
                     TipDialog.show("Data upload failed. Please contact the administrator");
-                    System.out.println(response.body().string());
                 }
 
                 response.close();

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 
-// TODO(sudheesh001) security check
 public class SignalStrengthMessageModel extends MeasurementDataModel {
 
     @JsonProperty("dbm")
@@ -29,4 +28,3 @@ public class SignalStrengthMessageModel extends MeasurementDataModel {
         this.device_id = device_id;
     }
 }
-// TODO(sudheesh001) security check

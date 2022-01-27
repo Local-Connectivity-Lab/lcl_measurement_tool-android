@@ -9,6 +9,7 @@ import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
+import com.lcl.lclmeasurementtool.Utils.SerializationUtils;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 
 import org.junit.Assert;
@@ -126,7 +127,7 @@ public class PostRequestTest {
                         "12345678",
                         "device_id");
         try {
-            byte[] serialized = signalStrengthMessageModel.serializeToBytes();
+            byte[] serialized = SerializationUtils.serializeToBytes(signalStrengthMessageModel);
             byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(Hex.decodeHex(sk_t)));
             System.out.println("serialized:" + Hex.encodeHexString(serialized));
             System.out.println("sigma_m:" + Hex.encodeHexString(sig_m));
@@ -169,7 +170,7 @@ public class PostRequestTest {
     private void uploadData(MeasurementDataModel data, String sk_t, String h_pkr, String endpoint) throws NoSuchAlgorithmException,
             InvalidKeySpecException, DecoderException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
 
-        byte[] serialized = data.serializeToBytes();
+        byte[] serialized = SerializationUtils.serializeToBytes(data);
 
         byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(Hex.decodeHex(sk_t)));
         Map<String, Object> uploadMap = new HashMap<>();

@@ -73,10 +73,10 @@ public class LocationServiceManager {
      *
      * @param context  the context of the current activity
      */
-    private LocationServiceManager(@NonNull Context context) {
-        this.context = new WeakReference<>(context);
-        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+    private LocationServiceManager(@NonNull WeakReference<Context> context) {
+        this.context = context;
+        locationManager = (LocationManager) this.context.get().getSystemService(Context.LOCATION_SERVICE);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context.get());
     }
 
     /**
@@ -87,7 +87,7 @@ public class LocationServiceManager {
      */
     public static LocationServiceManager getManager(@NonNull Context context) {
         if (locationServiceManager == null) {
-            locationServiceManager = new LocationServiceManager(context);
+            locationServiceManager = new LocationServiceManager(new WeakReference<>(context));
         }
         return locationServiceManager;
     }
@@ -182,7 +182,6 @@ public class LocationServiceManager {
         new Thread(() -> {
             Looper.prepare();
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, (float) 10.0, locationListener, Looper.myLooper());
-//          locationManager.requestLocationUpdates(5000, 10, locationUpdateCriteria, locationListener, Looper.myLooper());
             Looper.loop();
         }).start();
     }

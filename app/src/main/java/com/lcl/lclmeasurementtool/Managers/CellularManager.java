@@ -37,6 +37,7 @@ import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.BuildConfig;
 import com.yanzhenjie.permission.runtime.Permission;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
@@ -64,15 +65,15 @@ public class CellularManager {
     // the flag that controls when to stop listening to signal strength change.
     private boolean stopListening;
 
-    private Context context;
+    WeakReference<Context> context;
 
     /**
      * Construct a new CellularManager object based on current context.
      * @param context the context of the application.
      */
-    private CellularManager(@NonNull Context context) {
+    private CellularManager(@NonNull WeakReference<Context> context) {
         this.context = context;
-        this.telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        this.telephonyManager = (TelephonyManager) context.get().getSystemService(Context.TELEPHONY_SERVICE);
         this.signalStrength = this.telephonyManager.getSignalStrength();
         if (this.signalStrength.getCellSignalStrengths().size() > 0) {
             this.report = this.signalStrength.getCellSignalStrengths().get(0);
@@ -87,7 +88,7 @@ public class CellularManager {
      */
     public static CellularManager getManager(@NonNull Context context) {
         if (cellularManager == null) {
-            cellularManager = new CellularManager(context);
+            cellularManager = new CellularManager(new WeakReference<>(context));
         }
         return cellularManager;
     }
@@ -150,24 +151,22 @@ public class CellularManager {
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     public String getCellID() {
-        if (ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            AndPermission.with(this.context).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> {
-                MessageDialog.build()
-                        .setTitle(R.string.location_message_title)
-                        .setMessage(R.string.permission_denied_explanation)
-                        .setOkButton(R.string.settings, (baseDialog, v) -> {
-                            // Build intent that displays the App settings screen.
-                            Intent intent = new Intent();
-                            intent.setAction(
-                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                            Uri uri = Uri.fromParts("package",
-                                    BuildConfig.APPLICATION_ID, null);
-                            intent.setData(uri);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            this.context.startActivity(intent);
-                            return false;
-                        }).setOkButton(android.R.string.cancel).show();
-            }).start();
+        if (ActivityCompat.checkSelfPermission(this.context.get(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> MessageDialog.build()
+                    .setTitle(R.string.location_message_title)
+                    .setMessage(R.string.permission_denied_explanation)
+                    .setOkButton(R.string.settings, (baseDialog, v) -> {
+                        // Build intent that displays the App settings screen.
+                        Intent intent = new Intent();
+                        intent.setAction(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package",
+                                BuildConfig.APPLICATION_ID, null);
+                        intent.setData(uri);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        this.context.get().startActivity(intent);
+                        return false;
+                    }).setOkButton(android.R.string.cancel).show()).start();
         }
         List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
         for (CellInfo info : infos) {
@@ -197,38 +196,51 @@ public class CellularManager {
         return "unknown";
     }
 
-//    /**
-//     * Read the IMEI code of the sim card
-//     * @return the IMEI code in string; null if CellularManager failed to initialize;
-//     */
-//    @RequiresApi(api = Build.VERSION_CODES.O)
-//    public String getIMEI() {
-//        if (this.telephonyManager != null) {
-//            return this.telephonyManager.getImei();
-//        }
-//
-//        return null;
-//    }
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    public String getCarrier() {
+        if (ActivityCompat.checkSelfPermission(this.context.get(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> MessageDialog.build()
+                    .setTitle(R.string.location_message_title)
+                    .setMessage(R.string.permission_denied_explanation)
+                    .setOkButton(R.string.settings, (baseDialog, v) -> {
+                        // Build intent that displays the App settings screen.
+                        Intent intent = new Intent();
+                        intent.setAction(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package",
+                                BuildConfig.APPLICATION_ID, null);
+                        intent.setData(uri);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        this.context.get().startActivity(intent);
+                        return false;
+                    }).setOkButton(android.R.string.cancel).show()).start();
+        }
 
-//    /**
-//     * Read the Sim card ID code of the sim card
-//     * @return the Siim card ID code in string; null if CellularManager failed to initialize;
-//     */
-//    public String getSIMCardID() {
-//        if (this.telephonyManager != null) {
-//            return this.telephonyManager.getSimSerialNumber();
-//        }
-//
-//        return null;
-//    }
-//
-//    public String getPhoneNumber() {
-//        if (this.telephonyManager != null) {
-//            return this.telephonyManager.getLine1Number();
-//        }
-//
-//        return null;
-//    }
+        List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
+        for (CellInfo info : infos) {
+            if (info instanceof CellInfoGsm) {
+                CellInfoGsm gsm = (CellInfoGsm) info;
+                return (String) gsm.getCellIdentity().getOperatorAlphaLong();
+            } else if (info instanceof CellInfoLte) {
+                CellInfoLte lte = (CellInfoLte) info;
+                return (String) lte.getCellIdentity().getOperatorAlphaLong();
+            } else if (info instanceof CellInfoCdma) {
+                CellInfoCdma cdma = (CellInfoCdma) info;
+                CellIdentityCdma cellIdentity = cdma.getCellIdentity();
+                return (String) cdma.getCellIdentity().getOperatorAlphaLong();
+            } else if (info instanceof CellInfoWcdma) {
+                CellInfoWcdma wcdma = (CellInfoWcdma) info;
+                return (String) wcdma.getCellIdentity().getOperatorAlphaLong();
+            } else if (info instanceof CellInfoTdscdma) {
+                CellInfoTdscdma tdscdma = (CellInfoTdscdma) info;
+                return (String) tdscdma.getCellIdentity().getOperatorAlphaLong();
+            } else {
+                break;
+            }
+        }
+
+        return "unknown";
+    }
 
     /**
      * Start listen to signal strength change and display onto the corresponding TextView.

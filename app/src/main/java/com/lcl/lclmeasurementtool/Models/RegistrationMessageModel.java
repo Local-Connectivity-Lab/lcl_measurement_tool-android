@@ -7,7 +7,6 @@ import com.lcl.lclmeasurementtool.Utils.Hex;
 
 import java.io.Serializable;
 
-// TODO(sudheesh001) security check
 public class RegistrationMessageModel implements Serializable {
 
     @JsonProperty("sigma_r")
@@ -30,4 +29,3 @@ public class RegistrationMessageModel implements Serializable {
         return mapper.writeValueAsBytes(this);
     }
 }
-// TODO(sudheesh001) security check

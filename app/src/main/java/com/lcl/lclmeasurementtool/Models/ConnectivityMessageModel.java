@@ -1,9 +1,7 @@
 package com.lcl.lclmeasurementtool.Models;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-// TODO(sudheesh001) security check
 public class ConnectivityMessageModel extends MeasurementDataModel {
 
     @JsonProperty("upload_speed")
@@ -33,4 +31,3 @@ public class ConnectivityMessageModel extends MeasurementDataModel {
         this.device_id = device_id;
     }
 }
-// TODO(sudheesh001) security check

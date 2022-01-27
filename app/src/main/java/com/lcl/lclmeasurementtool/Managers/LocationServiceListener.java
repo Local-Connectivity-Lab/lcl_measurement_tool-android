@@ -70,7 +70,6 @@ public class LocationServiceListener implements LifecycleObserver {
     void checkLocationMode() {
         if (!this.mLocationManager.isLocationModeOn() && lifecycle.getCurrentState().equals(Lifecycle.State.RESUMED) && !checkLocationModeLock) {
             checkLocationModeLock = true;
-            // TODO turn off start FAB if canceled
             MessageDialog.build()
                     .setTitle(R.string.location_message_title)
                     .setMessage(R.string.enable_location_message)

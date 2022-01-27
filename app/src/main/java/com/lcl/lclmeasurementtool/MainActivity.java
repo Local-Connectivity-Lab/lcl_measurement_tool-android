@@ -42,6 +42,7 @@ import com.kongzue.dialogx.interfaces.OnBindView;
 import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
+import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
@@ -91,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String SIM_STATE_CHANGED = "android.intent.action.SIM_STATE_CHANGED";
     private SimStatesReceiver simStatesReceiver;
     private FullScreenDialog fullScreenDialog;
-
+    private SharedPreferences preferences;
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
@@ -107,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.toolbar, navController, appBarConfiguration);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        preferences = getPreferences(MODE_PRIVATE);
         if (!preferences.contains(getString(R.string.device_id))) {
             String device_id = UUID.randomUUID().toString();
             preferences.edit().putString(getString(R.string.device_id), device_id).apply();
@@ -119,8 +120,6 @@ public class MainActivity extends AppCompatActivity {
             showLogInPage();
         }
 
-
-
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
 
         simStatesReceiver = new SimStatesReceiver(this);
@@ -129,12 +128,21 @@ public class MainActivity extends AppCompatActivity {
         this.registerReceiver(simStatesReceiver, filter);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // TODO: check for sim swap
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         this.unregisterReceiver(simStatesReceiver);
     }
 
+    // show login page and validate the credentials through QR code scan
     private void showLogInPage() {
         DialogX.init(this);
         ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
@@ -144,8 +152,6 @@ public class MainActivity extends AppCompatActivity {
                         Intent data = result.getData();
                         if (data != null) {
                             String content = data.getStringExtra(Constant.CODED_CONTENT);
-//                            System.out.println("scan result is：" + content);
-
                             QRCodeKeysModel jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
                             String sigma_t = jsonObj.getSigma_t();
                             String sk_t = jsonObj.getSk_t();
@@ -174,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
 
-                Button qrScanner = (Button) v.findViewById(R.id.qr_scanner);
+                Button qrScanner = v.findViewById(R.id.qr_scanner);
 
                 qrScanner.setOnClickListener(v1 -> {
                     Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
@@ -204,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // check for necessary permission
     private void askPermission() {
         boolean hasPermissions = AndPermission.hasPermissions(this, Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION);
         if (hasPermissions) return;
@@ -217,6 +224,7 @@ public class MainActivity extends AppCompatActivity {
                 }).start();
     }
 
+    // save credential to SharedPreferences
     private void saveCredentials(String sigma_t, String pk_a, String sk_t) {
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -226,12 +234,14 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
+    // show message when failed and remove all saved keys
     private void showMessageOnFailure() {
         WaitDialog.dismiss();
         TipDialog.show("Cannot validate code. Please retry or contact the administrator", WaitDialog.TYPE.ERROR);
         getPreferences(MODE_PRIVATE).edit().clear().apply();
     }
 
+    // validate keys
     private void validate(String sigma_t, String pk_a, String sk_t) {
         byte[] sigma_t_hex;
         byte[] pk_a_hex;
@@ -312,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // prepare for registration message and then register
         RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(sigma_r, h_concat, R);
         String registration = JsonStream.serialize(registrationMessageModel);
 

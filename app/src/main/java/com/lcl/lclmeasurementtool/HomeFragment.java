@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.NetworkCapabilities;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -19,12 +20,14 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
+import androidx.work.impl.model.Preference;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.maps.model.LatLng;
@@ -48,17 +51,20 @@ import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Managers.UploadManager;
 import com.lcl.lclmeasurementtool.Models.ConnectivityMessageModel;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataModel;
+import com.lcl.lclmeasurementtool.Models.MeasurementDataReportModel;
 import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
 import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.LocationUtils;
+import com.lcl.lclmeasurementtool.Utils.SerializationUtils;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -110,7 +116,7 @@ public class HomeFragment extends Fragment {
         super.onResume();
     }
 
-
+    // check whether the system has stored necessary credentials
     private boolean systemReady() {
         SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
         return (!preferences.contains("sigma_t") || !preferences.contains("pk_a") || !preferences.contains("sk_t"));
@@ -177,7 +183,7 @@ public class HomeFragment extends Fragment {
         setupTestView();
         setUpFAB();
 
-
+        // listen to network changes from wifi to cellular and vice versa
         this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
 
             // Cellular
@@ -300,7 +306,7 @@ public class HomeFragment extends Fragment {
         binding.ping.data.setTextColor(this.activity.getColor(R.color.light_gray));
     }
 
-
+    // initialze FAB
     private void setUpFAB() {
         FloatingActionButton fab = binding.fab;
         if (isCellularConnected) {
@@ -330,10 +336,12 @@ public class HomeFragment extends Fragment {
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
                     PopTip.show("Test canceled.");
+                    WaitDialog.dismiss();
                 } else {
                     setFABToStartedState();
                     mNetworkTestViewModel.run();
                     PopTip.show("Test started");
+                    WaitDialog.show("Running Tests ...");
                 }
 
                 this.isTestStarted = !isTestStarted;
@@ -360,6 +368,7 @@ public class HomeFragment extends Fragment {
                 case CANCELLED:
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
+                    WaitDialog.dismiss();
                     MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
                     break;
                 case RUNNING:
@@ -388,6 +397,7 @@ public class HomeFragment extends Fragment {
                 case FAILED:
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
+                    WaitDialog.dismiss();
                     MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
                     break;
                 case RUNNING:
@@ -414,7 +424,8 @@ public class HomeFragment extends Fragment {
                         PopTip.show("Test completed");
                     });
 
-                    if (isTestCompleted() && isTestStarted) {
+                    // upload data only when test is complete and system is ready
+                    if (isTestCompleted()) {
                         Log.i(TAG, "prepare for upload");
                         if (systemReady()) return;
                         String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
@@ -441,7 +452,7 @@ public class HomeFragment extends Fragment {
                             uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
                         });
                     }
-
+                    TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
                     setFABToInitialState();
                     break;
             }
@@ -452,6 +463,7 @@ public class HomeFragment extends Fragment {
                 case FAILED:
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
+                    WaitDialog.dismiss();
                     MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
                     break;
                 case RUNNING:
@@ -491,18 +503,15 @@ public class HomeFragment extends Fragment {
     private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
             InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
 
-        byte[] serialized = data.serializeToBytes();
+        byte[] serialized = SerializationUtils.serializeToBytes(data);
 
         byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
 
-        Map<String, Object> uploadMap = new HashMap<>();
-        uploadMap.put("M", Hex.encodeHexString(serialized));
-        uploadMap.put("sigma_m", Hex.encodeHexString(sig_m));
-        uploadMap.put("h_pkr", Hex.encodeHexString(h_pkr));
+        MeasurementDataReportModel reportModel = new MeasurementDataReportModel(sig_m, h_pkr, serialized);
 
         // upload data
         UploadManager upload = UploadManager.Builder()
-                .addPayload(JsonStream.serialize(uploadMap))
+                .addPayload(JsonStream.serialize(reportModel))
                 .addEndpoint(endpoint);
         try {
             upload.post();
