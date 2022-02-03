@@ -1,5 +1,7 @@
 package com.lcl.lclmeasurementtool.Managers;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.kongzue.dialogx.dialogs.TipDialog;
@@ -16,7 +18,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class UploadManager {
-
+    private static final String TAG = "UPLOAD_MANAGER";
     private static UploadManager instance;
     private static final MediaType MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
 
@@ -43,16 +45,18 @@ public class UploadManager {
         RequestBody body = RequestBody.create(json, MEDIA_TYPE);
         Request request = new Request.Builder().url(NetworkConstants.URL + endpoint).post(body).build();
 
+        Log.i(TAG, "prepare for upload");
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                e.printStackTrace();
+                Log.e(TAG, e.getLocalizedMessage());
                 TipDialog.show("Data upload failed. Please contact the administrator");
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
+                    Log.e(TAG, response.body().string() + " on " + endpoint);
                     TipDialog.show("Data upload failed. Please contact the administrator");
                 }
 

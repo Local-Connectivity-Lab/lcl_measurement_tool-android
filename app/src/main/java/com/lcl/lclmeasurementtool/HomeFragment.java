@@ -81,7 +81,7 @@ public class HomeFragment extends Fragment {
     private FragmentActivity activity;
     private Context context;
     public static final String TAG = "MAIN_FRAGMENT";
-    private static final int SIGNAL_THRESHOLD = 2;
+    private static final int SIGNAL_THRESHOLD = 5;
     private String device_id;
 
     CellularManager mCellularManager;
@@ -324,7 +324,7 @@ public class HomeFragment extends Fragment {
                         .setTitle(R.string.cellular_on_title)
                         .setMessage(R.string.cellular_on_message)
                         .setButtonOrientation(LinearLayout.VERTICAL)
-                        .setOkButton(R.string.settings, (baseDialog, v) -> {
+                        .setOtherButton(R.string.settings, (baseDialog, v) -> {
                             Intent networkSettings = new Intent(Settings.ACTION_SETTINGS);
                             networkSettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(networkSettings);
@@ -336,12 +336,10 @@ public class HomeFragment extends Fragment {
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
                     PopTip.show("Test canceled.");
-                    WaitDialog.dismiss();
                 } else {
                     setFABToStartedState();
                     mNetworkTestViewModel.run();
                     PopTip.show("Test started");
-                    WaitDialog.show("Running Tests ...");
                 }
 
                 this.isTestStarted = !isTestStarted;
@@ -368,7 +366,6 @@ public class HomeFragment extends Fragment {
                 case CANCELLED:
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
-                    WaitDialog.dismiss();
                     MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
                     break;
                 case RUNNING:
@@ -397,7 +394,6 @@ public class HomeFragment extends Fragment {
                 case FAILED:
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
-                    WaitDialog.dismiss();
                     MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
                     break;
                 case RUNNING:
@@ -452,9 +448,9 @@ public class HomeFragment extends Fragment {
                             uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
                         });
                     }
-                    TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
                     setFABToInitialState();
                     break;
+                default:break;
             }
 
         } else if (tags.contains("IPERF_DOWN")) {
