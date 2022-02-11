@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.NetworkCapabilities;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -16,23 +15,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
-import androidx.work.impl.model.Preference;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.TipDialog;
@@ -64,16 +59,13 @@ import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.ZoneId;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class HomeFragment extends Fragment {
@@ -81,7 +73,7 @@ public class HomeFragment extends Fragment {
     private FragmentActivity activity;
     private Context context;
     public static final String TAG = "MAIN_FRAGMENT";
-    private static final int SIGNAL_THRESHOLD = 5;
+    private static final int SIGNAL_THRESHOLD = 2;
     private String device_id;
 
     CellularManager mCellularManager;
@@ -158,7 +150,7 @@ public class HomeFragment extends Fragment {
                 String cell_id = mCellularManager.getCellID();
                 byte[][] result = retrieveKeysInformation();
                 if (result.length == 0) {
-                    exitWhenFailure("Keys are compromised. Please rescan the QR Code");
+                    exitWhenFailure(getString(R.string.keys_compromised));
                 }
 
                 byte[] h_pkr = result[0];
@@ -287,9 +279,9 @@ public class HomeFragment extends Fragment {
     }
 
     private void resetConnectivities() {
-        prevDownload = -1.0;
-        prevPing = -1.0;
-        prevUpload = -1.0;
+        prevDownload = 0;
+        prevPing = 0;
+        prevUpload = 0;
     }
 
     private void setupTestView() {
@@ -335,11 +327,11 @@ public class HomeFragment extends Fragment {
                 if (this.isTestStarted) {
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
-                    PopTip.show("Test canceled.");
+                    PopTip.show(getString(R.string.iperf_test_canceled));
                 } else {
                     setFABToStartedState();
                     mNetworkTestViewModel.run();
-                    PopTip.show("Test started");
+                    PopTip.show(getString(R.string.iperf_test_starts));
                 }
 
                 this.isTestStarted = !isTestStarted;
@@ -417,7 +409,7 @@ public class HomeFragment extends Fragment {
                         TextView speedTest = binding.upload.data;
                         speedTest.setTextColor(this.activity.getColor(R.color.white));
                         speedTest.setText(finalResult);
-                        PopTip.show("Test completed");
+                        PopTip.show(getString(R.string.iperf_test_completed));
                     });
 
                     // upload data only when test is complete and system is ready
@@ -428,7 +420,7 @@ public class HomeFragment extends Fragment {
                         String cell_id = mCellularManager.getCellID();
                         byte[][] result = retrieveKeysInformation();
                         if (result.length == 0) {
-                            exitWhenFailure("Keys are compromised. Please rescan the QR Code");
+                            exitWhenFailure(getString(R.string.keys_compromised));
                         }
 
                         byte[] h_pkr = result[0];
@@ -487,7 +479,7 @@ public class HomeFragment extends Fragment {
             }
         } else {
             // unknown worker
-            PopTip.show("Unknown test.");
+            PopTip.show(getString(R.string.unknown_test));
         }
     }
 
@@ -499,6 +491,7 @@ public class HomeFragment extends Fragment {
     private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
             InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
 
+//        byte[] serialized = data.serializeToBytes();
         byte[] serialized = SerializationUtils.serializeToBytes(data);
 
         byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
@@ -507,23 +500,23 @@ public class HomeFragment extends Fragment {
 
         // upload data
         UploadManager upload = UploadManager.Builder()
-                .addPayload(JsonStream.serialize(reportModel))
+                .addPayload(Hex.encodeHexString(reportModel.serializeToBytes()))
                 .addEndpoint(endpoint);
         try {
             upload.post();
         } catch (IOException e) {
-            showMessageOnFailure();
+            TipDialog.show(getString(R.string.upload_ioexception), WaitDialog.TYPE.ERROR);
         }
     }
 
-    private void showMessageOnFailure() {
-        TipDialog.show("Cannot connect the server. Please retry or contact the administrator", WaitDialog.TYPE.ERROR);
-    }
+//    private void showMessageOnFailure() {
+//        TipDialog.show(getString(R.string.upload_failure), WaitDialog.TYPE.ERROR);
+//    }
 
     private byte[][] retrieveKeysInformation() {
         SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
         if (!preferences.contains("h_pkr") || !preferences.contains("sk_t")) {
-            exitWhenFailure("Key information missing");
+            exitWhenFailure(getString(R.string.keys_missing));
         }
         byte[] h_pkr;
         byte[] sk_t;
@@ -537,13 +530,13 @@ public class HomeFragment extends Fragment {
 
         if (h_pkr.length == 0 || sk_t.length == 0) {
             preferences.edit().clear().apply();
-            exitWhenFailure("Keys are compromised. Please rescan the QR Code");
+            exitWhenFailure(getString(R.string.keys_compromised));
         }
         return new byte[][]{h_pkr, sk_t};
     }
 
     private void exitWhenFailure(String message) {
-        MessageDialog.show("Error", message, "ok").setOkButton((baseDialog, v) -> {
+        MessageDialog.show(getString(R.string.error), message, getString(android.R.string.ok)).setOkButton((baseDialog, v) -> {
             activity.finishAndRemoveTask();
             System.exit(1);
             return true;

@@ -17,6 +17,9 @@
             android:id="@+id/SignalStrengthFragment"
             android:icon="@drawable/signal_strength_indicator"
             android:title="History Signal Strength Data"/>
+        <item
+            android:id="@+id/settings"
+            android:title="Settings"/>
     </group>
 <!--    <group-->
 <!--        android:id="@+id/group2"-->

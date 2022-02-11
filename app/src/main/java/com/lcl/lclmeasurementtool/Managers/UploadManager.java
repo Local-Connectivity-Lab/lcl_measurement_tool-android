@@ -4,8 +4,10 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
+import com.lcl.lclmeasurementtool.R;
 
 import java.io.IOException;
 
@@ -21,6 +23,7 @@ public class UploadManager {
     private static final String TAG = "UPLOAD_MANAGER";
     private static UploadManager instance;
     private static final MediaType MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
+    private static final String ERR_MSG = "Data upload failed. Please contact the administrator at lcl@seattlecommunitynetwork.org.";
 
     private final OkHttpClient client;
     private String json;
@@ -50,14 +53,15 @@ public class UploadManager {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.e(TAG, e.getLocalizedMessage());
-                TipDialog.show("Data upload failed. Please contact the administrator");
+                TipDialog.show(ERR_MSG);
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
                     Log.e(TAG, response.body().string() + " on " + endpoint);
-                    TipDialog.show("Data upload failed. Please contact the administrator");
+//                    TipDialog.show(response.body().string());
+                    TipDialog.show(ERR_MSG);
                 }
 
                 response.close();

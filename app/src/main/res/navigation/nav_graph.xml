@@ -9,19 +9,25 @@
         android:id="@+id/HomeFragment"
         android:name="com.lcl.lclmeasurementtool.HomeFragment"
         android:label="LCL Measurement Tool"
-        tools:layout="@layout/home_fragment">
-    </fragment>
+        tools:layout="@layout/home_fragment" />
     <fragment
         android:id="@+id/SpeedTestFragment"
         android:name="com.lcl.lclmeasurementtool.ConnectivityDataFragment"
         android:label="Speed Test Results"
-        tools:layout="@layout/signal_data_fragment">
-    </fragment>
+        tools:layout="@layout/signal_data_fragment" />
     <fragment
         android:id="@+id/SignalStrengthFragment"
         android:name="com.lcl.lclmeasurementtool.SignalDataFragment"
         android:label="Signal Strength Results"
-        tools:layout="@layout/signal_data_fragment">
-    </fragment>
+        tools:layout="@layout/signal_data_fragment" />
+    <fragment
+        android:id="@+id/SettingsFragment"
+        android:name="com.lcl.lclmeasurementtool.SettingsFragment"
+        android:label="Settings" />
+
+    <action
+        android:id="@+id/toSettings"
+        app:destination="@id/SettingsFragment"
+        app:enterAnim="@anim/nav_default_enter_anim"/>
 
 </navigation>

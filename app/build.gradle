@@ -3,6 +3,8 @@ plugins {
     id 'com.google.secrets_gradle_plugin' version '0.5'
 }
 
+apply plugin: 'realm-android'
+
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
@@ -53,6 +55,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
     implementation 'androidx.navigation:navigation-fragment:2.3.0'
     implementation 'androidx.navigation:navigation-ui:2.3.0'
+    implementation 'androidx.preference:preference:1.1.0'
     implementation 'com.google.android.gms:play-services-location:18.0.0'
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
     implementation "com.squareup.okhttp3:okhttp:4.9.0"
@@ -67,7 +70,6 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15to18:1.70'
 
     testImplementation 'junit:junit:4.+'
-    testImplementation "com.squareup.okhttp3:mockwebserver:4.9.3"
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation "androidx.room:room-runtime:2.3.0"

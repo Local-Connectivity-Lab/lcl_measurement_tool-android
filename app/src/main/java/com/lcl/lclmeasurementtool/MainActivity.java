@@ -1,6 +1,8 @@
 package com.lcl.lclmeasurementtool;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -24,12 +26,15 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.navigation.NavController;
+import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.material.textfield.TextInputEditText;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
@@ -42,7 +47,6 @@ import com.kongzue.dialogx.interfaces.OnBindView;
 import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
-import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
@@ -63,7 +67,6 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.interfaces.ECPrivateKey;
@@ -92,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String SIM_STATE_CHANGED = "android.intent.action.SIM_STATE_CHANGED";
     private SimStatesReceiver simStatesReceiver;
     private FullScreenDialog fullScreenDialog;
-    private SharedPreferences preferences;
+    ActivityResultLauncher<Intent> activityResultLauncher;
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
@@ -108,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.toolbar, navController, appBarConfiguration);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        preferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         if (!preferences.contains(getString(R.string.device_id))) {
             String device_id = UUID.randomUUID().toString();
             preferences.edit().putString(getString(R.string.device_id), device_id).apply();
@@ -117,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         askPermission();
         if (!preferences.contains("sigma_t") || !preferences.contains("pk_a") || !preferences.contains("sk_t")) {
             Log.e(TAG, "key not in shared preferences");
-            showLogInPage();
+//            showLogInPage();
         }
 
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
@@ -126,6 +129,24 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(SIM_STATE_CHANGED);
         this.registerReceiver(simStatesReceiver, filter);
+        activityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            String content = data.getStringExtra(Constant.CODED_CONTENT);
+                            QRCodeKeysModel jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
+                            String sigma_t = jsonObj.getSigma_t();
+                            String sk_t = jsonObj.getSk_t();
+                            String pk_a = jsonObj.getPk_a();
+
+                            WaitDialog.show(getString(R.string.validation));
+                            validate(sigma_t, pk_a, sk_t);
+                        }
+                    }
+                }
+        );
     }
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -145,24 +166,6 @@ public class MainActivity extends AppCompatActivity {
     // show login page and validate the credentials through QR code scan
     private void showLogInPage() {
         DialogX.init(this);
-        ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        Intent data = result.getData();
-                        if (data != null) {
-                            String content = data.getStringExtra(Constant.CODED_CONTENT);
-                            QRCodeKeysModel jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
-                            String sigma_t = jsonObj.getSigma_t();
-                            String sk_t = jsonObj.getSk_t();
-                            String pk_a = jsonObj.getPk_a();
-
-                            WaitDialog.show("Validating ...");
-                            validate(sigma_t, pk_a, sk_t);
-                        }
-                    }
-                }
-        );
 
         FullScreenDialog.show(new OnBindView<FullScreenDialog>(R.layout.login) {
             @Override
@@ -191,10 +194,11 @@ public class MainActivity extends AppCompatActivity {
                 });
 
                 Button next = (Button) v.findViewById(R.id.next);
+                TextInputEditText userKey = (TextInputEditText) v.findViewById(R.id.user_key);
+                TextInputEditText privateKey = (TextInputEditText) v.findViewById(R.id.private_key);
+                TextInputEditText sigmaKey = (TextInputEditText) v.findViewById(R.id.sigma_key);
+                next.setEnabled( !TextUtils.isEmpty(userKey.getText()) && !TextUtils.isEmpty(privateKey.getText()) && !TextUtils.isEmpty(sigmaKey.getText()) );
                 next.setOnClickListener(view -> {
-                    TextInputEditText userKey = view.findViewById(R.id.user_key);
-                    TextInputEditText privateKey = view.findViewById(R.id.private_key);
-                    TextInputEditText sigmaKey = view.findViewById(R.id.sigma_key);
                     if (TextUtils.isEmpty(userKey.getText()) || TextUtils.isEmpty(privateKey.getText()) || TextUtils.isEmpty(sigmaKey.getText())) {
                         showMessageOnFailure();
                     } else {
@@ -237,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
     // show message when failed and remove all saved keys
     private void showMessageOnFailure() {
         WaitDialog.dismiss();
-        TipDialog.show("Cannot validate code. Please retry or contact the administrator", WaitDialog.TYPE.ERROR);
+        TipDialog.show(getString(R.string.validation_failure), WaitDialog.TYPE.ERROR);
         getPreferences(MODE_PRIVATE).edit().clear().apply();
     }
 
@@ -342,12 +346,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    TipDialog.show("Success", WaitDialog.TYPE.SUCCESS);
+                    TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.validation_success), WaitDialog.TYPE.SUCCESS);
                     saveCredentials(sigma_t, pk_a, sk_t);
                     activity.runOnUiThread(() -> fullScreenDialog.dismiss());
                 } else {
                     System.out.println(response.body().string());
-                    TipDialog.show("Registration failed. Please try again", WaitDialog.TYPE.ERROR);
+                    TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.registration_failure), WaitDialog.TYPE.ERROR);
                 }
                 response.close();
             }
@@ -396,27 +400,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        binding.toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.HomeFragment:
-                        Fragment home = new HomeFragment();
-                        return NavigationUI.onNavDestinationSelected(item, navController);
-//                        show(home);
-                    case R.id.SpeedTestFragment:
-                        SignalDataFragment fConn = new SignalDataFragment();
-                        fConn.type = EntityEnum.CONNECTIVITY;
-//                        show(fConn);
-                        return NavigationUI.onNavDestinationSelected(item, navController);
-                    case R.id.SignalStrengthFragment:
-                        SignalDataFragment fSig = new SignalDataFragment();
-                        fSig.type = EntityEnum.SIGNALSTRENGTH;
-                        return NavigationUI.onNavDestinationSelected(item, navController);
-                    default:
-                        return false;
-                }
+        binding.toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.settings) {
+                Navigation.findNavController(this, R.id.nav_host).navigate(R.id.toSettings);
+                return true;
             }
+            return NavigationUI.onNavDestinationSelected(item, navController);
         });
         return true;
     }

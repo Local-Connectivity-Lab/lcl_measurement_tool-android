@@ -23,4 +23,9 @@ public class MeasurementDataReportModel implements Serializable {
         this.h_pkr = Hex.encodeHexString(h_pkr, false);
         this.M = Hex.encodeHexString(M, false);
     }
+
+    public byte[] serializeToBytes() throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsBytes(this);
+    }
 }
