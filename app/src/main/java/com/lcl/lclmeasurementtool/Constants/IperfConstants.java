@@ -1,11 +1,8 @@
 package com.lcl.lclmeasurementtool.Constants;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
+import android.util.Base64;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 public class IperfConstants {
 
@@ -28,9 +25,8 @@ public class IperfConstants {
     public static int IC_serverPort = 40404;
 
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public static String Base64Encode(String input) {
         byte[] buffer = input.getBytes(StandardCharsets.US_ASCII);
-        return Base64.getEncoder().encodeToString(buffer);
+        return Base64.encodeToString(buffer, Base64.DEFAULT);
     }
 }

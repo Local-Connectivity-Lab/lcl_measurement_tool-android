@@ -10,10 +10,12 @@ import androidx.room.TypeConverters;
 import androidx.room.Update;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
+import com.lcl.lclmeasurementtool.Utils.LocationUtils;
+
 import java.util.List;
 
 @Dao
-@TypeConverters({Converters.class})
+@TypeConverters({LocationUtils.class})
 public interface SignalStrengthDAO {
 
     // CREATE

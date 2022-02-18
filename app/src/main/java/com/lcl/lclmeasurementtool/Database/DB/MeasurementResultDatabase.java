@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.Database.DB;
 
 import android.content.Context;
+
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -8,21 +9,22 @@ import androidx.room.TypeConverters;
 
 import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityDAO;
-import com.lcl.lclmeasurementtool.Database.Entity.Converters;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrengthDAO;
+import com.lcl.lclmeasurementtool.Utils.LocationUtils;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Database(entities = {Connectivity.class, SignalStrength.class}, version = 1)
-@TypeConverters({Converters.class})
+@TypeConverters({LocationUtils.class})
 public abstract class MeasurementResultDatabase extends RoomDatabase {
 
     public abstract ConnectivityDAO connectivityDAO();
     public abstract SignalStrengthDAO signalStrengthDAO();
 
     private static volatile MeasurementResultDatabase instance;
-    private static final int NUMBER_OF_THREADS = 5;
+    private static final int NUMBER_OF_THREADS = Runtime.getRuntime().availableProcessors() * 2;
     public static final ExecutorService databaseWriteExecutor =
             Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 

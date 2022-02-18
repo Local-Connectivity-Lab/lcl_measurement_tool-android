@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.Managers;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.PeriodicSync;
@@ -36,9 +37,12 @@ import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.BuildConfig;
 import com.yanzhenjie.permission.runtime.Permission;
+import com.yanzhenjie.permission.runtime.PermissionRequest;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
+
+import okhttp3.internal.platform.AndroidPlatform;
 
 /**
  * CellularManager monitors changes in device's signal strength and
@@ -51,21 +55,24 @@ public class CellularManager {
     static final String TAG = "CELLULAR_MANAGER_TAG";
 
     private static CellularManager cellularManager = null;
-
     // the telephony manager that manages all access related to cellular information.
     private final TelephonyManager telephonyManager;
 
     // the signal strength object that stores the information
     // retrieved from the system by the time the object is accessed.
-    private final SignalStrength signalStrength;
+    private SignalStrength signalStrength = null;
 
     // the LTE signal strength report that consists of all cellular signal strength information.
-    private final CellSignalStrength report;
+    private CellSignalStrength report = null;
 
     // the flag that controls when to stop listening to signal strength change.
     private boolean stopListening;
 
     WeakReference<Context> context;
+
+    private boolean useDeprecatedAPIs() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.Q;
+    }
 
     /**
      * Construct a new CellularManager object based on current context.
@@ -74,11 +81,42 @@ public class CellularManager {
     private CellularManager(@NonNull WeakReference<Context> context) {
         this.context = context;
         this.telephonyManager = (TelephonyManager) context.get().getSystemService(Context.TELEPHONY_SERVICE);
-        this.signalStrength = this.telephonyManager.getSignalStrength();
-        if (this.signalStrength.getCellSignalStrengths().size() > 0) {
-            this.report = this.signalStrength.getCellSignalStrengths().get(0);
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            this.signalStrength = this.telephonyManager.getSignalStrength();
+            if (this.signalStrength.getCellSignalStrengths().size() > 0) {
+                this.report = this.signalStrength.getCellSignalStrengths().get(0);
+            } else {
+                this.report = null;
+            }
         } else {
-            this.report = null;
+            if (!AndPermission.hasPermissions(this.context.get(), Permission.ACCESS_FINE_LOCATION)) {
+                AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).start();
+            }
+
+            @SuppressLint("MissingPermission") List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
+            for (CellInfo info : infos) {
+                if (info instanceof CellInfoGsm) {
+                    CellInfoGsm gsm = (CellInfoGsm) info;
+                    this.report = gsm.getCellSignalStrength();
+                    break;
+                } else if (info instanceof CellInfoLte) {
+                    CellInfoLte lte = (CellInfoLte) info;
+                    this.report = lte.getCellSignalStrength();
+                    break;
+                } else if (info instanceof CellInfoCdma) {
+                    CellInfoCdma cdma = (CellInfoCdma) info;
+                    this.report = cdma.getCellSignalStrength();
+                    break;
+                } else if (info instanceof CellInfoWcdma) {
+                    CellInfoWcdma wcdma = (CellInfoWcdma) info;
+                    this.report = wcdma.getCellSignalStrength();
+                    break;
+                } else {
+                    break;
+                }
+            }
         }
     }
 
@@ -149,9 +187,8 @@ public class CellularManager {
         return true;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.Q)
     public String getCellID() {
-        if (ActivityCompat.checkSelfPermission(this.context.get(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (!AndPermission.hasPermissions(this.context.get(), Permission.ACCESS_FINE_LOCATION)) {
             AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> MessageDialog.build()
                     .setTitle(R.string.location_message_title)
                     .setMessage(R.string.permission_denied_explanation)
@@ -168,7 +205,7 @@ public class CellularManager {
                         return false;
                     }).setOkButton(android.R.string.cancel).show()).start();
         }
-        List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
+        @SuppressLint("MissingPermission") List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
         for (CellInfo info : infos) {
             if (info instanceof CellInfoGsm) {
                 CellInfoGsm gsm = (CellInfoGsm) info;
@@ -185,9 +222,6 @@ public class CellularManager {
             } else if (info instanceof CellInfoWcdma) {
                 CellInfoWcdma wcdma = (CellInfoWcdma) info;
                 return String.valueOf(wcdma.getCellIdentity().getCid());
-            } else if (info instanceof CellInfoTdscdma) {
-                CellInfoTdscdma tdscdma = (CellInfoTdscdma) info;
-                return String.valueOf(tdscdma.getCellIdentity().getCid());
             } else {
                 break;
             }
@@ -257,20 +291,23 @@ public class CellularManager {
                     @Override
                     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                         super.onSignalStrengthsChanged(signalStrength);
-                        List<CellSignalStrength> reports = signalStrength.getCellSignalStrengths(CellSignalStrength.class);
-//                                signalStrength.
-//                                                                getCellSignalStrengths();
-
+                        List<CellSignalStrength> reports = null;
                         int dBm;
                         SignalStrengthLevel level;
-                        if (!reports.isEmpty()) {
-                            CellSignalStrength report = reports.get(0);
-                            Log.i(TAG, "report level code is:" + report.getLevel());
-                            level = SignalStrengthLevel.init(report.getLevel());
-                            dBm = report.getDbm();
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                            reports = signalStrength.getCellSignalStrengths(CellSignalStrength.class);
+                            if (!reports.isEmpty()) {
+                                CellSignalStrength report = reports.get(0);
+                                Log.i(TAG, "report level code is:" + report.getLevel());
+                                level = SignalStrengthLevel.init(report.getLevel());
+                                dBm = report.getDbm();
+                            } else {
+                                level = SignalStrengthLevel.POOR;
+                                dBm = level.getLevelCode();
+                            }
                         } else {
-                            level = SignalStrengthLevel.POOR;
-                            dBm = level.getLevelCode();
+                            dBm = signalStrength.getGsmSignalStrength();
+                            level = SignalStrengthLevel.init(signalStrength.getLevel());
                         }
 
                         if (dBm == Integer.MAX_VALUE) dBm = 0;
@@ -287,21 +324,6 @@ public class CellularManager {
             }
         }).start();
     }
-
-//    public void listenToSimCardState() {
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                telephonyManager.listen(new PhoneStateListener() {
-//                    @Override
-//                    public void onServiceStateChanged(ServiceState serviceState) {
-//                        super.onServiceStateChanged(serviceState);
-//                        serviceState.getState()
-//                    }
-//                });
-//            }
-//        });
-//    }
 
     /**
      * Stop listening the changes on signal strength.

@@ -8,11 +8,12 @@ import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.lcl.lclmeasurementtool.Utils.LocationUtils;
 
 import java.text.SimpleDateFormat;
 
 @Entity(tableName = "signal_strength_table")
-@TypeConverters({Converters.class})
+@TypeConverters({LocationUtils.class})
 public class SignalStrength {
 
     @PrimaryKey

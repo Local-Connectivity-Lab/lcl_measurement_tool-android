@@ -23,9 +23,4 @@ public class RegistrationMessageModel implements Serializable {
         this.h = Hex.encodeHexString(h, false);
         this.R = Hex.encodeHexString(R, false);
     }
-
-    public byte[] serializeToBytes() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsBytes(this);
-    }
 }

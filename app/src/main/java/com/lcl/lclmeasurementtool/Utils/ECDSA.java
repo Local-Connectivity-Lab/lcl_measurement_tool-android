@@ -1,20 +1,28 @@
 package com.lcl.lclmeasurementtool.Utils;
 
-import android.util.Log;
-
-import com.google.android.gms.common.util.Hex;
-
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.*;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
-import java.security.spec.*;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.ECPublicKeySpec;
+import java.security.spec.EllipticCurve;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
-// TODO: ECDSA key check: this is the ECDSA class
 public class ECDSA {
     // This is a custom easy helper implementation for the EC prime256v1 or the secp256r1 curves.
     // The raw ASN.1 Encoding structures will contain the necessary metadata for interoperation, it would need corresponding
@@ -37,9 +45,7 @@ public class ECDSA {
         byte[] skEncoded = sk.getEncoded(); // PKCS8 Encoding
         byte[] pkBytesEmbedded = new byte[PublicKeyEncodingSize];
         System.arraycopy(skEncoded, skEncoded.length - PublicKeyEncodingSize, pkBytesEmbedded, 0, PublicKeyEncodingSize);
-        if (pkBytesEmbedded.length != PublicKeyEncodingSize || pkBytesEmbedded[0] != PADDING) {
-            throw new InvalidKeySpecException();
-        }
+
         ECPoint p = decodePoint(pkBytesEmbedded, keyParams.getCurve());
         ECPublicKeySpec pkSpec = new ECPublicKeySpec(p, keyParams);
         return (ECPublicKey) kf.generatePublic(pkSpec);
@@ -58,11 +64,6 @@ public class ECDSA {
     }
 
     public static boolean Verify(byte[] message, byte[] signature, ECPublicKey pk) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchProviderException {
-        // TODO: ECDSA key check
-//        Log.d("ECDSA", pk.toString());
-//        Log.d("ECDSA", Hex.bytesToStringLowercase(pk.getEncoded()));
-//        Log.d("ECDSA", pk.getAlgorithm());
-//        Log.d("ECDSA", pk.getFormat());
         Signature s = Signature.getInstance(SIGNATURE_ALGORITHM, "BC");
         s.initVerify((PublicKey) pk);
         s.update(message);
@@ -74,18 +75,6 @@ public class ECDSA {
         s.initSign(sk);
         s.update(message);
         return s.sign();
-    }
-
-    public static void testBC() {
-        byte[] byteData = new byte[]{1, 2, 3, 4, 5, 6, 6, 7, 7, 7, 7, 7, 7, 7};
-        MessageDigest md = null;
-        try {
-            md = MessageDigest.getInstance("MD2");
-            System.out.println("in BC");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        byte[] messageDigest = md.digest(byteData);
     }
 
     /////////////////////////////////////  ECUtils  //////////////////////////////////////////////

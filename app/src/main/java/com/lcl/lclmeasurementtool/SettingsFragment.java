@@ -23,8 +23,9 @@ import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
-    private static final String TOU = "http://www.google.com";
-    private static final String PRIVACY = "http://www.google.com";
+    private static final String TOU = "https://seattlecommunitynetwork.org/";
+    private static final String PRIVACY = "https://seattlecommunitynetwork.org/";
+    private static final String EMAIL = "help@seattlecommunitynetwork.org";
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -71,9 +72,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         Preference feedback = findPreference("feedback");
         if (feedback != null) {
-            Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:lcl@seattlecommunitynetwork.org"));
+            Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:" + EMAIL));
             intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Feedback");
-            intent.putExtra(android.content.Intent.EXTRA_TEXT, "Let us know what you think");
+            intent.putExtra(android.content.Intent.EXTRA_TEXT, "Let us know what you think!");
             feedback.setIntent(intent);
         } else {
             forceQuit();

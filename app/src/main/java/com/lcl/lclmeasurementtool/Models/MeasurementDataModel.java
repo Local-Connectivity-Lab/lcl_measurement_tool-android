@@ -21,9 +21,4 @@ public abstract class MeasurementDataModel implements Serializable {
 
     @JsonProperty("device_id")
     String device_id;
-
-    public byte[] serializeToBytes() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsBytes(this);
-    }
 }

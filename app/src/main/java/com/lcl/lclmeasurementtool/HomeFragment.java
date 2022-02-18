@@ -491,7 +491,6 @@ public class HomeFragment extends Fragment {
     private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
             InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
 
-//        byte[] serialized = data.serializeToBytes();
         byte[] serialized = SerializationUtils.serializeToBytes(data);
 
         byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
@@ -500,7 +499,7 @@ public class HomeFragment extends Fragment {
 
         // upload data
         UploadManager upload = UploadManager.Builder()
-                .addPayload(Hex.encodeHexString(reportModel.serializeToBytes()))
+                .addPayload(Hex.encodeHexString(SerializationUtils.serializeToBytes(reportModel)))
                 .addEndpoint(endpoint);
         try {
             upload.post();

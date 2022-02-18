@@ -96,10 +96,17 @@ public class LocationServiceManager {
      * Return whether the device's location mode is on.
      * @return whether the device's location mode is on.
      */
-    @RequiresApi(api = Build.VERSION_CODES.P)
     public boolean isLocationModeOn() {
         if (locationManager != null) {
-            return locationManager.isLocationEnabled();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                return locationManager.isLocationEnabled();
+            } else {
+                for (String p : locationManager.getAllProviders()) {
+                    if (locationManager.isProviderEnabled(p)) {
+                        return true;
+                    }
+                }
+            }
         }
         return false;
     }

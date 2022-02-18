@@ -32,7 +32,6 @@ public class KeyStoreManager {
 
     private final KeyStore ks;
 
-    @RequiresApi(api = Build.VERSION_CODES.P)
     private KeyStoreManager()
             throws NoSuchProviderException,
             NoSuchAlgorithmException,
@@ -41,7 +40,6 @@ public class KeyStoreManager {
         ks.load(null);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.P)
     public static KeyStoreManager getInstance() throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
         if (instance == null) {
             instance = new KeyStoreManager();
@@ -108,13 +106,11 @@ public class KeyStoreManager {
         ks.deleteEntry(alias);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.P)
     public void generate() throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, provider);
         KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN)
                 .setDigests(KeyProperties.DIGEST_SHA256)
                 .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
-//                .setIsStrongBoxBacked(true)  => unable on LG phone and Pixel?
                 .build();
         generator.initialize(spec);
         KeyPair keyPair = generator.generateKeyPair();

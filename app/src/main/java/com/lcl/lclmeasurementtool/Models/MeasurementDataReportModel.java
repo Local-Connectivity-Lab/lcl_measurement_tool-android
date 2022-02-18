@@ -1,8 +1,6 @@
 package com.lcl.lclmeasurementtool.Models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lcl.lclmeasurementtool.Utils.Hex;
 
 import java.io.Serializable;
@@ -22,10 +20,5 @@ public class MeasurementDataReportModel implements Serializable {
         this.sigma_m = Hex.encodeHexString(sigma_m, false);
         this.h_pkr = Hex.encodeHexString(h_pkr, false);
         this.M = Hex.encodeHexString(M, false);
-    }
-
-    public byte[] serializeToBytes() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsBytes(this);
     }
 }

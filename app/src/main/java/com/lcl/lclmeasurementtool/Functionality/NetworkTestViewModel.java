@@ -12,6 +12,8 @@ import androidx.work.WorkContinuation;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
+import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
+
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
@@ -33,10 +35,10 @@ public class NetworkTestViewModel extends ViewModel {
         mWorkManager = WorkManager.getInstance(context);
         // TODO HACK! For now cancel any pending work leftover from previous invocations of the app?
         // The app should probably eventually list the status of all pending and completed tests the user has done?
-        mWorkManager.cancelAllWorkByTag("backgroundTest");
-        mSavedIperfDownInfo = mWorkManager.getWorkInfosByTagLiveData("IPERF_DOWN");
-        mSavedIperfUpInfo = mWorkManager.getWorkInfosByTagLiveData("IPERF_UP");
-        mSavedPingInfo = mWorkManager.getWorkInfosByTagLiveData("PING");
+        mWorkManager.cancelAllWorkByTag(NetworkConstants.WORKER_TAG);
+        mSavedIperfDownInfo = mWorkManager.getWorkInfosByTagLiveData(NetworkConstants.IPERF_DOWN_TAG);
+        mSavedIperfUpInfo = mWorkManager.getWorkInfosByTagLiveData(NetworkConstants.IPERF_UP_TAG);
+        mSavedPingInfo = mWorkManager.getWorkInfosByTagLiveData(NetworkConstants.PING_TAG);
     }
 
     public LiveData<List<WorkInfo>> getmSavedPingInfo() {
@@ -56,20 +58,20 @@ public class NetworkTestViewModel extends ViewModel {
         // TODO: Clarify the background work model we want exposed to end users... should these be "unique" work?
         OneTimeWorkRequest ping = new OneTimeWorkRequest.Builder(PingWorker.class)
                 .setInputData(preparePingWorkerData())
-                .addTag("PING")
-                .addTag("backgroundTest")
+                .addTag(NetworkConstants.PING_TAG)
+                .addTag(NetworkConstants.WORKER_TAG)
                 .build();
         pingUUID = ping.getId();
         OneTimeWorkRequest downStream = new OneTimeWorkRequest.Builder(IperfDownStreamWorker.class)
                 .setInputData(prepareIperfWorkerData())
-                .addTag("IPERF_DOWN")
-                .addTag("backgroundTest")
+                .addTag(NetworkConstants.IPERF_DOWN_TAG)
+                .addTag(NetworkConstants.WORKER_TAG)
                 .build();
         downStreamUUID = downStream.getId();
         OneTimeWorkRequest upStream = new OneTimeWorkRequest.Builder(IperfUpStreamWorker.class)
                 .setInputData(prepareIperfWorkerData())
-                .addTag("IPERF_UP")
-                .addTag("backgroundTest")
+                .addTag(NetworkConstants.IPERF_UP_TAG)
+                .addTag(NetworkConstants.WORKER_TAG)
                 .build();
         upStreamUUID = upStream.getId();
 
@@ -86,7 +88,7 @@ public class NetworkTestViewModel extends ViewModel {
         mWorkManager.cancelWorkById(downStreamUUID);
         mWorkManager.cancelWorkById(upStreamUUID);
         // TODO: Clarify the background work model we want exposed to end users
-        mWorkManager.cancelAllWorkByTag("backgroundTest");
+        mWorkManager.cancelAllWorkByTag(NetworkConstants.WORKER_TAG);
     }
 
     private Data prepareIperfWorkerData() {
@@ -96,8 +98,8 @@ public class NetworkTestViewModel extends ViewModel {
 
     private Data preparePingWorkerData() {
         Data.Builder builder = new Data.Builder();
-        builder.putInt("TIMES", 5);
-        builder.putString("ADDRESS", "google.com");
+        builder.putInt(NetworkConstants.IPERF_COUNTS_TAG, NetworkConstants.IPERF_COUNTS);
+        builder.putString(NetworkConstants.IPERF_TEST_ADDRESS_TAG, NetworkConstants.IPERF_TEST_ADDRESS);
         return builder.build();
     }
 }
