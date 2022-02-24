@@ -59,8 +59,7 @@ public class UploadManager {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    Log.e(TAG, response.body().string() + " on " + endpoint);
-//                    TipDialog.show(response.body().string());
+                    Log.e(TAG, "error occurs on " + endpoint);
                     TipDialog.show(ERR_MSG);
                 }
 

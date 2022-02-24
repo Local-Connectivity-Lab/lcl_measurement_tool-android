@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
         askPermission();
         if (!preferences.contains("sigma_t") || !preferences.contains("pk_a") || !preferences.contains("sk_t")) {
             Log.e(TAG, "key not in shared preferences");
-//            showLogInPage();
+            showLogInPage();
         }
 
         MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
@@ -139,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     protected void onResume() {
         super.onResume();
@@ -225,6 +224,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("sigma_t", sigma_t);
         editor.putString("sk_t", sk_t);
         editor.putString("pk_a", pk_a);
+        editor.putBoolean("login", true);
         editor.apply();
     }
 
@@ -340,12 +340,13 @@ public class MainActivity extends AppCompatActivity {
                     saveCredentials(sigma_t, pk_a, sk_t);
                     activity.runOnUiThread(() -> fullScreenDialog.dismiss());
                 } else {
-                    System.out.println(response.body().string());
+                    Log.e(TAG, response.body().string());
                     TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.registration_failure), WaitDialog.TYPE.ERROR);
                 }
                 response.close();
             }
         });
+
     }
 
 

@@ -28,6 +28,7 @@ import androidx.work.WorkInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.TipDialog;
@@ -48,6 +49,7 @@ import com.lcl.lclmeasurementtool.Models.ConnectivityMessageModel;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataModel;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataReportModel;
 import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
+import com.lcl.lclmeasurementtool.Utils.AppState;
 import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
@@ -83,6 +85,7 @@ public class HomeFragment extends Fragment {
 
     private boolean isTestStarted;
     private boolean isCellularConnected;
+
     private NetworkTestViewModel mNetworkTestViewModel;
     private ConnectivityViewModel connectivityViewModel;
     private SignalViewModel signalViewModel;
@@ -111,7 +114,7 @@ public class HomeFragment extends Fragment {
     // check whether the system has stored necessary credentials
     private boolean systemReady() {
         SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
-        return (!preferences.contains("sigma_t") || !preferences.contains("pk_a") || !preferences.contains("sk_t"));
+        return preferences.getBoolean("login", false);
     }
 
     @Override
@@ -139,6 +142,7 @@ public class HomeFragment extends Fragment {
         prevSignalStrength = mCellularManager.getDBM();
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
         mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
+
             if (systemReady()) return;
 
             Log.e(TAG, "" + dBm);
@@ -499,7 +503,7 @@ public class HomeFragment extends Fragment {
 
         // upload data
         UploadManager upload = UploadManager.Builder()
-                .addPayload(Hex.encodeHexString(SerializationUtils.serializeToBytes(reportModel)))
+                .addPayload(JsonStream.serialize(reportModel))
                 .addEndpoint(endpoint);
         try {
             upload.post();
