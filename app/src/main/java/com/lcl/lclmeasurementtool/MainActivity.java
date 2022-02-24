@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
             showLogInPage();
         }
 
-        MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
+//        MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
 
         simStatesReceiver = new SimStatesReceiver(this);
         IntentFilter filter = new IntentFilter();

@@ -74,7 +74,7 @@ public class HomeFragment extends Fragment {
     private HomeFragmentBinding binding;
     private FragmentActivity activity;
     private Context context;
-    public static final String TAG = "MAIN_FRAGMENT";
+    public static final String TAG = "HOME_FRAGMENT";
     private static final int SIGNAL_THRESHOLD = 2;
     private String device_id;
 
@@ -143,7 +143,7 @@ public class HomeFragment extends Fragment {
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
         mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
 
-            if (systemReady()) return;
+            if (!systemReady()) return;
 
             Log.e(TAG, "" + dBm);
             updateSignalStrengthTexts(level, dBm);
@@ -375,7 +375,12 @@ public class HomeFragment extends Fragment {
                         return;
                     }
 
-                    prevPing = Double.parseDouble(finalResult.split(" ")[0]);
+                    try {
+                        prevPing = Double.parseDouble(finalResult.split(" ")[0]);
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "ping receive empty string");
+                    }
+
                     Log.i(TAG, "ping is: " + prevPing);
                     this.activity.runOnUiThread(() -> {
                         TextView pingTest = binding.ping.data;
@@ -408,18 +413,24 @@ public class HomeFragment extends Fragment {
                         return;
                     }
 
-                    prevUpload = Double.parseDouble(finalResult.split(" ")[0]);
+                    try {
+                        prevUpload = Double.parseDouble(finalResult.split(" ")[0]);
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "upload receive empty string");
+                    }
+
                     this.activity.runOnUiThread(() -> {
                         TextView speedTest = binding.upload.data;
                         speedTest.setTextColor(this.activity.getColor(R.color.white));
                         speedTest.setText(finalResult);
                         PopTip.show(getString(R.string.iperf_test_completed));
                     });
+                    setFABToInitialState();
 
                     // upload data only when test is complete and system is ready
                     if (isTestCompleted()) {
                         Log.i(TAG, "prepare for upload");
-                        if (systemReady()) return;
+                        if (!systemReady()) return;
                         String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
                         String cell_id = mCellularManager.getCellID();
                         byte[][] result = retrieveKeysInformation();
@@ -444,7 +455,6 @@ public class HomeFragment extends Fragment {
                             uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
                         });
                     }
-                    setFABToInitialState();
                     break;
                 default:break;
             }
@@ -473,7 +483,12 @@ public class HomeFragment extends Fragment {
                         mNetworkTestViewModel.cancel();
                         return;
                     }
-                    prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
+
+                    try {
+                        prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "download receive empty string");
+                    }
                     this.activity.runOnUiThread(() -> {
                         TextView speedTest = binding.download.data;
                         speedTest.setTextColor(this.activity.getColor(R.color.white));
@@ -511,10 +526,6 @@ public class HomeFragment extends Fragment {
             TipDialog.show(getString(R.string.upload_ioexception), WaitDialog.TYPE.ERROR);
         }
     }
-
-//    private void showMessageOnFailure() {
-//        TipDialog.show(getString(R.string.upload_failure), WaitDialog.TYPE.ERROR);
-//    }
 
     private byte[][] retrieveKeysInformation() {
         SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);

@@ -1,8 +1,13 @@
 package com.lcl.lclmeasurementtool.Constants;
 
-import android.util.Base64;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
+import com.lcl.lclmeasurementtool.BuildConfig;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class IperfConstants {
 
@@ -18,8 +23,8 @@ public class IperfConstants {
             "TQIDAQAB\n" +
             "-----END PUBLIC KEY-----";
 
-    public static String IC_test_username = "secrettestuser";
-    public static String IC_test_password = "secrettestuser";
+    public static String IC_test_username = BuildConfig.USERNAME;
+    public static String IC_test_password = BuildConfig.PASSWORD;
 
     public static String IC_serverAddr = "othello-iperf.westus2.cloudapp.azure.com";
     public static int IC_serverPort = 40404;
@@ -27,6 +32,12 @@ public class IperfConstants {
 
     public static String Base64Encode(String input) {
         byte[] buffer = input.getBytes(StandardCharsets.US_ASCII);
-        return Base64.encodeToString(buffer, Base64.DEFAULT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            // return the correct encoding for iperf
+            return Base64.getEncoder().encodeToString(buffer);
+        } else {
+            return android.util.Base64.encodeToString(buffer, android.util.Base64.NO_WRAP);
+        }
     }
 }
