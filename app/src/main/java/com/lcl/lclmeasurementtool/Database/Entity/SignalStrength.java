@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat;
 
 @Entity(tableName = "signal_strength_table")
 @TypeConverters({LocationUtils.class})
-public class SignalStrength {
+public class SignalStrength implements DataEncodable {
 
     @PrimaryKey
     @NonNull
@@ -57,5 +57,36 @@ public class SignalStrength {
 
     public String getLocationString() {
         return location.latitude + "|" + location.longitude;
+    }
+
+    public static String[] getHeader() {
+        return new String[]{"timestamp", "signal_strength", "level", "latitude", "longitude"};
+    }
+
+    @Override
+    public String[] toCSV() {
+        return new String[]{timestamp, String.valueOf(signalStrength), String.valueOf(level), String.valueOf(location.latitude), String.valueOf(location.longitude)};
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SignalStrength that = (SignalStrength) o;
+
+        if (signalStrength != that.signalStrength) return false;
+        if (level != that.level) return false;
+        if (!timestamp.equals(that.timestamp)) return false;
+        return location.equals(that.location);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = timestamp.hashCode();
+        result = 31 * result + signalStrength;
+        result = 31 * result + level;
+        result = 31 * result + location.hashCode();
+        return result;
     }
 }

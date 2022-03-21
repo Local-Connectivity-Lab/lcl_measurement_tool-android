@@ -10,28 +10,21 @@ import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 
 import java.util.List;
 
-public class ConnectivityViewModel extends AndroidViewModel {
+public class ConnectivityViewModel extends AbstractViewModel<Connectivity> {
 
     private final MeasurementResultDatabase db;
     public ConnectivityViewModel(@NonNull Application application) {
         super(application);
-
         db = MeasurementResultDatabase.getInstance(application);
     }
 
-    public LiveData<List<Connectivity>> getAllConnectivityResults() {
+    public LiveData<List<Connectivity>> getAll() {
         return db.connectivityDAO().retrieveAllConnectivities();
     }
 
-    public void insert(Connectivity connectivity) {
+    public void insert(Connectivity data) {
         MeasurementResultDatabase.databaseWriteExecutor.execute(() -> {
-            db.connectivityDAO().insert(connectivity);
-        });
-    }
-
-    public void deleteAll() {
-        MeasurementResultDatabase.databaseWriteExecutor.execute(() -> {
-            db.connectivityDAO().deleteAll();
+            db.connectivityDAO().insert(data);
         });
     }
 }

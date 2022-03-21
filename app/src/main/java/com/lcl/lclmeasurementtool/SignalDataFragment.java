@@ -25,15 +25,11 @@ import com.lcl.lclmeasurementtool.databinding.SignalDataFragmentBinding;
 public class SignalDataFragment extends Fragment {
 
     private SignalDataFragmentBinding binding;
-    public EntityEnum type;
-    private Context context;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = SignalDataFragmentBinding.inflate(inflater, container, false);
-        this.context = getContext();
-
         return binding.getRoot();
     }
 
@@ -41,12 +37,8 @@ public class SignalDataFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         SignalViewModel mSignalViewModel = new ViewModelProvider(requireActivity()).get(SignalViewModel.class);
-        mSignalViewModel.getAllConnectivityResults().observe(getViewLifecycleOwner(), signalStrengths -> {
-//            binding.dataListLinearLayout.removeAllViews();
-            signalStrengths.forEach(s -> {
-                binding.dataListLinearLayout.addView(setupRow(s));
-            });
-        });
+        mSignalViewModel.getAll().observe(getViewLifecycleOwner(),
+                signalStrengths -> signalStrengths.stream().distinct().forEach(s -> binding.dataListLinearLayout.addView(setupRow(s))));
     }
 
     private CardView setupRow(SignalStrength s) {

@@ -45,8 +45,8 @@ public class ConnectivityDataFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ConnectivityViewModel mConnectivityViewModel = new ViewModelProvider(requireActivity()).get(ConnectivityViewModel.class);
-        mConnectivityViewModel.getAllConnectivityResults().observe(getViewLifecycleOwner(), connectivities -> {
-            connectivities.forEach(c -> {
+        mConnectivityViewModel.getAll().observe(getViewLifecycleOwner(), connectivities -> {
+            connectivities.stream().distinct().forEach(c -> {
                 binding.dataListLinearLayout.addView(setupRow(c));
             });
         });

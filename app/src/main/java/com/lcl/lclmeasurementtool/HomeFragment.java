@@ -49,7 +49,6 @@ import com.lcl.lclmeasurementtool.Models.ConnectivityMessageModel;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataModel;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataReportModel;
 import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
-import com.lcl.lclmeasurementtool.Utils.AppState;
 import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
@@ -112,9 +111,9 @@ public class HomeFragment extends Fragment {
     }
 
     // check whether the system has stored necessary credentials
-    private boolean systemReady() {
+    private boolean systemNotReady() {
         SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
-        return preferences.getBoolean("login", false);
+        return !preferences.getBoolean("login", false);
     }
 
     @Override
@@ -143,7 +142,7 @@ public class HomeFragment extends Fragment {
         updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
         mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
 
-            if (!systemReady()) return;
+            if (systemNotReady()) return;
 
             Log.e(TAG, "" + dBm);
             updateSignalStrengthTexts(level, dBm);
@@ -430,7 +429,7 @@ public class HomeFragment extends Fragment {
                     // upload data only when test is complete and system is ready
                     if (isTestCompleted()) {
                         Log.i(TAG, "prepare for upload");
-                        if (!systemReady()) return;
+                        if (systemNotReady()) return;
                         String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
                         String cell_id = mCellularManager.getCellID();
                         byte[][] result = retrieveKeysInformation();
@@ -514,7 +513,10 @@ public class HomeFragment extends Fragment {
 
         byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
 
-        MeasurementDataReportModel reportModel = new MeasurementDataReportModel(sig_m, h_pkr, serialized);
+        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
+        boolean show_data = preferences.getBoolean("showData", false);
+
+        MeasurementDataReportModel reportModel = new MeasurementDataReportModel(sig_m, h_pkr, serialized, show_data);
 
         // upload data
         UploadManager upload = UploadManager.Builder()

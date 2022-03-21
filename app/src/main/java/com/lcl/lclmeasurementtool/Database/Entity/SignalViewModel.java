@@ -10,7 +10,7 @@ import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 
 import java.util.List;
 
-public class SignalViewModel extends AndroidViewModel {
+public class SignalViewModel extends AbstractViewModel<SignalStrength> {
 
     private final MeasurementResultDatabase db;
 
@@ -19,19 +19,14 @@ public class SignalViewModel extends AndroidViewModel {
         db = MeasurementResultDatabase.getInstance(application);
     }
 
-    public LiveData<List<SignalStrength>> getAllConnectivityResults() {
+    @Override
+    public LiveData<List<SignalStrength>> getAll() {
         return db.signalStrengthDAO().retrieveAllSignalStrengths();
     }
 
-    public void insert(SignalStrength signalStrength) {
+    public void insert(SignalStrength data) {
         MeasurementResultDatabase.databaseWriteExecutor.execute(() -> {
-            db.signalStrengthDAO().insert(signalStrength);
-        });
-    }
-
-    public void deleteAll() {
-        MeasurementResultDatabase.databaseWriteExecutor.execute(() -> {
-            db.signalStrengthDAO().deleteAll();
+            db.signalStrengthDAO().insert(data);
         });
     }
 }

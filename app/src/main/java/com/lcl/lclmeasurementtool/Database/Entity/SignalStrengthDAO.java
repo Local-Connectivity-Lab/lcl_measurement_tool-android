@@ -29,8 +29,6 @@ public interface SignalStrengthDAO {
     @Query("SELECT * FROM signal_strength_table WHERE time_stamp >= :d1 AND time_stamp <= :d2")
     public LiveData<List<SignalStrength>> retrieveSignalStrengthBetweenDates(String d1, String d2);
 
-//    @RawQuery
-//    public LiveData<List<SignalStrength>> query(SupportSQLiteQuery query);
 
     // UPDATE
 

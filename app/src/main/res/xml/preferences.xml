@@ -3,18 +3,23 @@
 
     >
     <PreferenceCategory app:title="General">
+
+        <CheckBoxPreference
+            app:key="show_data"
+            app:title="Show data on SCN website"
+            app:summary="Display signal and speed test data on SCN public map. Your data will help others understand our coverage!"
+            app:icon="@drawable/go_public"
+            />
         <Preference
             app:key="export_signal"
             app:title="Export Signal Strength Data"
-            app:summary="Export signal Strength Data in CSV format"
-            app:icon="@drawable/export"
-            app:enabled="false"/>
+            app:summary="Export signal strength data in CSV format"
+            app:icon="@drawable/export"/>
         <Preference
             app:key="export_measurement"
-            app:title="Export Measurement Data"
-            app:summary="Export signal Strength Data in CSV format"
-            app:icon="@drawable/export"
-            app:enabled="false"/>
+            app:title="Export Speed Test Data"
+            app:summary="Export speed test data in CSV format"
+            app:icon="@drawable/export"/>
 
     </PreferenceCategory>
     <PreferenceCategory

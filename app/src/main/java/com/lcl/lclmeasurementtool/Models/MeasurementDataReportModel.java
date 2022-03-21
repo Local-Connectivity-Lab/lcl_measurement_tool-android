@@ -16,9 +16,13 @@ public class MeasurementDataReportModel implements Serializable {
     @JsonProperty("M")
     String M;
 
-    public MeasurementDataReportModel(byte[] sigma_m, byte[] h_pkr, byte[] M) {
+    @JsonProperty("show_data")
+    boolean show_data;
+
+    public MeasurementDataReportModel(byte[] sigma_m, byte[] h_pkr, byte[] M, boolean show_data) {
         this.sigma_m = Hex.encodeHexString(sigma_m, false);
         this.h_pkr = Hex.encodeHexString(h_pkr, false);
         this.M = Hex.encodeHexString(M, false);
+        this.show_data = show_data;
     }
 }
