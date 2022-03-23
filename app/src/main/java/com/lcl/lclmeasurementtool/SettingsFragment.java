@@ -17,9 +17,8 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
-import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -33,13 +32,16 @@ import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
-import com.opencsv.CSVWriter;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
@@ -49,12 +51,21 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     private static final String EMAIL = "help@seattlecommunitynetwork.org";
     private static final String MIME_TYPE = "text/csv";
 
+    private List<String[]> connectivityList;
+    private List<String[]> signalStrengthList;
+
     private static final String CSV = ".csv";
     private Activity activity;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return super.onCreateView(inflater, container, savedInstanceState);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initData();
     }
 
     @Override
@@ -73,6 +84,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             forceQuit();
             return;
         }
+
         signalCSV.setOnPreferenceClickListener(preference -> {
             generateCSV(EntityEnum.SIGNALSTRENGTH);
             return true;
@@ -87,7 +99,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             generateCSV(EntityEnum.CONNECTIVITY);
             return true;
         });
-
 
 
         Preference logout = findPreference("logout");
@@ -125,7 +136,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             forceQuit();
         }
 
-        CheckBoxPreference showData = (CheckBoxPreference) findPreference("show_data");
+        CheckBoxPreference showData = findPreference("show_data");
         if (showData != null) {
             if (this.getActivity() == null) {
                 forceQuit();
@@ -142,50 +153,49 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     }
 
     private void generateCSV(EntityEnum entity) {
+        System.out.println(entity);
         String baseDir = activity.getFilesDir().getAbsolutePath();
         String fileName = entity.getFileName();
         String filePath = baseDir + File.separator + fileName + CSV;
-        System.out.println(fileName);
-        System.out.println(activity.getPackageName());
-        try {
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(filePath));
-            csvWriter.writeNext(entity.getHeader());
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(filePath), CSVFormat.EXCEL)) {
+            printer.printRecords((Object) entity.getHeader());
             switch (entity) {
                 case CONNECTIVITY:
-                    List<Connectivity> connectivityList = (new ConnectivityViewModel(this.activity.getApplication())).getAll().getValue();
-                    if (connectivityList != null) {
-                        connectivityList.forEach(v -> csvWriter.writeNext(v.toCSV()));
-                    }
+                    printer.printRecords(connectivityList);
                     break;
                 case SIGNALSTRENGTH:
-                    List<SignalStrength> signalStrengthList = (new SignalViewModel(this.activity.getApplication())).getAll().getValue();
-                    if (signalStrengthList != null) {
-                        signalStrengthList.forEach(v -> csvWriter.writeNext(v.toCSV()));
-                    }
+                    printer.printRecords(signalStrengthList);
                     break;
             }
-            csvWriter.close();
-
-            Intent sharingIntent = new Intent(Intent.ACTION_SEND);
-            Uri fileUri = FileProvider.getUriForFile(
-                    this.activity.getApplicationContext(),
-                    "com.lcl.lclmeasurementtool.fileprovider",
-                    new File(filePath));
-            this.activity.grantUriPermission(activity.getPackageName(), fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            sharingIntent.setType(MIME_TYPE);
-            sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
-            sharingIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            Intent chooser = Intent.createChooser(sharingIntent, "Share using");
-            chooser.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            List<ResolveInfo> resInfoList1 = this.activity.getPackageManager().queryIntentActivities(sharingIntent, PackageManager.MATCH_DEFAULT_ONLY);
-            List<ResolveInfo> resInfoList2 = this.activity.getPackageManager().queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY);
-            resolvePermissions(resInfoList1, fileUri);
-            resolvePermissions(resInfoList2, fileUri);
-            this.activity.startActivity(chooser);
-        } catch (IOException e) {
+        } catch (IOException ex) {
             forceQuit();
-            e.printStackTrace();
+            return;
         }
+
+        Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+        Uri fileUri = FileProvider.getUriForFile(
+                this.activity.getApplicationContext(),
+                "com.lcl.lclmeasurementtool.fileprovider",
+                new File(filePath));
+        this.activity.grantUriPermission(activity.getPackageName(), fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        sharingIntent.setType(MIME_TYPE);
+        sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+        sharingIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Intent chooser = Intent.createChooser(sharingIntent, "Share using");
+        chooser.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        List<ResolveInfo> resInfoList1 = this.activity.getPackageManager().queryIntentActivities(sharingIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        List<ResolveInfo> resInfoList2 = this.activity.getPackageManager().queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY);
+        resolvePermissions(resInfoList1, fileUri);
+        resolvePermissions(resInfoList2, fileUri);
+        this.activity.startActivity(chooser);
+    }
+
+    private void initData() {
+        AbstractViewModel<Connectivity> connectivityViewModel = new ViewModelProvider(requireActivity()).get(ConnectivityViewModel.class);
+        connectivityViewModel.getAll().observe(this, connectivities -> connectivityList = connectivities.stream().map(Connectivity::toCSV).collect(Collectors.toList()));
+
+        AbstractViewModel<SignalStrength> signalStrengthViewModel  = new ViewModelProvider(requireActivity()).get(SignalViewModel.class);
+        signalStrengthViewModel.getAll().observe(this, signalStrengths -> signalStrengthList = signalStrengths.stream().map(SignalStrength::toCSV).collect(Collectors.toList()));
     }
 
     private void resolvePermissions(List<ResolveInfo> resInfo, Uri fileUri) {

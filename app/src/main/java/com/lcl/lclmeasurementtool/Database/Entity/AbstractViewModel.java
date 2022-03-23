@@ -14,5 +14,6 @@ public abstract class AbstractViewModel<T> extends AndroidViewModel {
     }
 
     public abstract LiveData<List<T>> getAll();
+    public abstract List<T> getAllSync();
     public abstract void insert(T data);
 }

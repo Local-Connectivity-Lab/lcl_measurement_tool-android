@@ -29,6 +29,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.textfield.TextInputEditText;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
+import com.jsoniter.spi.JsonException;
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.dialogs.FullScreenDialog;
 import com.kongzue.dialogx.dialogs.MessageDialog;
@@ -126,7 +127,14 @@ public class MainActivity extends AppCompatActivity {
                         Intent data = result.getData();
                         if (data != null) {
                             String content = data.getStringExtra(Constant.CODED_CONTENT);
-                            QRCodeKeysModel jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
+                            QRCodeKeysModel jsonObj;
+                            try {
+                             jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
+                            } catch (JsonException e) {
+                                TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.qrcode_invalid_format), WaitDialog.TYPE.ERROR);
+                                return;
+                            }
+
                             String sigma_t = jsonObj.getSigma_t();
                             String sk_t = jsonObj.getSk_t();
                             String pk_a = jsonObj.getPk_a();

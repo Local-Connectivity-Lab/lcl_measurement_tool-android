@@ -24,6 +24,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.maps.model.LatLng;
@@ -241,12 +242,13 @@ public class HomeFragment extends Fragment {
     /////////////////////// SIGNAL //////////////////////
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
         this.activity.runOnUiThread(() -> {
-            if (binding.SignalStrengthValue != null) {
+
+            if (binding != null) {
                 binding.SignalStrengthValue.setText(String.valueOf(dBm));
                 binding.SignalStrengthStatus.setText(level.getName());
+                binding.SignalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
+                binding.SignalStrengthIndicator.setColorFilter(level.getColor(this.context));
             }
-            binding.SignalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
-            binding.SignalStrengthIndicator.setColorFilter(level.getColor(this.context));
         });
     }
 
@@ -452,8 +454,12 @@ public class HomeFragment extends Fragment {
                                             prevPing, cell_id, device_id);
                             connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
                             uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
+//                            prevPing = 0.0;
+//                            prevUpload = 0.0;
+//                            prevDownload = 0.0;
                         });
                     }
+                    WorkManager.getInstance(this.context).pruneWork();
                     break;
                 default:break;
             }

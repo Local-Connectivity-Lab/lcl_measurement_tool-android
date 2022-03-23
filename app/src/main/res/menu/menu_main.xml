@@ -5,10 +5,10 @@
     <group
         android:id="@+id/group1"
         android:checkableBehavior="none">
-        <item
-            android:id="@+id/HomeFragment"
-            android:icon="@drawable/main"
-            android:title="Home"/>
+<!--        <item-->
+<!--            android:id="@+id/HomeFragment"-->
+<!--            android:icon="@drawable/main"-->
+<!--            android:title="Home"/>-->
         <item
             android:id="@+id/SpeedTestFragment"
             android:icon="@drawable/speed_test"

@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.Database.Entity;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -22,8 +23,14 @@ public class ConnectivityViewModel extends AbstractViewModel<Connectivity> {
         return db.connectivityDAO().retrieveAllConnectivities();
     }
 
+    @Override
+    public List<Connectivity> getAllSync() {
+        return db.connectivityDAO().retrieveAllConnectivitiesSynchronous();
+    }
+
     public void insert(Connectivity data) {
         MeasurementResultDatabase.databaseWriteExecutor.execute(() -> {
+            Log.d("Connectivity_ViewModel", "[insert called]");
             db.connectivityDAO().insert(data);
         });
     }

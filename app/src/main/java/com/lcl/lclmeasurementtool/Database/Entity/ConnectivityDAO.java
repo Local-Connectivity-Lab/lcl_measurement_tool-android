@@ -27,11 +27,12 @@ public interface ConnectivityDAO {
     public LiveData<List<Connectivity>> retrieveAllConnectivities();
 
 
+    @Query("SELECT * FROM connectivity_table")
+    public List<Connectivity> retrieveAllConnectivitiesSynchronous();
+
+
     @Query("SELECT * FROM connectivity_table WHERE time_stamp >= :d1 AND time_stamp <= :d2")
     public LiveData<List<Connectivity>> retrieveConnectivitiesBetweenDates(String d1, String d2);
-
-//    @RawQuery
-//    public LiveData<List<Connectivity>> query(SupportSQLiteQuery query);
 
     // UPDATE
     @Update

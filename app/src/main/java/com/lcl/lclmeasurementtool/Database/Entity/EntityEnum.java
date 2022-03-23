@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.Database.Entity;
 
-import androidx.lifecycle.ViewModel;
+import java.util.ArrayList;
+import java.util.List;
 
 public enum EntityEnum {
     CONNECTIVITY,
@@ -22,7 +23,7 @@ public enum EntityEnum {
                 return Connectivity.getHeader();
             case SIGNALSTRENGTH:
                 return SignalStrength.getHeader();
-            default: return new String[]{};
+            default: return new String[0];
         }
     }
 }

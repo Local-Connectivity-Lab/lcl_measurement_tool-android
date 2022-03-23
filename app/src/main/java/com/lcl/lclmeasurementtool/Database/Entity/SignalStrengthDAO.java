@@ -26,6 +26,9 @@ public interface SignalStrengthDAO {
     @Query("SELECT * FROM signal_strength_table")
     public LiveData<List<SignalStrength>> retrieveAllSignalStrengths();
 
+    @Query("SELECT * FROM signal_strength_table")
+    public List<SignalStrength> retrieveAllSignalStrengthsSynchronous();
+
     @Query("SELECT * FROM signal_strength_table WHERE time_stamp >= :d1 AND time_stamp <= :d2")
     public LiveData<List<SignalStrength>> retrieveSignalStrengthBetweenDates(String d1, String d2);
 

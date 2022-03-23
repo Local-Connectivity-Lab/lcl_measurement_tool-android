@@ -30,6 +30,7 @@
     <string name="validation_failure">Cannot validate authentication code. Please retry or contact the administrator at lcl@seattlecommunitynetwork.org.</string>
     <string name="validation_success">Validation success.</string>
     <string name="registration_failure">Registration failed. Please try again.</string>
+    <string name="qrcode_invalid_format">The QR Code is invalid. Please rescan the code or contact the administrator at lcl@seattlecommunitynetwork.org.</string>
     <string name="keys_compromised">Authentication keys are compromised. Please rescan the QR Code.</string>
     <string name="keys_missing">Error: Authentication key information is missing.</string>
     <string name="iperf_test_canceled">Test canceled.</string>
