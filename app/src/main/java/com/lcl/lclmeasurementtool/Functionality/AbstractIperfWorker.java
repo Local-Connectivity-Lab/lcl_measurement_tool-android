@@ -20,8 +20,12 @@ public abstract class AbstractIperfWorker extends Worker {
     protected Context context;
     protected CountDownLatch doneSignal;
 
+    // the final output data
     Data finalData;
 
+    /**
+     * Prepare necessary data for the iperf test
+     */
     abstract void prepareConfig();
 
     public AbstractIperfWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {

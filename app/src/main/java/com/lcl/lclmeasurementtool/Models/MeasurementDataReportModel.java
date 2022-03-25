@@ -5,6 +5,9 @@ import com.lcl.lclmeasurementtool.Utils.Hex;
 
 import java.io.Serializable;
 
+/**
+ * A model representing the message of a measurement data report
+ */
 public class MeasurementDataReportModel implements Serializable {
 
     @JsonProperty("sigma_m")

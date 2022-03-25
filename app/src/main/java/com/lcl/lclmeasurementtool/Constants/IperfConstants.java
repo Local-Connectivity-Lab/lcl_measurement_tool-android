@@ -13,6 +13,8 @@ public class IperfConstants {
 
     public static boolean IC_isDebug = true;
 
+    // the SSL key
+    // TODO: hide it
     public static String IC_SSL_PK = "-----BEGIN PUBLIC KEY-----\n" +
             "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwt8Pvsja7c6Co8nsyrCc\n" +
             "qCYz3liIEUYS1QaoMgefQHRUoIVVi8Gh7/ZAzu6+Jfl/b0qhIb9vgbdKhSYM7lfB\n" +
@@ -29,11 +31,14 @@ public class IperfConstants {
     public static String IC_serverAddr = "othello-iperf.westus2.cloudapp.azure.com";
     public static int IC_serverPort = 40404;
 
-
+    /**
+     * Retuen the base64 encoding of the given string
+     * @param input  the input to be converted to base64 format
+     * @return       the string in base64 format
+     */
     public static String Base64Encode(String input) {
         byte[] buffer = input.getBytes(StandardCharsets.US_ASCII);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
             // return the correct encoding for iperf
             return Base64.getEncoder().encodeToString(buffer);
         } else {

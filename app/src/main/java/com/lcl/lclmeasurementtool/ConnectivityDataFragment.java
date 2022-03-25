@@ -28,16 +28,17 @@ import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * A fragment support displaying connectivity measurement data
+ */
 public class ConnectivityDataFragment extends Fragment {
 
     private ConnectivityDataFragmentBinding binding;
-    private Context context;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = ConnectivityDataFragmentBinding.inflate(inflater, container, false);
-        this.context = getContext();
         return binding.getRoot();
     }
 
@@ -52,6 +53,11 @@ public class ConnectivityDataFragment extends Fragment {
         });
     }
 
+    /**
+     * Set up cardview for each given connectivity measurement
+     * @param c given signal strength
+     * @return a cardview instance for the row
+     */
     private CardView setupRow(Connectivity c) {
         CardView row = (CardView) getLayoutInflater().inflate(R.layout.connectivity_data_card_template, null);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -70,9 +76,6 @@ public class ConnectivityDataFragment extends Fragment {
 
         TextView tvPing = row.findViewById(R.id.connectivity_ping);
         tvPing.setText(new Formatter().format("%.2f", c.getPing()).toString());
-
-//        TextView tvPacket = row.findViewById(R.id.connectivity_packet);
-//        tvPacket.setText(new Formatter().format("%.2f", c.getPacketLoss()).toString());
         return row;
     }
 }

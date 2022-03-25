@@ -3,6 +3,9 @@ package com.lcl.lclmeasurementtool.Models;
 import com.jsoniter.annotation.JsonCreator;
 import com.jsoniter.annotation.JsonProperty;
 
+/**
+ * A model representing the message from a QR code scan
+ */
 public class QRCodeKeysModel {
 
     @JsonProperty

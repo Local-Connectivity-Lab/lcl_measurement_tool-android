@@ -18,6 +18,9 @@
 
 package com.lcl.lclmeasurementtool.Utils;
 
+/**
+ * EncoderException from apache commons
+ */
 public class EncoderException extends Exception {
 
     /**

@@ -16,8 +16,15 @@ import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.lcl.lclmeasurementtool.Constants.SimCardConstants;
 import com.lcl.lclmeasurementtool.R;
 
+/**
+ * A receiver listening to the simcard state
+ */
 public class SimStatesReceiver extends BroadcastReceiver {
+
+    // debugging tag
     private final static String TAG = "SIM_RECEIVER";
+
+    // the intent to listen to
     private final static String ACTION_SIM_STATE = "android.intent.action.SIM_STATE_CHANGED";
 
     private Context context;
@@ -56,6 +63,7 @@ public class SimStatesReceiver extends BroadcastReceiver {
         }
     }
 
+    // remove credentials when detecting simcard swap
     private void removeCredentials() {
         SharedPreferences preferences = activity.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -63,6 +71,7 @@ public class SimStatesReceiver extends BroadcastReceiver {
         editor.apply();
     }
 
+    // show error message when the sim card is missing
     private void showMessage() {
         MessageDialog.show(R.string.sim_missing, R.string.sim_missing_message, android.R.string.ok).setOkButton((baseDialog, v) -> {
             activity.finishAndRemoveTask();

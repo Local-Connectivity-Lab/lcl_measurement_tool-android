@@ -3,8 +3,6 @@ plugins {
     id 'com.google.secrets_gradle_plugin' version '0.5'
 }
 
-apply plugin: 'realm-android'
-
 def iperfkeyPropertiesFile = rootProject.file("iperfkey.properties")
 def iperfkeyProperties = new Properties()
 iperfkeyProperties.load(new FileInputStream(iperfkeyPropertiesFile))

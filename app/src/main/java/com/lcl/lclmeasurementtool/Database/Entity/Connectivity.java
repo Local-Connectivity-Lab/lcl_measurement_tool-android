@@ -11,6 +11,9 @@ import com.lcl.lclmeasurementtool.Utils.LocationUtils;
 
 import java.util.List;
 
+/**
+ * A class holding the connectivity measurement entity
+ */
 @Entity(tableName = "connectivity_table")
 @TypeConverters({LocationUtils.class})
 public class Connectivity implements DataEncodable {
@@ -39,28 +42,52 @@ public class Connectivity implements DataEncodable {
         this.location = location;
     }
 
+    /**
+     * Retrieve the timestamp when the signal strength data is collected
+     * @return the string representation of the timestamp
+     */
     @NonNull
     public String getTimestamp() {
         return timestamp;
     }
 
+    /**
+     * Retrieve the ping stat
+     * @return the ping stat
+     */
     public double getPing() {
         return ping;
     }
 
+    /**
+     * Retrieve the upload speed
+     * @return the upload speed in Mbps
+     */
     public double getUpload() {
         return upload;
     }
 
+    /**
+     * Retrieve the download speed
+     * @return the download speed in Mbps
+     */
     public double getDownload() {
         return download;
     }
 
+    /**
+     * Retrieve the location where the signal strength data is collected
+     * @return the location in latlng
+     */
     @NonNull
     public LatLng getLocation() {
         return location;
     }
 
+    /**
+     * Retrieve the location in string format
+     * @return the string representation of the location
+     */
     public String getLocationString() {
         return location.latitude + "|" + location.longitude;
     }
@@ -69,11 +96,16 @@ public class Connectivity implements DataEncodable {
 //        return packetLoss;
 //    }
 
+    /**
+     * Retrieve the header of the signal strength table
+     * @return the headers of the signal strength table
+     */
     public static String[] getHeader() {
         return new String[]{"timestamp", "ping", "upload", "download", "latitude", "longitude"};
     }
 
-    public String[] toCSV() {
+    @Override
+    public String[] toArray() {
         return new String[]{timestamp, String.valueOf(ping), String.valueOf(upload), String.valueOf(download), String.valueOf(location.latitude), String.valueOf(location.longitude)};
     }
 }

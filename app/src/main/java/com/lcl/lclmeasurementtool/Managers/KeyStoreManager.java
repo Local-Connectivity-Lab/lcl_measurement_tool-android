@@ -21,6 +21,10 @@ import java.security.cert.CertificateException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 
+/**
+ * A key store manager responsible for generating and maintaining private/public keys
+ * @deprecated will not be used in the measurement application
+ */
 public class KeyStoreManager {
 
     private static KeyStoreManager instance;

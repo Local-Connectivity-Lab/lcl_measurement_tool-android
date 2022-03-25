@@ -3,10 +3,20 @@ package com.lcl.lclmeasurementtool.Database.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The enum representing the data stored in the database
+ */
 public enum EntityEnum {
+    // connectivity
     CONNECTIVITY,
+
+    // signal strength
     SIGNALSTRENGTH;
 
+    /**
+     * Retrieve the csv file name of the entity
+     * @return file name of the entity
+     */
     public String getFileName() {
         switch (this) {
             case CONNECTIVITY:
@@ -17,6 +27,10 @@ public enum EntityEnum {
         }
     }
 
+    /**
+     * Retrieve the header of the entity table
+     * @return the headers of the entity
+     */
     public String[] getHeader() {
         switch (this) {
             case CONNECTIVITY:

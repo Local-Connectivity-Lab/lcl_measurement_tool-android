@@ -10,9 +10,12 @@ import com.lcl.lclmeasurementtool.Constants.IperfConstants;
 
 import java.lang.Thread;
 
-
+/**
+ * A worker responsible for handling the iperf downstream test
+ */
 public class IperfDownStreamWorker extends AbstractIperfWorker {
 
+    // debugging tag
     private static final String TAG = "IPERF_DOWNSTREAM_WORKER";
 
     public IperfDownStreamWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {

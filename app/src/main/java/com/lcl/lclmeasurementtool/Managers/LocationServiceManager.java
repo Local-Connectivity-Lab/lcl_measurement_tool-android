@@ -47,8 +47,12 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
+/**
+ * A location service manager managing the location information
+ */
 public class LocationServiceManager {
 
+    // debugging tag
     private static final String TAG = "LOCATION_MANAGER";
 
     // the location service manager instance

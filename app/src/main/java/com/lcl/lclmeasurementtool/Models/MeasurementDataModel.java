@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
 
+/**
+ * An abstract class of a basic measurement data
+ */
 public abstract class MeasurementDataModel implements Serializable {
     @JsonProperty("latitude")
     double latitude;

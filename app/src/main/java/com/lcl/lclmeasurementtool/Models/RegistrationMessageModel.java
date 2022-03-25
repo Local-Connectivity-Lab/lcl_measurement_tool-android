@@ -7,6 +7,9 @@ import com.lcl.lclmeasurementtool.Utils.Hex;
 
 import java.io.Serializable;
 
+/**
+ * A model representing the message of a registration data report
+ */
 public class RegistrationMessageModel implements Serializable {
 
     @JsonProperty("sigma_r")

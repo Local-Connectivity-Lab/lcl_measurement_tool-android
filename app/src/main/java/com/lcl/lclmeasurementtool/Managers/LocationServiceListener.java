@@ -21,6 +21,9 @@ import com.lcl.lclmeasurementtool.MainActivity;
 import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Utils.UIUtils;
 
+/**
+ * A location service listener listening to location changes
+ */
 public class LocationServiceListener implements LifecycleObserver {
 
     private static final String TAG = "LOCATION_SERVICE_LISTENER";

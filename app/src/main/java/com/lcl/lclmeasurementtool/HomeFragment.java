@@ -35,6 +35,7 @@ import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
+import com.lcl.lclmeasurementtool.Database.Entity.AbstractViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.Database.Entity.ConnectivityViewModel;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
@@ -87,8 +88,8 @@ public class HomeFragment extends Fragment {
     private boolean isCellularConnected;
 
     private NetworkTestViewModel mNetworkTestViewModel;
-    private ConnectivityViewModel connectivityViewModel;
-    private SignalViewModel signalViewModel;
+    private AbstractViewModel<Connectivity> connectivityViewModel;
+    private AbstractViewModel<SignalStrength> signalViewModel;
 
     private int prevSignalStrength = 0;
     private double prevPing = -1.0;
@@ -454,9 +455,6 @@ public class HomeFragment extends Fragment {
                                             prevPing, cell_id, device_id);
                             connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
                             uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
-//                            prevPing = 0.0;
-//                            prevUpload = 0.0;
-//                            prevDownload = 0.0;
                         });
                     }
                     WorkManager.getInstance(this.context).pruneWork();

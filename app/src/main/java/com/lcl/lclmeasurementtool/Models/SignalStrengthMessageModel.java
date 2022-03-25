@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 
+/**
+ * A model representing the message of a signal strength measurement
+ */
 public class SignalStrengthMessageModel extends MeasurementDataModel {
 
     @JsonProperty("dbm")

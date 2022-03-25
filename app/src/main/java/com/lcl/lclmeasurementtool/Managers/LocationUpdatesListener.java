@@ -14,6 +14,10 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 
+/**
+ * A callback handling the location update
+ */
 public interface LocationUpdatesListener {
+    // called when a new location is fetched
     void onUpdate(Location location) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, UnrecoverableEntryException, SignatureException, InvalidKeyException, DecoderException, InvalidKeySpecException, NoSuchProviderException;
 }

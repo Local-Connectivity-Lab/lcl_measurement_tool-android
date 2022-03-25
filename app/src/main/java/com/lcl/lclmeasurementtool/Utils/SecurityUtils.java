@@ -4,10 +4,18 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * A utility class that provides convenient functionality for security related tasks
+ */
 public class SecurityUtils {
 
+    // RSA algorithm
     public static final String RSA = "RSA";
+
+    // SHA256 with RSA signature
     public static final String SHA_256_WITH_RSA_SIGNATURE = "SHA256withRSA";
+
+    // SHA-256
     public static final String SHA_256_HASH = "SHA-256";
 
     /**

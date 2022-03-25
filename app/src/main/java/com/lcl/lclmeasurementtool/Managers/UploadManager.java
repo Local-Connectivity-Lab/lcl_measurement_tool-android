@@ -19,12 +19,23 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+/**
+ * A manager handling networking(upload) with the report server
+ */
 public class UploadManager {
+    // debugging tag
     private static final String TAG = "UPLOAD_MANAGER";
+
+    // singleton instance
     private static UploadManager instance;
+
+    // HTTP media type
     private static final MediaType MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
+
+    // error message
     private static final String ERR_MSG = "Data upload failed. Please contact the administrator at lcl@seattlecommunitynetwork.org.";
 
+    // HTTP client
     private final OkHttpClient client;
     private String json;
     private String endpoint;
@@ -40,6 +51,10 @@ public class UploadManager {
         return instance;
     }
 
+    /**
+     * Post data to the server
+     * @throws IOException when IO error occurs during networking
+     */
     public void post() throws IOException {
         if (json == null) {
             throw new IllegalArgumentException("JSON data should not be null");
@@ -68,11 +83,21 @@ public class UploadManager {
         });
     }
 
+    /**
+     * Add json payload to the message body
+     * @param json  the json string to be uploaded
+     * @return      A upload manager with the json data
+     */
     public UploadManager addPayload(String json) {
         this.json = json;
         return this;
     }
 
+    /**
+     * Add endpoint indicating where data will be uploaded to
+     * @param endpoint  the endpoint indicating the server endpoint
+     * @return          A upload manager holding the endpoint information
+     */
     public UploadManager addEndpoint(String endpoint) {
         this.endpoint = endpoint;
         return this;

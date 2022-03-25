@@ -14,6 +14,9 @@ import com.lcl.lclmeasurementtool.Utils.LocationUtils;
 
 import java.util.List;
 
+/**
+ * A DAO for connectivity measurement
+ */
 @Dao
 @TypeConverters({LocationUtils.class})
 public interface ConnectivityDAO {

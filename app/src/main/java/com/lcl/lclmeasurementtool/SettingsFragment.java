@@ -39,22 +39,41 @@ import org.apache.commons.csv.CSVPrinter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * A fragment for user preferences
+ */
 public class SettingsFragment extends PreferenceFragmentCompat {
 
+    // debugging tag
     private static final String TAG = "SETTINGS";
+
+    // terms of use
     private static final String TOU = "https://seattlecommunitynetwork.org/";
+
+    // privacy policy
     private static final String PRIVACY = "https://seattlecommunitynetwork.org/";
+
+    // help email
     private static final String EMAIL = "help@seattlecommunitynetwork.org";
+
+    // data export type
     private static final String MIME_TYPE = "text/csv";
 
+    // file provider
+    private static final String FILE_PROVIDER = "com.lcl.lclmeasurementtool.fileprovider";
+
+    // A list holding the connectivity data from the database
     private List<String[]> connectivityList;
+
+    // A list holding the signal strength data from the database
     private List<String[]> signalStrengthList;
 
+    // CSV file extension
     private static final String CSV = ".csv";
+
     private Activity activity;
 
     @Override
@@ -107,7 +126,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 SharedPreferences preferences = activity.getPreferences(MODE_PRIVATE);
                 preferences.edit().clear().apply();
                 TipDialog.show("Logging out ...", WaitDialog.TYPE.SUCCESS, 1000);
-                // TODO show login screen
+                // TODO(johnnzhou) show login screen
                 Intent out = new Intent(activity, MainActivity.class);
                 activity.startActivity(out);
                 activity.finish();
@@ -152,8 +171,11 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         }
     }
 
+    /**
+     * Generate CSV file for given data type
+     * @param entity the given data entity type
+     */
     private void generateCSV(EntityEnum entity) {
-        System.out.println(entity);
         String baseDir = activity.getFilesDir().getAbsolutePath();
         String fileName = entity.getFileName();
         String filePath = baseDir + File.separator + fileName + CSV;
@@ -172,10 +194,11 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             return;
         }
 
+        // prepare sharing intent
         Intent sharingIntent = new Intent(Intent.ACTION_SEND);
         Uri fileUri = FileProvider.getUriForFile(
                 this.activity.getApplicationContext(),
-                "com.lcl.lclmeasurementtool.fileprovider",
+                FILE_PROVIDER,
                 new File(filePath));
         this.activity.grantUriPermission(activity.getPackageName(), fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
         sharingIntent.setType(MIME_TYPE);
@@ -185,19 +208,29 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         chooser.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         List<ResolveInfo> resInfoList1 = this.activity.getPackageManager().queryIntentActivities(sharingIntent, PackageManager.MATCH_DEFAULT_ONLY);
         List<ResolveInfo> resInfoList2 = this.activity.getPackageManager().queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY);
+
+        // resolve permission issues for both intents
         resolvePermissions(resInfoList1, fileUri);
         resolvePermissions(resInfoList2, fileUri);
         this.activity.startActivity(chooser);
     }
 
+    /**
+     * Initialize live data observers from the database
+     */
     private void initData() {
         AbstractViewModel<Connectivity> connectivityViewModel = new ViewModelProvider(requireActivity()).get(ConnectivityViewModel.class);
-        connectivityViewModel.getAll().observe(this, connectivities -> connectivityList = connectivities.stream().map(Connectivity::toCSV).collect(Collectors.toList()));
+        connectivityViewModel.getAll().observe(this, connectivities -> connectivityList = connectivities.stream().map(Connectivity::toArray).collect(Collectors.toList()));
 
         AbstractViewModel<SignalStrength> signalStrengthViewModel  = new ViewModelProvider(requireActivity()).get(SignalViewModel.class);
-        signalStrengthViewModel.getAll().observe(this, signalStrengths -> signalStrengthList = signalStrengths.stream().map(SignalStrength::toCSV).collect(Collectors.toList()));
+        signalStrengthViewModel.getAll().observe(this, signalStrengths -> signalStrengthList = signalStrengths.stream().map(SignalStrength::toArray).collect(Collectors.toList()));
     }
 
+    /**
+     * Resolve file permission issues
+     * @param resInfo  a list of resolve information from intent
+     * @param fileUri  the file URI
+     */
     private void resolvePermissions(List<ResolveInfo> resInfo, Uri fileUri) {
         for (ResolveInfo resolveInfo : resInfo) {
             String packageName = resolveInfo.activityInfo.packageName;
@@ -205,6 +238,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         }
     }
 
+    /**
+     * Force quit when key error occurs
+     */
     private void forceQuit() {
         MessageDialog.show(R.string.error, R.string.setting_fatal_error_message, android.R.string.ok).setOkButtonClickListener((baseDialog, v) -> {
             baseDialog.getActivity().finish();

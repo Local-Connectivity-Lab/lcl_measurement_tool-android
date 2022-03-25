@@ -2,6 +2,9 @@ package com.lcl.lclmeasurementtool.Models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * A model representing the message of a connectivity measurement
+ */
 public class ConnectivityMessageModel extends MeasurementDataModel {
 
     @JsonProperty("upload_speed")

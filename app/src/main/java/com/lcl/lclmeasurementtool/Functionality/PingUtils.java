@@ -4,8 +4,22 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ *
+ */
 public class PingUtils {
 
+    /**
+     * Perform ping test given the ping settings
+     *
+     * @param address  the address to ping to
+     * @param times    the number of times for the ping test
+     * @param timeout  the timeout limit
+     * @return         a <code>ping stats</code> corresponding to the test
+     * @throws IOException           for networking error
+     * @throws InterruptedException  for IO interruption
+     * @see PingStats
+     */
     public static PingStats ping(String address, int times, int timeout) throws IOException, InterruptedException {
         if (address == null) {
             throw new IllegalArgumentException("address should not be null");
@@ -49,6 +63,13 @@ public class PingUtils {
         return pingStats;
     }
 
+    /**
+     * Retrieve the ping statistics from raw string output
+     * @param pingStats  the ping stat object holding the ping statistics
+     * @param s          the raw output string from the ping test
+     * @return           the ping stats with the given statistics from the test output
+     * @see PingStats
+     */
     public static PingStats getPingStats(PingStats pingStats, String s) {
         pingStats.setFullOutput(s);
 

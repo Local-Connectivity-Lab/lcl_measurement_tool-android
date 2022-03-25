@@ -22,6 +22,9 @@ import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
 import com.lcl.lclmeasurementtool.databinding.SignalDataFragmentBinding;
 
+/**
+ * A fragment support displaying signal data
+ */
 public class SignalDataFragment extends Fragment {
 
     private SignalDataFragmentBinding binding;
@@ -41,6 +44,11 @@ public class SignalDataFragment extends Fragment {
                 signalStrengths -> signalStrengths.stream().distinct().forEach(s -> binding.dataListLinearLayout.addView(setupRow(s))));
     }
 
+    /**
+     * Set up cardview for each given signal strength
+     * @param s given signal strength
+     * @return a cardview instance for the row
+     */
     private CardView setupRow(SignalStrength s) {
         CardView row = (CardView) getLayoutInflater().inflate(R.layout.signal_data_card_template, null);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);

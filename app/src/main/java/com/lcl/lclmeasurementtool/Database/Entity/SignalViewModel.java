@@ -11,6 +11,9 @@ import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 
 import java.util.List;
 
+/**
+ * The signal view model interfacing between database and the view
+ */
 public class SignalViewModel extends AbstractViewModel<SignalStrength> {
 
     private final MeasurementResultDatabase db;
@@ -26,10 +29,6 @@ public class SignalViewModel extends AbstractViewModel<SignalStrength> {
     }
 
     @Override
-    public List<SignalStrength> getAllSync() {
-        return db.signalStrengthDAO().retrieveAllSignalStrengthsSynchronous();
-    }
-
     public void insert(SignalStrength data) {
         MeasurementResultDatabase.databaseWriteExecutor.execute(() -> {
             Log.d("Signal_ViewModel", "[insert called]");

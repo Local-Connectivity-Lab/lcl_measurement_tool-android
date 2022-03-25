@@ -1,7 +1,13 @@
 package com.lcl.lclmeasurementtool.Database.Entity;
 
-import java.util.List;
-
+/**
+ * Data encodable interface
+ */
 public interface DataEncodable {
-    String[] toCSV();
+
+    /**
+     * Transform the data to a string array
+     * @return array of strings of the data in the entity
+     */
+    String[] toArray();
 }

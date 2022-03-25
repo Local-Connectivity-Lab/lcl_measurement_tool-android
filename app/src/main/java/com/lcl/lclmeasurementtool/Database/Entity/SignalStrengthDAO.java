@@ -14,6 +14,9 @@ import com.lcl.lclmeasurementtool.Utils.LocationUtils;
 
 import java.util.List;
 
+/**
+ * A DAO for signal strength
+ */
 @Dao
 @TypeConverters({LocationUtils.class})
 public interface SignalStrengthDAO {

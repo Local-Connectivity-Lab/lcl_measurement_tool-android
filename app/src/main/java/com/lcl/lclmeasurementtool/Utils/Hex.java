@@ -22,6 +22,9 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * A utility class for HEX operations (from apache commons)
+ */
 public class Hex {
 
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
