@@ -53,6 +53,7 @@ import com.lcl.lclmeasurementtool.Models.ConnectivityMessageModel;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataModel;
 import com.lcl.lclmeasurementtool.Models.MeasurementDataReportModel;
 import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
+import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
 import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
@@ -62,6 +63,7 @@ import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
+import com.microsoft.appcenter.analytics.Analytics;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -166,7 +168,10 @@ public class HomeFragment extends Fragment {
                 byte[] h_pkr = result[0];
                 byte[] sk_t = result[1];
                 mLocationManager.getLastLocation(location -> {
-                    if (location == null) return;
+                    if (location == null) {
+                        Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND);
+                        return;
+                    }
                     LatLng latLng = LocationUtils.toLatLng(location);
                     SignalStrengthMessageModel signalStrengthMessageModel =
                             new SignalStrengthMessageModel(
@@ -339,6 +344,7 @@ public class HomeFragment extends Fragment {
 
                 mLocationManager.getLastLocation(location -> {
                     if (location == null) {
+                        Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND + ": TEST CANCELLED");
                         setFABToInitialState();
                         mNetworkTestViewModel.cancel();
                         PopTip.show(getString(R.string.location_not_available));
@@ -459,7 +465,10 @@ public class HomeFragment extends Fragment {
                         byte[] sk_t = result[1];
 
                         mLocationManager.getLastLocation(location -> {
-                            if (location == null) return;
+                            if (location == null) {
+                                Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND);
+                                return;
+                            }
                             LatLng latLng = LocationUtils.toLatLng(location);
                             ConnectivityMessageModel connectivityMessageModel =
                                     new ConnectivityMessageModel(

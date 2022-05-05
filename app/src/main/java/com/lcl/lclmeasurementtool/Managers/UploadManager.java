@@ -8,8 +8,12 @@ import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.R;
+import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
+import com.microsoft.appcenter.analytics.Analytics;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -75,7 +79,13 @@ public class UploadManager {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
                     Log.e(TAG, "error occurs on " + endpoint);
+                    String body = response.body().string();
+                    Log.e(TAG, body);
+                    Map<String, String> reason = AnalyticsUtils.formatProperties(endpoint, body);
+                    Analytics.trackEvent(AnalyticsUtils.UPLOAD_FAILED, reason);
                     TipDialog.show(ERR_MSG);
+                } else {
+                    Analytics.trackEvent(AnalyticsUtils.DATA_UPLOADED + " on " + endpoint);
                 }
 
                 response.close();

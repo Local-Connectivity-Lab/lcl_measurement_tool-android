@@ -10,6 +10,11 @@ public class AnalyticsUtils {
     public static final String INVALID_KEYS = "Invalid Keys";
 
     public static final String REGISTRATION_FAILED = "Registration Failed";
+    public static final String LOCATION_NOT_FOUND = "Location Not Found";
+    public static final String UPLOAD_FAILED = "Data Upload Failed";
+    public static final String DATA_UPLOADED = "Data Uploaded";
+
+
 
     public static Map<String, String> formatProperties(String... reasons) {
         Map<String, String> properties = new HashMap<>();
