@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -44,6 +45,7 @@ import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
+import com.lcl.lclmeasurementtool.Managers.LocationUpdatesListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Managers.UploadManager;
@@ -63,9 +65,12 @@ import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.ZoneId;
 import java.util.List;
@@ -161,6 +166,7 @@ public class HomeFragment extends Fragment {
                 byte[] h_pkr = result[0];
                 byte[] sk_t = result[1];
                 mLocationManager.getLastLocation(location -> {
+                    if (location == null) return;
                     LatLng latLng = LocationUtils.toLatLng(location);
                     SignalStrengthMessageModel signalStrengthMessageModel =
                             new SignalStrengthMessageModel(
@@ -330,6 +336,15 @@ public class HomeFragment extends Fragment {
                         }).setOkButton(android.R.string.cancel, (baseDialog, v) -> false).show();
 
             } else {
+
+                mLocationManager.getLastLocation(location -> {
+                    if (location == null) {
+                        setFABToInitialState();
+                        mNetworkTestViewModel.cancel();
+                        PopTip.show(getString(R.string.location_not_available));
+                    }
+                });
+
                 if (this.isTestStarted) {
                     setFABToInitialState();
                     mNetworkTestViewModel.cancel();
@@ -340,7 +355,7 @@ public class HomeFragment extends Fragment {
                     PopTip.show(getString(R.string.iperf_test_starts));
                 }
 
-                this.isTestStarted = !isTestStarted;
+//                this.isTestStarted = !isTestStarted;
             }
         });
     }
@@ -444,6 +459,7 @@ public class HomeFragment extends Fragment {
                         byte[] sk_t = result[1];
 
                         mLocationManager.getLastLocation(location -> {
+                            if (location == null) return;
                             LatLng latLng = LocationUtils.toLatLng(location);
                             ConnectivityMessageModel connectivityMessageModel =
                                     new ConnectivityMessageModel(

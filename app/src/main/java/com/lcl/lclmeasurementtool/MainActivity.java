@@ -36,8 +36,8 @@ import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBindView;
+import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
 import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
-import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
@@ -46,6 +46,9 @@ import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
+import com.microsoft.appcenter.AppCenter;
+import com.microsoft.appcenter.analytics.Analytics;
+import com.microsoft.appcenter.crashes.Crashes;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.BuildConfig;
 import com.yanzhenjie.permission.runtime.Permission;
@@ -63,6 +66,8 @@ import java.security.SignatureException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 import okhttp3.Call;
@@ -102,6 +107,9 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.toolbar, navController, appBarConfiguration);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
+        // TODO: add appcenter secret
+        AppCenter.start(getApplication(), AnalyticsUtils.SK, com.microsoft.appcenter.analytics.Analytics.class, Crashes.class);
+
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         if (!preferences.contains(getString(R.string.device_id))) {
             String device_id = UUID.randomUUID().toString();
@@ -132,6 +140,8 @@ public class MainActivity extends AppCompatActivity {
                              jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
                             } catch (JsonException e) {
                                 TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.qrcode_invalid_format), WaitDialog.TYPE.ERROR);
+                                Map<String, String> reasons = AnalyticsUtils.formatProperties(e.getMessage(), Arrays.toString(e.getStackTrace()));
+                                Analytics.trackEvent(AnalyticsUtils.QR_CODE_PARSING_FAILED, reasons);
                                 return;
                             }
 
@@ -258,11 +268,14 @@ public class MainActivity extends AppCompatActivity {
                     ECDSA.DeserializePublicKey(pk_a_hex)
             )) {
                 showMessageOnFailure();
+                Map<String, String> reasons = AnalyticsUtils.formatProperties("Verification Failure", null);
+                Analytics.trackEvent(AnalyticsUtils.INVALID_KEYS, reasons);
                 return;
             }
         } catch (InvalidKeyException | SignatureException | NoSuchAlgorithmException | DecoderException | InvalidKeySpecException | NoSuchProviderException e) {
-            e.printStackTrace();
             showMessageOnFailure();
+            Map<String, String> reasons = AnalyticsUtils.formatProperties(e.getMessage(), Arrays.toString(e.getStackTrace()));
+            Analytics.trackEvent(AnalyticsUtils.INVALID_KEYS, reasons);
             return;
         }
 
@@ -339,6 +352,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 showMessageOnFailure();
+                Map<String, String> reasons = AnalyticsUtils.formatProperties(e.getMessage(), Arrays.toString(e.getStackTrace()));
+                Analytics.trackEvent(AnalyticsUtils.REGISTRATION_FAILED, reasons);
             }
 
             @Override
@@ -349,6 +364,8 @@ public class MainActivity extends AppCompatActivity {
                     activity.runOnUiThread(() -> fullScreenDialog.dismiss());
                 } else {
                     Log.e(TAG, response.body().string());
+                    Map<String, String> reasons = AnalyticsUtils.formatProperties("status code", String.valueOf(response.code()), "body", response.body().string());
+                    Analytics.trackEvent(AnalyticsUtils.REGISTRATION_FAILED, reasons);
                     TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.registration_failure), WaitDialog.TYPE.ERROR);
                 }
                 response.close();

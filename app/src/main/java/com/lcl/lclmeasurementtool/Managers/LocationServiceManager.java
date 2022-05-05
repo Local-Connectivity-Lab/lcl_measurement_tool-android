@@ -164,6 +164,12 @@ public class LocationServiceManager {
                             e.printStackTrace();
                         }
                     } else {
+                        try {
+                            listener.onUpdate(null);
+                        } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException | UnrecoverableEntryException | SignatureException | InvalidKeyException | DecoderException | InvalidKeySpecException | NoSuchProviderException e) {
+                            e.printStackTrace();
+                            return;
+                        }
                         Log.w(TAG, "getLastLocation:exception", task.getException());
                         Toast.makeText(this.context.get(), context.get().getText(R.string.no_location_detected), Toast.LENGTH_SHORT).show();
                     }

@@ -34,6 +34,7 @@
     <string name="keys_compromised">Authentication keys are compromised. Please rescan the QR Code.</string>
     <string name="keys_missing">Error: Authentication key information is missing.</string>
     <string name="iperf_test_canceled">Test canceled.</string>
+    <string name="location_not_available">Location is not available. Test canceled.</string>
     <string name="iperf_test_starts">Test started.</string>
     <string name="iperf_test_completed">Test completed.</string>
     <string name="unknown_test">Unknown test.</string>
