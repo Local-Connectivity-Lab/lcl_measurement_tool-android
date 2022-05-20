@@ -19,9 +19,9 @@ public class TimeUtils {
      * according to the ISO_LOCAL_DATE_TIME format from the given location
      *
      * @param zoneId  the time zone ID to offset the time
-     * @return a String representation of current time in ISO_LOCAL_DATE_TIME format
+     * @return a String representation of current time in ISO format
      */
     public static String getTimeStamp(ZoneId zoneId) {
-        return Instant.now().atZone(zoneId).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        return Instant.now().atZone(zoneId).toString();
     }
 }

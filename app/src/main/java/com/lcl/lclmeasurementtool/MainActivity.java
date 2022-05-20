@@ -36,11 +36,11 @@ import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBindView;
-import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
 import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
+import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
 import com.lcl.lclmeasurementtool.Utils.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
@@ -107,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.toolbar, navController, appBarConfiguration);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        // TODO: add appcenter secret
         AppCenter.start(getApplication(), AnalyticsUtils.SK, com.microsoft.appcenter.analytics.Analytics.class, Crashes.class);
 
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -122,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
             showLogInPage();
         }
 
-//        MeasurementResultDatabase db = MeasurementResultDatabase.getInstance(this);
 
         simStatesReceiver = new SimStatesReceiver(this);
         IntentFilter filter = new IntentFilter();

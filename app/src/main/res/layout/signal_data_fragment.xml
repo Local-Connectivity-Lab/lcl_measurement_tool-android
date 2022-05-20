@@ -5,16 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dark_black"
-    tools:context=".SignalDataFragment">
+    tools:context=".SignalDataFragment"
+    tools:ignore="SpeakableTextPresentCheck">
 
     <LinearLayout
         android:id="@+id/data_list_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_marginTop="15dp"
         android:layout_marginBottom="20dp"
-        android:layout_marginTop="15dp">
-    </LinearLayout>
+        android:orientation="vertical" />
 
 
 </ScrollView>
