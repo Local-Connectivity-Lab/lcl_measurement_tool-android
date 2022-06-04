@@ -37,6 +37,8 @@ public class SignalDataFragment extends Fragment {
 
     private SignalDataFragmentBinding binding;
 
+    private static final String dBm = " dBm";
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -74,7 +76,8 @@ public class SignalDataFragment extends Fragment {
         layoutParams.bottomMargin = 40;
         row.setLayoutParams(layoutParams);
         TextView tvVal = row.findViewById(R.id.val);
-        tvVal.setText(String.valueOf(s.getSignalStrength()));
+        String ss = s.getSignalStrength() + dBm;
+        tvVal.setText(ss);
         TextView tvDate = row.findViewById(R.id.date);
         tvDate.setText(s.getTimestamp());
         TextInfo textInfo = new TextInfo();
@@ -84,7 +87,7 @@ public class SignalDataFragment extends Fragment {
         textInfo.setBold(true);
         StringBuilder sb = new StringBuilder();
         sb.append("Signal Strength: ")
-                .append(s.getSignalStrength()).append(" dBm")
+                .append(s.getSignalStrength()).append(dBm)
                 .append("\n")
                 .append("Level: ")
                 .append(s.getLevel())

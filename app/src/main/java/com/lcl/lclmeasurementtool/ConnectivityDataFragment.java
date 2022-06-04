@@ -38,6 +38,9 @@ public class ConnectivityDataFragment extends Fragment {
 
     private ConnectivityDataFragmentBinding binding;
 
+    private static final String mbps = " mbps";
+    private static final String ms = " ms";
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -83,10 +86,12 @@ public class ConnectivityDataFragment extends Fragment {
         TextView tvDate = row.findViewById(R.id.connectivity_date);
         tvDate.setText(c.getTimestamp());
         TextView tvUpload = row.findViewById(R.id.connectivity_upload);
-        tvUpload.setText(new Formatter().format("%.2f", c.getUpload()).toString());
+        String uploadSpeedString = formatSpeedData(c.getUpload()) + mbps;
+        tvUpload.setText(uploadSpeedString);
 
         TextView tvDownload = row.findViewById(R.id.connectivity_download);
-        tvDownload.setText(new Formatter().format("%.2f", c.getDownload()).toString());
+        String downloadSpeedString = formatSpeedData(c.getDownload()) + mbps;
+        tvDownload.setText(downloadSpeedString);
 
         TextInfo textInfo = new TextInfo();
         int fontColor = ContextCompat.getColor(binding.getRoot().getContext(), R.color.white);
@@ -94,13 +99,13 @@ public class ConnectivityDataFragment extends Fragment {
         textInfo.setFontColor(fontColor);
         textInfo.setBold(true);
         String sb = "Ping: " +
-                c.getPing() + " ms" +
+                c.getPing() + ms +
                 "\n" +
                 "Upload Speed: " +
-                c.getUpload() + " mbps" +
+                c.getUpload() + mbps +
                 "\n" +
                 "Download Speed: " +
-                c.getDownload() + " mbps" +
+                c.getDownload() + mbps +
                 "\n" +
                 "Time: " +
                 c.getTimestamp() +
@@ -112,5 +117,9 @@ public class ConnectivityDataFragment extends Fragment {
                 .setMessageTextInfo(textInfo));
 
         return row;
+    }
+
+    private String formatSpeedData(double speed) {
+        return new Formatter().format("%.2f", speed).toString();
     }
 }
