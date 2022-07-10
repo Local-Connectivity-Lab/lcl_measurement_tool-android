@@ -62,8 +62,9 @@ Android Studio provides out-of-box build tool and debugger to help build, run, a
 * In order to build the code, clone this project repo to your working folder 
   * using HTTPS: `$ git clone https://github.com/Local-Connectivity-Lab/lcl_measurement_tool.git`
   * using SSH if you have set it up: `$ git@github.com:Local-Connectivity-Lab/lcl_measurement_tool.git`
-* `cd` into the directory `lcl_measurement_tool` and change the branch from `main` to `dev` to view the latest codebase `$ git checkout dev`
+* `cd` into the directory `lcl_measurement_tool` and change the branch from `main` to `develop` to view the latest codebase `$ git checkout dev`
 * Open the project using Android Studio. Wait for Android Studio to automatically install Gradle and other dependencies used by the project.
+* Under the top-level directory of this project, where this README.md lives, create a new file `iperfkey.properties` and ask either Esther Jang or Zhennan Zhou for the keys.
 
 #### Building the project
 * On the top menu bar, find the `Build -> Clean Project` to remove any previous build. Then `Build -> Rebuild Project`.
