@@ -34,10 +34,11 @@ In each sub-directory, there is a README file explaining the module.
 ### Managing SDK, NDK, and Emulators
 Android Studio has tools to help manage the SDK, NDK, and Emulators resources.
 
+![SDK, NDK, Emulator Manager](docs/img/sdk_ndk_emulator.png)
+
 #### SDK and NDK
 Android SDK is a component for building apps on Android platform.
 Android NDK is a toolset that lets you implement parts of your app in native code, using languages such as C and C++.
-![SDK, NDK, Emulator Manager](docs/img/sdk_ndk_emulator.png)
 
 To properly configure SDK and NDK for the project. First go to the `SDK Platform` pane, and check the SDK with API level equal to or greater than 30.
 ![Android SDK](docs/img/android_sdk.png)
@@ -71,7 +72,7 @@ Android Studio provides out-of-box build tool and debugger to help build, run, a
 #### Running/Debugging the project
 After building the project, we can use Android Studio's "Play" button in the toolbar to run the project on an actual Android phone or in the Emulator of your choice.
 If you need to debug the code, add breakpoints and then click the `bug` button in the toolbar. Android Studio will pop up a debugger attached to the process. 
-![AndroidStudio toolbar](docs/img/androidstudio_tool_bar.png). Make sure the target shows as `app`. 
+![AndroidStudio toolbar](docs/img/androidstudio_tool_bar.png) Make sure the target shows as `app`. 
 
 #### Profiling and Inspection
 If you need to inspect the network packet or checking the app's running state, you can use Android Studio's built-in profiler located at the bottom toolbar.
