@@ -6,7 +6,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -45,7 +44,6 @@ import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
-import com.lcl.lclmeasurementtool.Managers.LocationUpdatesListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
 import com.lcl.lclmeasurementtool.Managers.UploadManager;
@@ -63,16 +61,14 @@ import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
+import com.lcl.lclmeasurementtool.model.datamodel.MeasurementReportModel;
 import com.microsoft.appcenter.analytics.Analytics;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
-import java.security.UnrecoverableEntryException;
-import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.ZoneId;
 import java.util.List;
@@ -548,6 +544,10 @@ public class HomeFragment extends Fragment {
         MeasurementDataReportModel reportModel = new MeasurementDataReportModel(sig_m, h_pkr, serialized, show_data);
 
         // upload data
+//        Upload u = Upload.INSTANCE;
+//        u.post("a", "b");
+
+
         UploadManager upload = UploadManager.Builder()
                 .addPayload(JsonStream.serialize(reportModel))
                 .addEndpoint(endpoint);

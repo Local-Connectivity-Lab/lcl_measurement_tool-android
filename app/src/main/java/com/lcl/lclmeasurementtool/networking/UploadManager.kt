@@ -1,20 +1,18 @@
 package com.lcl.lclmeasurementtool.networking
 
 import android.util.Log
-import com.lcl.lclmeasurementtool.Constants.NetworkConstants
 import com.lcl.lclmeasurementtool.errors.UploadPostFailedException
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
-object Upload {
+object UploadManager {
 
     private val client: OkHttpClient = OkHttpClient()
     private val MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
     private const val TAG = "UPLOAD_MANAGER"
     private const val ERR_MSG = "Data upload failed."
-
 
     /**
      * Post payload to endpoint
