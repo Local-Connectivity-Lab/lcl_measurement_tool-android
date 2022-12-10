@@ -6,8 +6,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.lcl.lclmeasurementtool.databinding.SignalDataFragmentBinding
-import com.lcl.lclmeasurementtool.model.viewmodel.SignalStrengthViewModel
-import com.lcl.lclmeasurementtool.model.viewmodel.SignalStrengthViewModelFactory
+import com.lcl.lclmeasurementtool.model.viewmodels.SignalStrengthViewModel
 
 class SignalStrengthFragment: Fragment() {
 
@@ -22,7 +21,7 @@ class SignalStrengthFragment: Fragment() {
             "You can only access the viewModel after onActivityCreated()"
         }
 
-        ViewModelProvider(this, SignalStrengthViewModelFactory(activity.application))[SignalStrengthViewModel::class.java]
+        ViewModelProvider(this, SignalStrengthViewModel.Factory(activity.application))[SignalStrengthViewModel::class.java]
 
     }
 

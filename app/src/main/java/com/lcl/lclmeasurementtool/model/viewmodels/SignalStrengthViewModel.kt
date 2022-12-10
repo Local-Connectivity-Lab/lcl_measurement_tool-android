@@ -1,13 +1,12 @@
-package com.lcl.lclmeasurementtool.model.viewmodel
+package com.lcl.lclmeasurementtool.model.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.lcl.lclmeasurementtool.database.dao.SignalStrengthDao
 import com.lcl.lclmeasurementtool.database.db.AppDatabase
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 import com.lcl.lclmeasurementtool.model.repository.MeasurementsRepository
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class SignalStrengthViewModel(application: Application): ViewModel() {
@@ -17,6 +16,17 @@ class SignalStrengthViewModel(application: Application): ViewModel() {
     fun insert(data: SignalStrengthReportModel) {
         viewModelScope.launch {
             repository.insertSignalStrengthData(data)
+        }
+    }
+
+
+    class Factory(private val application: Application): ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(SignalStrengthViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return SignalStrengthViewModel(application) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }
