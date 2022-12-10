@@ -34,7 +34,7 @@ import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
-import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
+import com.lcl.lclmeasurementtool.constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.database.Entity.AbstractViewModel;
 import com.lcl.lclmeasurementtool.database.Entity.Connectivity;
 import com.lcl.lclmeasurementtool.database.Entity.ConnectivityViewModel;

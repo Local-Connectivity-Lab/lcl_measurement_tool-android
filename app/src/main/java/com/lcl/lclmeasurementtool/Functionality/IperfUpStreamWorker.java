@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.work.WorkerParameters;
 
-import com.lcl.lclmeasurementtool.Constants.IperfConstants;
+import com.lcl.lclmeasurementtool.constants.IperfConstants;
 
 import java.lang.Thread;
 

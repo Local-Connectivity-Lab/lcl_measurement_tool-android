@@ -1,9 +1,9 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
-import static com.lcl.lclmeasurementtool.Constants.NetworkConstants.IPERF_COUNTS;
-import static com.lcl.lclmeasurementtool.Constants.NetworkConstants.IPERF_COUNTS_TAG;
-import static com.lcl.lclmeasurementtool.Constants.NetworkConstants.IPERF_TEST_ADDRESS;
-import static com.lcl.lclmeasurementtool.Constants.NetworkConstants.IPERF_TEST_ADDRESS_TAG;
+import static com.lcl.lclmeasurementtool.constants.NetworkConstants.IPERF_COUNTS;
+import static com.lcl.lclmeasurementtool.constants.NetworkConstants.IPERF_COUNTS_TAG;
+import static com.lcl.lclmeasurementtool.constants.NetworkConstants.IPERF_TEST_ADDRESS;
+import static com.lcl.lclmeasurementtool.constants.NetworkConstants.IPERF_TEST_ADDRESS_TAG;
 
 import android.content.Context;
 

@@ -4,15 +4,12 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
-import com.lcl.lclmeasurementtool.Constants.NetworkConstants;
-import com.lcl.lclmeasurementtool.R;
+import com.lcl.lclmeasurementtool.constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
 import com.microsoft.appcenter.analytics.Analytics;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.Call;
