@@ -1,4 +1,4 @@
-package com.lcl.lclmeasurementtool.Database.Entity;
+package com.lcl.lclmeasurementtool.database.Entity;
 
 import android.app.Application;
 import android.util.Log;
@@ -6,7 +6,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 
-import com.lcl.lclmeasurementtool.Database.db.MeasurementResultDatabase;
+import com.lcl.lclmeasurementtool.database.db.MeasurementResultDatabase;
 
 import java.util.List;
 

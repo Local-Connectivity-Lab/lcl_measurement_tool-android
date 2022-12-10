@@ -1,7 +1,8 @@
-package com.lcl.lclmeasurementtool.model.dao
+package com.lcl.lclmeasurementtool.database.dao
 
 import androidx.room.*
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SignalStrengthDao {
@@ -11,7 +12,7 @@ interface SignalStrengthDao {
 
     // READ
     @Query("SELECT * FROM signal_strength_table ORDER BY time_stamp ASC")
-    fun getAll(): List<SignalStrengthReportModel>
+    fun getAll(): Flow<List<SignalStrengthReportModel>>
 
     // DELETE
     @Query("DELETE FROM signal_strength_table")

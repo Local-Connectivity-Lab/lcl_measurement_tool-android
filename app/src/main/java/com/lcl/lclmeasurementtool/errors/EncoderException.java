@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.lcl.lclmeasurementtool.Utils;
+package com.lcl.lclmeasurementtool.errors;
 
 /**
  * EncoderException from apache commons

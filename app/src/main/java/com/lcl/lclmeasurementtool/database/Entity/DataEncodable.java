@@ -1,4 +1,4 @@
-package com.lcl.lclmeasurementtool.Database.Entity;
+package com.lcl.lclmeasurementtool.database.Entity;
 
 /**
  * Data encodable interface

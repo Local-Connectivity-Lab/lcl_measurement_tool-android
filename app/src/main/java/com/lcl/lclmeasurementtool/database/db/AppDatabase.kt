@@ -1,11 +1,11 @@
-package com.lcl.lclmeasurementtool.Database.db
+package com.lcl.lclmeasurementtool.database.db
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.lcl.lclmeasurementtool.model.dao.ConnectivityDao
-import com.lcl.lclmeasurementtool.model.dao.SignalStrengthDao
+import com.lcl.lclmeasurementtool.database.dao.ConnectivityDao
+import com.lcl.lclmeasurementtool.database.dao.SignalStrengthDao
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 

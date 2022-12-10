@@ -7,9 +7,9 @@ import com.lcl.lclmeasurementtool.views.AbstractViewHolder
 
 open class HistoricalDataAdapter<DataModel, ViewHolder : AbstractViewHolder<DataModel>>(
     private val createCustomViewHolder: (parent: ViewGroup, viewType: Int) -> ViewHolder,
-    diffCallback: DiffUtil.ItemCallback<DataModel>,
+    diffCallback: DiffUtil.ItemCallback<DataModel>):
+    ListAdapter<DataModel, ViewHolder>(diffCallback){
 
-): ListAdapter<DataModel, ViewHolder>(diffCallback){
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return createCustomViewHolder(parent, viewType)
     }

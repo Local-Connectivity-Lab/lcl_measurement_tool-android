@@ -1,7 +1,4 @@
-package com.lcl.lclmeasurementtool.Database.Entity;
-
-import java.util.ArrayList;
-import java.util.List;
+package com.lcl.lclmeasurementtool.database.Entity;
 
 /**
  * The enum representing the data stored in the database

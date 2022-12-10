@@ -6,8 +6,8 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.lcl.lclmeasurementtool.Database.db.MeasurementResultDatabase;
-import com.lcl.lclmeasurementtool.Database.Entity.SignalStrengthDAO;
+import com.lcl.lclmeasurementtool.database.db.MeasurementResultDatabase;
+import com.lcl.lclmeasurementtool.database.Entity.SignalStrengthDAO;
 
 import org.junit.After;
 import org.junit.Before;
