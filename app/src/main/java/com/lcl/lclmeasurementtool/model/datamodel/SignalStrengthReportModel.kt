@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.model.datamodel
 
 import androidx.annotation.NonNull
+import androidx.recyclerview.widget.DiffUtil
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
@@ -17,4 +18,24 @@ data class SignalStrengthReportModel(
     @Ignore  override var cellId: String,
     @get:JsonProperty("dbm") @ColumnInfo(name = "signal_strength") var dbm: Int,
     @get:JsonProperty("level_code") @ColumnInfo(name = "signal_strength_level") var levelCode: Int
-    ) : BaseMeasureDataModel
+    ) : BaseMeasureDataModel {
+
+    companion object {
+        val diffCallback = object: DiffUtil.ItemCallback<SignalStrengthReportModel>() {
+            override fun areItemsTheSame(
+                oldItem: SignalStrengthReportModel,
+                newItem: SignalStrengthReportModel
+            ): Boolean {
+                return oldItem.timestamp == newItem.timestamp
+            }
+
+            override fun areContentsTheSame(
+                oldItem: SignalStrengthReportModel,
+                newItem: SignalStrengthReportModel
+            ): Boolean {
+                return newItem == oldItem
+            }
+
+        }
+    }
+    }

@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.model.datamodel
 
+import androidx.recyclerview.widget.DiffUtil
 import androidx.room.ColumnInfo
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
@@ -14,4 +15,22 @@ data class ConnectivityReportModel(
     @ColumnInfo(name = "upload_speed") @get:JsonProperty("upload_speed") var uploadSpeed: Double,
     @ColumnInfo(name = "download_speed") @get:JsonProperty("download_speed") var downloadSpeed: Double,
     @ColumnInfo(name = "ping") @get:JsonProperty("ping") var ping: Double
-) : BaseMeasureDataModel
+) : BaseMeasureDataModel {
+    companion object {
+        val diffCallback = object: DiffUtil.ItemCallback<ConnectivityReportModel>() {
+            override fun areItemsTheSame(
+                oldItem: ConnectivityReportModel,
+                newItem: ConnectivityReportModel
+            ): Boolean {
+                return oldItem.timestamp == newItem.timestamp
+            }
+
+            override fun areContentsTheSame(
+                oldItem: ConnectivityReportModel,
+                newItem: ConnectivityReportModel
+            ): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
+}
