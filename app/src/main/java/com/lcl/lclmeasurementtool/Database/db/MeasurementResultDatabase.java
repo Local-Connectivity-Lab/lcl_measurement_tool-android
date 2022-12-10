@@ -1,4 +1,4 @@
-package com.lcl.lclmeasurementtool.Database.DB;
+package com.lcl.lclmeasurementtool.Database.db;
 
 import android.content.Context;
 

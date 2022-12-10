@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.model.datamodel
 
+import androidx.room.PrimaryKey
 import com.fasterxml.jackson.annotation.JsonProperty
 
 interface BaseMeasureDataModel {

@@ -6,16 +6,13 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.lcl.lclmeasurementtool.Database.DB.MeasurementResultDatabase;
-import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
+import com.lcl.lclmeasurementtool.Database.db.MeasurementResultDatabase;
 import com.lcl.lclmeasurementtool.Database.Entity.SignalStrengthDAO;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.IOException;
 
