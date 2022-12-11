@@ -3,6 +3,8 @@ package com.lcl.lclmeasurementtool
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.lcl.lclmeasurementtool.databinding.SignalDataFragmentBinding
@@ -16,14 +18,7 @@ class SignalStrengthFragment: Fragment() {
 
     private lateinit var recyclerView: RecyclerView
 
-    private val viewModel: SignalStrengthViewModel by lazy {
-        val activity = requireNotNull(this.activity) {
-            "You can only access the viewModel after onActivityCreated()"
-        }
-
-        ViewModelProvider(this, SignalStrengthViewModel.Factory(activity.application))[SignalStrengthViewModel::class.java]
-
-    }
+    private val viewModel: SignalStrengthViewModel by viewModels { SignalStrengthViewModel.Factory }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

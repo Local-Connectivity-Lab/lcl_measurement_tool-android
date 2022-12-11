@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.lcl.lclmeasurementtool.database.db.AppDatabase
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.model.repository.MeasurementsRepository
@@ -21,15 +22,16 @@ class ConnectivityViewModel(application: Application): AndroidViewModel(applicat
         }
     }
 
-
-
-    class Factory(private val application: Application): ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(ConnectivityViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return ConnectivityViewModel(application) as T
+    companion object {
+        val Factory: ViewModelProvider.Factory = object: ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+                if (modelClass.isAssignableFrom(ConnectivityViewModel::class.java)) {
+                    val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
+                    @Suppress("UNCHECKED_CAST")
+                    return ConnectivityViewModel(application) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
             }
-            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }
