@@ -11,7 +11,7 @@ import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.model.repository.MeasurementsRepository
 import kotlinx.coroutines.launch
 
-class ConnectivityViewModel(application: Application): AndroidViewModel(application) {
+class ConnectivityViewModel(application: Application): ViewModel() {
 
     private val repository = MeasurementsRepository(AppDatabase.getDatabase(application))
     val connectivityData = repository.connectivityData
