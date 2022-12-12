@@ -102,10 +102,10 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = HomeFragmentBinding.inflate(inflater, container, false);
-        this.activity = getActivity();
-        this.context = getContext();
-        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
-        device_id = preferences.getString("device_id", "unknown");
+//        this.activity = getActivity();
+//        this.context = getContext();
+//        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
+//        device_id = preferences.getString("device_id", "unknown");
         return binding.getRoot();
     }
 
@@ -115,475 +115,475 @@ public class HomeFragment extends Fragment {
     }
 
     // check whether the system has stored necessary credentials
-    private boolean systemNotReady() {
-        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
-        return !preferences.getBoolean("login", false);
-    }
+//    private boolean systemNotReady() {
+//        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
+//        return !preferences.getBoolean("login", false);
+//    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         // prepare necessary information managers
-        mNetworkManager = NetworkManager.getManager(this.context);
-        mCellularManager = CellularManager.getManager(this.context);
-        mLocationManager = LocationServiceManager.getManager(this.context);
-
-        locationServiceListener = new LocationServiceListener(this.context, getLifecycle());
-        mNetworkTestViewModel = new NetworkTestViewModel(this.context);
-        mNetworkTestViewModel.getmSavedIperfDownInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
-        mNetworkTestViewModel.getmSavedIperfUpInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
-        mNetworkTestViewModel.getmSavedPingInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
-        connectivityViewModel = new ViewModelProvider(this).get(ConnectivityViewModel.class);
-        signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
-
-        getLifecycle().addObserver(locationServiceListener);
-
-        this.isTestStarted = false;
-        this.isCellularConnected = false;
-
-        // update and listen to signal strength changes
-        prevSignalStrength = mCellularManager.getDBM();
-        updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
-        mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
-
-            if (systemNotReady()) return;
-
-            Log.e(TAG, "" + dBm);
-            updateSignalStrengthTexts(level, dBm);
-
-            if (prevSignalStrength != 0 && Math.abs(prevSignalStrength - dBm) >= SIGNAL_THRESHOLD) {
-                prevSignalStrength = dBm;
-                String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
-                String cell_id = mCellularManager.getCellID();
-                byte[][] result = retrieveKeysInformation();
-                if (result.length == 0) {
-                    exitWhenFailure(getString(R.string.keys_compromised));
-                }
-
-                byte[] h_pkr = result[0];
-                byte[] sk_t = result[1];
-                mLocationManager.getLastLocation(location -> {
-                    if (location == null) {
-                        Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND);
-                        return;
-                    }
-                    LatLng latLng = LocationUtils.toLatLng(location);
-                    SignalStrengthMessageModel signalStrengthMessageModel =
-                            new SignalStrengthMessageModel(
-                                    latLng.latitude,
-                                    latLng.longitude,
-                                    ts,
-                                    dBm,
-                                    level.getLevelCode(),
-                                    cell_id,
-                                    device_id);
-                    signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
-                    uploadData(signalStrengthMessageModel, sk_t, h_pkr, NetworkConstants.SIGNAL_ENDPOINT);
-                });
-            }
-        });
-
-        setupTestView();
-        setUpFAB();
-
-        // listen to network changes from wifi to cellular and vice versa
-        this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
-
-            // Cellular
-            @Override
-            public void onAvailable() {
-                Log.i(TAG, "from call back on cellular available");
-                isCellularConnected = true;
-                setFABToInitialState();
-            }
-
-            @Override
-            public void onLost() {
-                Log.e(TAG, "on cellular lost");
-                isCellularConnected = false;
-                setFABToDisabledState();
-            }
-
-            @Override
-            public void onUnavailable() {
-                Log.e(TAG, "on cellular unavailable");
-                isCellularConnected = false;
-                setFABToDisabledState();
-            }
-
-            @Override
-            public void onCellularNetworkChanged(NetworkCapabilities capabilities) {
-            }
-
-        }, new NetworkChangeListener() {
-
-            // WIFI
-            @Override
-            public void onAvailable() {
-                Log.i(TAG, "from call back on wifi available");
-                isCellularConnected = false;
-                setFABToDisabledState();
-            }
-
-            @Override
-            public void onUnavailable() {
-            }
-
-            @Override
-            public void onLost() {
-            }
-
-            @Override
-            public void onCellularNetworkChanged(NetworkCapabilities capabilities) {
-            }
-        });
+//        mNetworkManager = NetworkManager.getManager(this.context);
+//        mCellularManager = CellularManager.getManager(this.context);
+//        mLocationManager = LocationServiceManager.getManager(this.context);
+//
+//        locationServiceListener = new LocationServiceListener(this.context, getLifecycle());
+//        mNetworkTestViewModel = new NetworkTestViewModel(this.context);
+//        mNetworkTestViewModel.getmSavedIperfDownInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
+//        mNetworkTestViewModel.getmSavedIperfUpInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
+//        mNetworkTestViewModel.getmSavedPingInfo().observe(getViewLifecycleOwner(), this::parseWorkInfo);
+//        connectivityViewModel = new ViewModelProvider(this).get(ConnectivityViewModel.class);
+//        signalViewModel = new ViewModelProvider(this).get(SignalViewModel.class);
+//
+//        getLifecycle().addObserver(locationServiceListener);
+//
+//        this.isTestStarted = false;
+//        this.isCellularConnected = false;
+//
+//        // update and listen to signal strength changes
+//        prevSignalStrength = mCellularManager.getDBM();
+//        updateSignalStrengthTexts(mCellularManager.getSignalStrengthLevel(), prevSignalStrength);
+//        mCellularManager.listenToSignalStrengthChange((level, dBm) -> {
+//
+//            if (systemNotReady()) return;
+//
+//            Log.e(TAG, "" + dBm);
+//            updateSignalStrengthTexts(level, dBm);
+//
+//            if (prevSignalStrength != 0 && Math.abs(prevSignalStrength - dBm) >= SIGNAL_THRESHOLD) {
+//                prevSignalStrength = dBm;
+//                String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
+//                String cell_id = mCellularManager.getCellID();
+//                byte[][] result = retrieveKeysInformation();
+//                if (result.length == 0) {
+//                    exitWhenFailure(getString(R.string.keys_compromised));
+//                }
+//
+//                byte[] h_pkr = result[0];
+//                byte[] sk_t = result[1];
+//                mLocationManager.getLastLocation(location -> {
+//                    if (location == null) {
+//                        Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND);
+//                        return;
+//                    }
+//                    LatLng latLng = LocationUtils.toLatLng(location);
+//                    SignalStrengthMessageModel signalStrengthMessageModel =
+//                            new SignalStrengthMessageModel(
+//                                    latLng.latitude,
+//                                    latLng.longitude,
+//                                    ts,
+//                                    dBm,
+//                                    level.getLevelCode(),
+//                                    cell_id,
+//                                    device_id);
+//                    signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
+//                    uploadData(signalStrengthMessageModel, sk_t, h_pkr, NetworkConstants.SIGNAL_ENDPOINT);
+//                });
+//            }
+//        });
+//
+//        setupTestView();
+//        setUpFAB();
+//
+//        // listen to network changes from wifi to cellular and vice versa
+//        this.mNetworkManager.addNetworkChangeListener(new NetworkChangeListener() {
+//
+//            // Cellular
+//            @Override
+//            public void onAvailable() {
+//                Log.i(TAG, "from call back on cellular available");
+//                isCellularConnected = true;
+//                setFABToInitialState();
+//            }
+//
+//            @Override
+//            public void onLost() {
+//                Log.e(TAG, "on cellular lost");
+//                isCellularConnected = false;
+//                setFABToDisabledState();
+//            }
+//
+//            @Override
+//            public void onUnavailable() {
+//                Log.e(TAG, "on cellular unavailable");
+//                isCellularConnected = false;
+//                setFABToDisabledState();
+//            }
+//
+//            @Override
+//            public void onCellularNetworkChanged(NetworkCapabilities capabilities) {
+//            }
+//
+//        }, new NetworkChangeListener() {
+//
+//            // WIFI
+//            @Override
+//            public void onAvailable() {
+//                Log.i(TAG, "from call back on wifi available");
+//                isCellularConnected = false;
+//                setFABToDisabledState();
+//            }
+//
+//            @Override
+//            public void onUnavailable() {
+//            }
+//
+//            @Override
+//            public void onLost() {
+//            }
+//
+//            @Override
+//            public void onCellularNetworkChanged(NetworkCapabilities capabilities) {
+//            }
+//        });
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mCellularManager.stopListening();
-        binding = null;
+//        mCellularManager.stopListening();
+//        binding = null;
     }
 
     /////////////////////// SIGNAL //////////////////////
     private void updateSignalStrengthTexts(SignalStrengthLevel level, int dBm) {
-        this.activity.runOnUiThread(() -> {
-
-            if (binding != null) {
-                binding.SignalStrengthValue.setText(String.valueOf(dBm));
-                binding.SignalStrengthStatus.setText(level.getName());
-                binding.SignalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
-                binding.SignalStrengthIndicator.setColorFilter(level.getColor(this.context));
-            }
-        });
+//        this.activity.runOnUiThread(() -> {
+//
+//            if (binding != null) {
+//                binding.SignalStrengthValue.setText(String.valueOf(dBm));
+//                binding.SignalStrengthStatus.setText(level.getName());
+//                binding.SignalStrengthUnit.setText(UnitUtils.SIGNAL_STRENGTH_UNIT);
+//                binding.SignalStrengthIndicator.setColorFilter(level.getColor(this.context));
+//            }
+//        });
     }
 
 
     /////////////////////////// Measurement ////////////////////////
-    private void setFABToInitialState() {
-        isTestStarted = false;
-        activity.runOnUiThread(() -> {
-            binding.fab.setSelected(true);
-            binding.fab.setImageResource(R.drawable.start);
-            binding.fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
-        });
-    }
-
-    private void setFABToStartedState() {
-        isTestStarted = true;
-        resetConnectivities();
-        activity.runOnUiThread(() -> {
-            setupTestView();
-            binding.fab.setImageResource(R.drawable.stop);
-        });
-    }
-
-    private void setFABToDisabledState() {
-        activity.runOnUiThread(() -> {
-            binding.fab.setSelected(false);
-            binding.fab.setImageResource(R.drawable.start);
-            binding.fab.setColorFilter(ContextCompat.getColor(this.context, R.color.light_gray));
-            isTestStarted = false;
-            setupTestView();
-            resetConnectivities();
-        });
-    }
-
-    private void resetConnectivities() {
-        prevDownload = 0;
-        prevPing = 0;
-        prevUpload = 0;
-    }
-
-    private void setupTestView() {
-        binding.upload.icon.setImageResource(R.drawable.upload);
-        binding.upload.data.setText("0.0 Mbit");
-        binding.upload.data.setTextColor(this.activity.getColor(R.color.light_gray));
-
-        binding.download.icon.setImageResource(R.drawable.download);
-        binding.download.data.setText("0.0 Mbit");
-        binding.download.data.setTextColor(this.activity.getColor(R.color.light_gray));
-
-        binding.ping.icon.setImageResource(R.drawable.ping);
-        binding.ping.data.setText("0.0 ms");
-        binding.ping.data.setTextColor(this.activity.getColor(R.color.light_gray));
-    }
-
-    // initialze FAB
-    private void setUpFAB() {
-        FloatingActionButton fab = binding.fab;
-        if (isCellularConnected) {
-            setFABToInitialState();
-        } else {
-            setFABToDisabledState();
-        }
-
-        fab.setOnClickListener(button -> {
-            if (!this.isCellularConnected) {
-                // raise alert telling user to enable cellular data
-                Log.e(TAG, "not connected to cellular network");
-                setFABToDisabledState();
-                MessageDialog.build()
-                        .setTitle(R.string.cellular_on_title)
-                        .setMessage(R.string.cellular_on_message)
-                        .setButtonOrientation(LinearLayout.VERTICAL)
-                        .setOtherButton(R.string.settings, (baseDialog, v) -> {
-                            Intent networkSettings = new Intent(Settings.ACTION_SETTINGS);
-                            networkSettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(networkSettings);
-                            return false;
-                        }).setOkButton(android.R.string.cancel, (baseDialog, v) -> false).show();
-
-            } else {
-
-                mLocationManager.getLastLocation(location -> {
-                    if (location == null) {
-                        Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND + ": TEST CANCELLED");
-                        setFABToInitialState();
-                        mNetworkTestViewModel.cancel();
-                        PopTip.show(getString(R.string.location_not_available));
-                    }
-                });
-
-                if (this.isTestStarted) {
-                    setFABToInitialState();
-                    mNetworkTestViewModel.cancel();
-                    PopTip.show(getString(R.string.iperf_test_canceled));
-                } else {
-                    setFABToStartedState();
-                    mNetworkTestViewModel.run();
-                    PopTip.show(getString(R.string.iperf_test_starts));
-                }
-
-//                this.isTestStarted = !isTestStarted;
-            }
-        });
-    }
-
-    @SuppressLint("RestrictedApi")
-    private void parseWorkInfo(List<WorkInfo> workInfoList) {
-        // if there are no matching work info, do nothing
-        if (workInfoList == null || workInfoList.isEmpty()) return;
-
-        WorkInfo workInfo = workInfoList.get(0);
-        Set<String> tags = workInfo.getTags();
-        WorkInfo.State state = workInfo.getState();
-        Data progress = workInfo.getProgress();
-        Data output = workInfo.getOutputData();
-
-        if (state == WorkInfo.State.SUCCEEDED && output.size() == 0) return;
-
-        if (tags.contains("PING")) {
-            switch (state) {
-                case FAILED:
-                case CANCELLED:
-                    setFABToInitialState();
-                    mNetworkTestViewModel.cancel();
-                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
-                    break;
-                case RUNNING:
-                    // do nothing
-                    break;
-                case SUCCEEDED:
-                    String finalResult = output.getString("FINAL_RESULT");
-                    if (finalResult == null || finalResult.isEmpty()) {
-                        setFABToInitialState();
-                        mNetworkTestViewModel.cancel();
-                        return;
-                    }
-
-                    try {
-                        prevPing = Double.parseDouble(finalResult.split(" ")[0]);
-                    } catch (NumberFormatException e) {
-                        Log.e(TAG, "ping receive empty string");
-                    }
-
-                    Log.i(TAG, "ping is: " + prevPing);
-                    this.activity.runOnUiThread(() -> {
-                        TextView pingTest = binding.ping.data;
-                        pingTest.setTextColor(this.activity.getColor(R.color.white));
-                        pingTest.setText(finalResult);
-                    });
-                    break;
-            }
-        } else if (tags.contains("IPERF_UP")) {
-            switch (state) {
-                case CANCELLED:
-                case FAILED:
-                    setFABToInitialState();
-                    mNetworkTestViewModel.cancel();
-                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
-                    break;
-                case RUNNING:
-                    String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
-                    this.activity.runOnUiThread(() -> {
-                        TextView speedTest = binding.upload.data;
-                        speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
-                        speedTest.setText(bandWidth);
-                    });
-                    break;
-                case SUCCEEDED:
-                    String finalResult = output.getString("FINAL_RESULT");
-                    if (finalResult == null || finalResult.isEmpty()) {
-                        setFABToInitialState();
-                        mNetworkTestViewModel.cancel();
-                        return;
-                    }
-
-                    try {
-                        prevUpload = Double.parseDouble(finalResult.split(" ")[0]);
-                    } catch (NumberFormatException e) {
-                        Log.e(TAG, "upload receive empty string");
-                    }
-
-                    this.activity.runOnUiThread(() -> {
-                        TextView speedTest = binding.upload.data;
-                        speedTest.setTextColor(this.activity.getColor(R.color.white));
-                        speedTest.setText(finalResult);
-                        PopTip.show(getString(R.string.iperf_test_completed));
-                    });
-                    setFABToInitialState();
-
-                    // upload data only when test is complete and system is ready
-                    if (isTestCompleted()) {
-                        Log.i(TAG, "prepare for upload");
-                        if (systemNotReady()) return;
-                        String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
-                        String cell_id = mCellularManager.getCellID();
-                        byte[][] result = retrieveKeysInformation();
-                        if (result.length == 0) {
-                            exitWhenFailure(getString(R.string.keys_compromised));
-                        }
-
-                        byte[] h_pkr = result[0];
-                        byte[] sk_t = result[1];
-
-                        mLocationManager.getLastLocation(location -> {
-                            if (location == null) {
-                                Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND);
-                                return;
-                            }
-                            LatLng latLng = LocationUtils.toLatLng(location);
-                            ConnectivityMessageModel connectivityMessageModel =
-                                    new ConnectivityMessageModel(
-                                            latLng.latitude,
-                                            latLng.longitude,
-                                            ts,
-                                            prevUpload,
-                                            prevDownload,
-                                            prevPing, cell_id, device_id);
-                            connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
-                            uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
-                        });
-                    }
-                    WorkManager.getInstance(this.context).pruneWork();
-                    break;
-                default:break;
-            }
-
-        } else if (tags.contains("IPERF_DOWN")) {
-            switch (state) {
-                case CANCELLED:
-                case FAILED:
-                    setFABToInitialState();
-                    mNetworkTestViewModel.cancel();
-                    WaitDialog.dismiss();
-                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
-                    break;
-                case RUNNING:
-                    String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
-                    this.activity.runOnUiThread(() -> {
-                        TextView speedTest = binding.download.data;
-                        speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
-                        speedTest.setText(bandWidth);
-                    });
-                    break;
-                case SUCCEEDED:
-                    String finalResult = output.getString("FINAL_RESULT");
-                    if (finalResult == null || finalResult.isEmpty()) {
-                        setFABToInitialState();
-                        mNetworkTestViewModel.cancel();
-                        return;
-                    }
-
-                    try {
-                        prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
-                    } catch (NumberFormatException e) {
-                        Log.e(TAG, "download receive empty string");
-                    }
-                    this.activity.runOnUiThread(() -> {
-                        TextView speedTest = binding.download.data;
-                        speedTest.setTextColor(this.activity.getColor(R.color.white));
-                        speedTest.setText(finalResult);
-                    });
-                    break;
-            }
-        } else {
-            // unknown worker
-            PopTip.show(getString(R.string.unknown_test));
-        }
-    }
-
-    ///////////////////// HELPER /////////////////////////
-    private boolean isTestCompleted() {
-        return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
-    }
-
-    private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
-            InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
-
-        byte[] serialized = SerializationUtils.serializeToBytes(data);
-
-        byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
-
-        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
-        boolean show_data = preferences.getBoolean("showData", false);
-
-        MeasurementDataReportModel reportModel = new MeasurementDataReportModel(sig_m, h_pkr, serialized, show_data);
-
-        // upload data
-//        Upload u = Upload.INSTANCE;
-//        u.post("a", "b");
-
-
-        UploadManager upload = UploadManager.Builder()
-                .addPayload(JsonStream.serialize(reportModel))
-                .addEndpoint(endpoint);
-        try {
-            upload.post();
-        } catch (IOException e) {
-            TipDialog.show(getString(R.string.upload_ioexception), WaitDialog.TYPE.ERROR);
-        }
-    }
-
-    private byte[][] retrieveKeysInformation() {
-        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
-        if (!preferences.contains("h_pkr") || !preferences.contains("sk_t")) {
-            exitWhenFailure(getString(R.string.keys_missing));
-        }
-        byte[] h_pkr;
-        byte[] sk_t;
-        try {
-            h_pkr = Hex.decodeHex(preferences.getString("h_pkr", ""));
-            sk_t = Hex.decodeHex(preferences.getString("sk_t", ""));
-        } catch (DecoderException e) {
-            e.printStackTrace();
-            return new byte[0][];
-        }
-
-        if (h_pkr.length == 0 || sk_t.length == 0) {
-            preferences.edit().clear().apply();
-            exitWhenFailure(getString(R.string.keys_compromised));
-        }
-        return new byte[][]{h_pkr, sk_t};
-    }
-
-    private void exitWhenFailure(String message) {
-        MessageDialog.show(getString(R.string.error), message, getString(android.R.string.ok)).setOkButton((baseDialog, v) -> {
-            activity.finishAndRemoveTask();
-            System.exit(1);
-            return true;
-        });
-    }
+//    private void setFABToInitialState() {
+//        isTestStarted = false;
+//        activity.runOnUiThread(() -> {
+//            binding.fab.setSelected(true);
+//            binding.fab.setImageResource(R.drawable.start);
+//            binding.fab.setColorFilter(ContextCompat.getColor(this.context, R.color.purple_500));
+//        });
+//    }
+//
+//    private void setFABToStartedState() {
+//        isTestStarted = true;
+//        resetConnectivities();
+//        activity.runOnUiThread(() -> {
+//            setupTestView();
+//            binding.fab.setImageResource(R.drawable.stop);
+//        });
+//    }
+//
+//    private void setFABToDisabledState() {
+//        activity.runOnUiThread(() -> {
+//            binding.fab.setSelected(false);
+//            binding.fab.setImageResource(R.drawable.start);
+//            binding.fab.setColorFilter(ContextCompat.getColor(this.context, R.color.light_gray));
+//            isTestStarted = false;
+//            setupTestView();
+//            resetConnectivities();
+//        });
+//    }
+//
+//    private void resetConnectivities() {
+//        prevDownload = 0;
+//        prevPing = 0;
+//        prevUpload = 0;
+//    }
+//
+//    private void setupTestView() {
+//        binding.upload.icon.setImageResource(R.drawable.upload);
+//        binding.upload.data.setText("0.0 Mbit");
+//        binding.upload.data.setTextColor(this.activity.getColor(R.color.light_gray));
+//
+//        binding.download.icon.setImageResource(R.drawable.download);
+//        binding.download.data.setText("0.0 Mbit");
+//        binding.download.data.setTextColor(this.activity.getColor(R.color.light_gray));
+//
+//        binding.ping.icon.setImageResource(R.drawable.ping);
+//        binding.ping.data.setText("0.0 ms");
+//        binding.ping.data.setTextColor(this.activity.getColor(R.color.light_gray));
+//    }
+//
+//    // initialze FAB
+//    private void setUpFAB() {
+//        FloatingActionButton fab = binding.fab;
+//        if (isCellularConnected) {
+//            setFABToInitialState();
+//        } else {
+//            setFABToDisabledState();
+//        }
+//
+//        fab.setOnClickListener(button -> {
+//            if (!this.isCellularConnected) {
+//                // raise alert telling user to enable cellular data
+//                Log.e(TAG, "not connected to cellular network");
+//                setFABToDisabledState();
+//                MessageDialog.build()
+//                        .setTitle(R.string.cellular_on_title)
+//                        .setMessage(R.string.cellular_on_message)
+//                        .setButtonOrientation(LinearLayout.VERTICAL)
+//                        .setOtherButton(R.string.settings, (baseDialog, v) -> {
+//                            Intent networkSettings = new Intent(Settings.ACTION_SETTINGS);
+//                            networkSettings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                            startActivity(networkSettings);
+//                            return false;
+//                        }).setOkButton(android.R.string.cancel, (baseDialog, v) -> false).show();
+//
+//            } else {
+//
+//                mLocationManager.getLastLocation(location -> {
+//                    if (location == null) {
+//                        Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND + ": TEST CANCELLED");
+//                        setFABToInitialState();
+//                        mNetworkTestViewModel.cancel();
+//                        PopTip.show(getString(R.string.location_not_available));
+//                    }
+//                });
+//
+//                if (this.isTestStarted) {
+//                    setFABToInitialState();
+//                    mNetworkTestViewModel.cancel();
+//                    PopTip.show(getString(R.string.iperf_test_canceled));
+//                } else {
+//                    setFABToStartedState();
+//                    mNetworkTestViewModel.run();
+//                    PopTip.show(getString(R.string.iperf_test_starts));
+//                }
+//
+////                this.isTestStarted = !isTestStarted;
+//            }
+//        });
+//    }
+//
+//    @SuppressLint("RestrictedApi")
+//    private void parseWorkInfo(List<WorkInfo> workInfoList) {
+//        // if there are no matching work info, do nothing
+//        if (workInfoList == null || workInfoList.isEmpty()) return;
+//
+//        WorkInfo workInfo = workInfoList.get(0);
+//        Set<String> tags = workInfo.getTags();
+//        WorkInfo.State state = workInfo.getState();
+//        Data progress = workInfo.getProgress();
+//        Data output = workInfo.getOutputData();
+//
+//        if (state == WorkInfo.State.SUCCEEDED && output.size() == 0) return;
+//
+//        if (tags.contains("PING")) {
+//            switch (state) {
+//                case FAILED:
+//                case CANCELLED:
+//                    setFABToInitialState();
+//                    mNetworkTestViewModel.cancel();
+//                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
+//                    break;
+//                case RUNNING:
+//                    // do nothing
+//                    break;
+//                case SUCCEEDED:
+//                    String finalResult = output.getString("FINAL_RESULT");
+//                    if (finalResult == null || finalResult.isEmpty()) {
+//                        setFABToInitialState();
+//                        mNetworkTestViewModel.cancel();
+//                        return;
+//                    }
+//
+//                    try {
+//                        prevPing = Double.parseDouble(finalResult.split(" ")[0]);
+//                    } catch (NumberFormatException e) {
+//                        Log.e(TAG, "ping receive empty string");
+//                    }
+//
+//                    Log.i(TAG, "ping is: " + prevPing);
+//                    this.activity.runOnUiThread(() -> {
+//                        TextView pingTest = binding.ping.data;
+//                        pingTest.setTextColor(this.activity.getColor(R.color.white));
+//                        pingTest.setText(finalResult);
+//                    });
+//                    break;
+//            }
+//        } else if (tags.contains("IPERF_UP")) {
+//            switch (state) {
+//                case CANCELLED:
+//                case FAILED:
+//                    setFABToInitialState();
+//                    mNetworkTestViewModel.cancel();
+//                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
+//                    break;
+//                case RUNNING:
+//                    String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
+//                    this.activity.runOnUiThread(() -> {
+//                        TextView speedTest = binding.upload.data;
+//                        speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
+//                        speedTest.setText(bandWidth);
+//                    });
+//                    break;
+//                case SUCCEEDED:
+//                    String finalResult = output.getString("FINAL_RESULT");
+//                    if (finalResult == null || finalResult.isEmpty()) {
+//                        setFABToInitialState();
+//                        mNetworkTestViewModel.cancel();
+//                        return;
+//                    }
+//
+//                    try {
+//                        prevUpload = Double.parseDouble(finalResult.split(" ")[0]);
+//                    } catch (NumberFormatException e) {
+//                        Log.e(TAG, "upload receive empty string");
+//                    }
+//
+//                    this.activity.runOnUiThread(() -> {
+//                        TextView speedTest = binding.upload.data;
+//                        speedTest.setTextColor(this.activity.getColor(R.color.white));
+//                        speedTest.setText(finalResult);
+//                        PopTip.show(getString(R.string.iperf_test_completed));
+//                    });
+//                    setFABToInitialState();
+//
+//                    // upload data only when test is complete and system is ready
+//                    if (isTestCompleted()) {
+//                        Log.i(TAG, "prepare for upload");
+//                        if (systemNotReady()) return;
+//                        String ts = TimeUtils.getTimeStamp(ZoneId.of("America/Los_Angeles"));
+//                        String cell_id = mCellularManager.getCellID();
+//                        byte[][] result = retrieveKeysInformation();
+//                        if (result.length == 0) {
+//                            exitWhenFailure(getString(R.string.keys_compromised));
+//                        }
+//
+//                        byte[] h_pkr = result[0];
+//                        byte[] sk_t = result[1];
+//
+//                        mLocationManager.getLastLocation(location -> {
+//                            if (location == null) {
+//                                Analytics.trackEvent(AnalyticsUtils.LOCATION_NOT_FOUND);
+//                                return;
+//                            }
+//                            LatLng latLng = LocationUtils.toLatLng(location);
+//                            ConnectivityMessageModel connectivityMessageModel =
+//                                    new ConnectivityMessageModel(
+//                                            latLng.latitude,
+//                                            latLng.longitude,
+//                                            ts,
+//                                            prevUpload,
+//                                            prevDownload,
+//                                            prevPing, cell_id, device_id);
+//                            connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
+//                            uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
+//                        });
+//                    }
+//                    WorkManager.getInstance(this.context).pruneWork();
+//                    break;
+//                default:break;
+//            }
+//
+//        } else if (tags.contains("IPERF_DOWN")) {
+//            switch (state) {
+//                case CANCELLED:
+//                case FAILED:
+//                    setFABToInitialState();
+//                    mNetworkTestViewModel.cancel();
+//                    WaitDialog.dismiss();
+//                    MessageDialog.show(R.string.error, R.string.measurement_test_error, android.R.string.ok);
+//                    break;
+//                case RUNNING:
+//                    String bandWidth = progress.getString("INTERVAL_BANDWIDTH");
+//                    this.activity.runOnUiThread(() -> {
+//                        TextView speedTest = binding.download.data;
+//                        speedTest.setTextColor(this.activity.getColor(R.color.light_gray));
+//                        speedTest.setText(bandWidth);
+//                    });
+//                    break;
+//                case SUCCEEDED:
+//                    String finalResult = output.getString("FINAL_RESULT");
+//                    if (finalResult == null || finalResult.isEmpty()) {
+//                        setFABToInitialState();
+//                        mNetworkTestViewModel.cancel();
+//                        return;
+//                    }
+//
+//                    try {
+//                        prevDownload = Double.parseDouble(finalResult.split(" ")[0]);
+//                    } catch (NumberFormatException e) {
+//                        Log.e(TAG, "download receive empty string");
+//                    }
+//                    this.activity.runOnUiThread(() -> {
+//                        TextView speedTest = binding.download.data;
+//                        speedTest.setTextColor(this.activity.getColor(R.color.white));
+//                        speedTest.setText(finalResult);
+//                    });
+//                    break;
+//            }
+//        } else {
+//            // unknown worker
+//            PopTip.show(getString(R.string.unknown_test));
+//        }
+//    }
+//
+//    ///////////////////// HELPER /////////////////////////
+//    private boolean isTestCompleted() {
+//        return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
+//    }
+//
+//    private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
+//            InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
+//
+//        byte[] serialized = SerializationUtils.serializeToBytes(data);
+//
+//        byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
+//
+//        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
+//        boolean show_data = preferences.getBoolean("showData", false);
+//
+//        MeasurementDataReportModel reportModel = new MeasurementDataReportModel(sig_m, h_pkr, serialized, show_data);
+//
+//        // upload data
+////        Upload u = Upload.INSTANCE;
+////        u.post("a", "b");
+//
+//
+//        UploadManager upload = UploadManager.Builder()
+//                .addPayload(JsonStream.serialize(reportModel))
+//                .addEndpoint(endpoint);
+//        try {
+//            upload.post();
+//        } catch (IOException e) {
+//            TipDialog.show(getString(R.string.upload_ioexception), WaitDialog.TYPE.ERROR);
+//        }
+//    }
+//
+//    private byte[][] retrieveKeysInformation() {
+//        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
+//        if (!preferences.contains("h_pkr") || !preferences.contains("sk_t")) {
+//            exitWhenFailure(getString(R.string.keys_missing));
+//        }
+//        byte[] h_pkr;
+//        byte[] sk_t;
+//        try {
+//            h_pkr = Hex.decodeHex(preferences.getString("h_pkr", ""));
+//            sk_t = Hex.decodeHex(preferences.getString("sk_t", ""));
+//        } catch (DecoderException e) {
+//            e.printStackTrace();
+//            return new byte[0][];
+//        }
+//
+//        if (h_pkr.length == 0 || sk_t.length == 0) {
+//            preferences.edit().clear().apply();
+//            exitWhenFailure(getString(R.string.keys_compromised));
+//        }
+//        return new byte[][]{h_pkr, sk_t};
+//    }
+//
+//    private void exitWhenFailure(String message) {
+//        MessageDialog.show(getString(R.string.error), message, getString(android.R.string.ok)).setOkButton((baseDialog, v) -> {
+//            activity.finishAndRemoveTask();
+//            System.exit(1);
+//            return true;
+//        });
+//    }
 }
