@@ -96,6 +96,9 @@ dependencies {
     implementation 'androidx.compose.material:material'
     implementation("androidx.compose.runtime:runtime:$compose_version")
 
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+
+
     // third-party lib
     implementation "com.squareup.okhttp3:okhttp:4.9.0"
     implementation 'com.jsoniter:jsoniter:0.9.23'
