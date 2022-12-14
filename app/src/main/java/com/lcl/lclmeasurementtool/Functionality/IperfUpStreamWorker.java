@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.work.WorkerParameters;
 
-import com.lcl.lclmeasurementtool.Constants.IperfConstants;
+import com.lcl.lclmeasurementtool.constants.IperfConstants;
 
 import java.lang.Thread;
 
@@ -37,7 +37,7 @@ public class IperfUpStreamWorker extends AbstractIperfWorker {
                 IperfConstants.IC_test_username : getInputData().getString("userName");
         config.password = IperfConstants.IC_isDebug ?
                 IperfConstants.IC_test_password : getInputData().getString("password");
-        config.rsaKey = IperfConstants.Base64Encode(IperfConstants.IC_SSL_PK);
+        config.rsaKey = IperfConstants.Companion.base64Encode(IperfConstants.Companion.getIC_SSL_PK());
         Log.d(TAG, config.mServerAddr + ":" + config.mServerPort + " isDown="+config.isDownMode);
     }
 

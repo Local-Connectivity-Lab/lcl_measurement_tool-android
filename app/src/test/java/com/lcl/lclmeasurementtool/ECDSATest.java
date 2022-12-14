@@ -10,7 +10,7 @@ import java.security.spec.InvalidKeySpecException;
 
 import static org.junit.Assert.*;
 
-import com.lcl.lclmeasurementtool.Utils.DecoderException;
+import com.lcl.lclmeasurementtool.errors.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
 

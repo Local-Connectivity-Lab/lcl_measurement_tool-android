@@ -12,14 +12,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -29,7 +27,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.lcl.lclmeasurementtool.R;
-import com.lcl.lclmeasurementtool.Utils.DecoderException;
+import com.lcl.lclmeasurementtool.errors.DecoderException;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.BuildConfig;
 import com.yanzhenjie.permission.runtime.Permission;
@@ -44,8 +42,6 @@ import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.concurrent.Executor;
-import java.util.function.Consumer;
 
 /**
  * A location service manager managing the location information

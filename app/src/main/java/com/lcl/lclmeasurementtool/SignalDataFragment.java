@@ -1,16 +1,12 @@
 package com.lcl.lclmeasurementtool;
 
-import android.content.Context;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
@@ -18,17 +14,11 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.material.card.MaterialCardView;
 import com.kongzue.dialogx.dialogs.BottomDialog;
-import com.kongzue.dialogx.interfaces.OnBindView;
 import com.kongzue.dialogx.util.TextInfo;
-import com.lcl.lclmeasurementtool.Database.Entity.EntityEnum;
-import com.lcl.lclmeasurementtool.Database.Entity.SignalStrength;
-import com.lcl.lclmeasurementtool.Database.Entity.SignalViewModel;
+import com.lcl.lclmeasurementtool.database.Entity.SignalStrength;
+import com.lcl.lclmeasurementtool.database.Entity.SignalViewModel;
 import com.lcl.lclmeasurementtool.databinding.SignalDataFragmentBinding;
-
-import java.util.Arrays;
 
 /**
  * A fragment support displaying signal data

@@ -2,7 +2,7 @@ package com.lcl.lclmeasurementtool.Managers;
 
 import android.location.Location;
 
-import com.lcl.lclmeasurementtool.Utils.DecoderException;
+import com.lcl.lclmeasurementtool.errors.DecoderException;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;

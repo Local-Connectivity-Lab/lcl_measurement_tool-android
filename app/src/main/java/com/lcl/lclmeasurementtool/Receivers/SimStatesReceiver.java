@@ -13,7 +13,7 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.kongzue.dialogx.dialogs.MessageDialog;
-import com.lcl.lclmeasurementtool.Constants.SimCardConstants;
+import com.lcl.lclmeasurementtool.constants.SimCardConstants;
 import com.lcl.lclmeasurementtool.R;
 
 /**
