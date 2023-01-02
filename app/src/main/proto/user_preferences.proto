@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option java_package = "com.lcl.lclmeasurementtool.datastore";
+option java_multiple_files = true;
+
+message UserPreferences {
+  bool show_data = 1;
+  bool logged_in = 2;
+  bytes h_pkr = 3;
+  bytes sk_t = 4;
+  string device_id = 5;
+}
