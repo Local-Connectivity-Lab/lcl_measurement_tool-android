@@ -21,10 +21,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun HomeRoute() {
-
+    HomeScreen()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +37,9 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             ConnectivityCard(modifier = modifier)
         }
 
-        FloatingActionButton(onClick = {}, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp, bottom = 12.dp)) {
+        FloatingActionButton(onClick = {}, modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(end = 12.dp, bottom = 12.dp)) {
             Icon(imageVector = Filled.PlayArrow, contentDescription = null)
         }
     }
@@ -44,6 +47,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 
 @Composable
 private fun SignalStrengthCard(modifier: Modifier = Modifier) {
+    val fontSize = 20.sp
     Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 10.dp)
@@ -51,18 +55,18 @@ private fun SignalStrengthCard(modifier: Modifier = Modifier) {
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier.padding(12.dp)
+            modifier = modifier.padding(20.dp)
         ) {
 
             Icon(modifier = modifier,
                 imageVector = Filled.SignalCellularAlt,
                 contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = "Signal Strength:")
+            Text(text = "Signal Strength:", fontSize = fontSize)
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "val", fontWeight = FontWeight.Bold)
+            Text(text = "val", fontWeight = FontWeight.Bold, fontSize = fontSize)
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "dBm")
+            Text(text = "dBm", fontSize = fontSize)
             Spacer(modifier = Modifier.width(20.dp))
             Box(modifier = Modifier
                 .size(10.dp)

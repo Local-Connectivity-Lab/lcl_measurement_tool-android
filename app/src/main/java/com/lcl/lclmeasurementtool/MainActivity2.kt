@@ -5,6 +5,8 @@ import android.os.PersistableBundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,6 +14,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.lcl.lclmeasurementtool.ui.LCLApp
 import com.lcl.lclmeasurementtool.ui.Login
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
@@ -23,6 +26,7 @@ class MainActivity2 : ComponentActivity() {
 
     val viewModel: MainActivityViewModel by viewModels()
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -43,7 +47,7 @@ class MainActivity2 : ComponentActivity() {
         // including IME animations
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            Login()
+            LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this))
 //            when(uiState) {
 //                MainActivityUiState.Login -> Login()
 //                else -> {}

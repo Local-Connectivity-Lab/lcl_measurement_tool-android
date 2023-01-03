@@ -6,19 +6,16 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 
-private const val interestsGraphRoutePattern = "history_graph"
+private const val historyGraphRoutePattern = "history_graph"
 const val historyRoute = "history_route"
 
-fun NavController.navigateToHistoryGraph(navOptions: NavOptions? = null) {
-    this.navigate(interestsGraphRoutePattern, navOptions)
+fun NavController.navigateToHistory(navOptions: NavOptions? = null) {
+    this.navigate(historyGraphRoutePattern, navOptions)
 }
 
-fun NavGraphBuilder.historyGraph(
-    navigateToTopic: (String) -> Unit,
-    nestedGraphs: NavGraphBuilder.() -> Unit
-) {
+fun NavGraphBuilder.historyGraph() {
     navigation(
-        route = interestsGraphRoutePattern,
+        route = historyGraphRoutePattern,
         startDestination = historyRoute
     ) {
         composable(route = historyRoute) {
@@ -26,6 +23,5 @@ fun NavGraphBuilder.historyGraph(
 //                navigateToTopic = navigateToTopic,
 //            )
         }
-        nestedGraphs()
     }
 }

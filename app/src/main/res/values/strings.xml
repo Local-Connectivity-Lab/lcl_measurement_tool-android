@@ -72,4 +72,9 @@
     <string name="dark_mode_config_light">Light</string>
     <string name="dark_mode_config_dark">Dark</string>
     <string name="dismiss_dialog_button_text">OK</string>
+
+    <string name="home_icon_text">Home</string>
+    <string name="home_title_text">Home</string>
+    <string name="history_data_title_text">History</string>
+    <string name="history_data_icon_text">History</string>
 </resources>

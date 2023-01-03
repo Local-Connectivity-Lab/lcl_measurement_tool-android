@@ -53,6 +53,7 @@ fun SettingsDialog(
 //                        )
 //                    }
 //                }
+                    SettingsPanel(onSelectPublishData = {})
                 Divider(Modifier.padding(top = 8.dp))
                 LinksPanel()
                 VersionInfo()
