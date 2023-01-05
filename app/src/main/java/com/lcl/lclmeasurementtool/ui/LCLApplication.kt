@@ -1,37 +1,55 @@
 package com.lcl.lclmeasurementtool.ui
 
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+
+import com.lcl.lclmeasurementtool.networking.NetworkMonitor
 import com.lcl.lclmeasurementtool.ui.navigation.TopLevelDestination
 import com.lcl.lclmeasurementtool.ui.navigation.historyGraph
 import com.lcl.lclmeasurementtool.ui.navigation.homeNavigationRoute
 import com.lcl.lclmeasurementtool.ui.navigation.homeScreen
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalLifecycleComposeApi::class
+)
 @Composable
 fun LCLApp(
     windowSizeClass: WindowSizeClass,
-    appState: AppState = rememberAppState(windowSizeClass = windowSizeClass)
+    networkMonitor: NetworkMonitor,
+    appState: AppState = rememberAppState(windowSizeClass = windowSizeClass, networkMonitor = networkMonitor)
 ) {
 
     if (appState.shouldShowSettingsDialog) {
         SettingsDialog(
             onDismiss = { appState.setShowSettingsDialog(false) }
         )
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val isOffline by appState.isOffline.collectAsStateWithLifecycle()
+    Log.d("LCLApplication", "isOffline is $isOffline")
+    LaunchedEffect(isOffline) {
+        if (isOffline) {
+            Log.d("LCLApplication", "show snack bar")
+            snackbarHostState.showSnackbar(message = "Please connect to a cellular network before running the test", duration = SnackbarDuration.Indefinite)
+        }
     }
 
 
@@ -41,7 +59,8 @@ fun LCLApp(
         contentColor = MaterialTheme.colorScheme.onBackground,
         bottomBar = {
             LCLBottomBar(destinations = appState.topLevelDestinations, onNavigateToDestination = appState::navigateToTopLevelDestination, currentDestination = appState.currentDestination)
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
 
         Row(modifier = Modifier
@@ -64,7 +83,7 @@ fun LCLApp(
                         onActionClick = { appState.setShowSettingsDialog(true) }
                     )
                 }
-                LCLNavHost(navController = appState.navController, onBackClick = appState::onBackClick)
+                LCLNavHost(navController = appState.navController, onBackClick = appState::onBackClick, isOffline = isOffline)
             }
         }
 
@@ -146,10 +165,11 @@ fun LCLNavHost(
     navController: NavHostController,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    startDestination: String = homeNavigationRoute
+    startDestination: String = homeNavigationRoute,
+    isOffline: Boolean
 ) {
     NavHost(navController = navController, modifier = modifier, startDestination = startDestination) {
-        homeScreen()
+        homeScreen(isOffline)
         historyGraph()
     }
 }

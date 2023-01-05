@@ -12,7 +12,7 @@ import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.NetworkPing
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,25 +24,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun HomeRoute() {
-    HomeScreen()
+fun HomeRoute(isOffline: Boolean) {
+    HomeScreen(isOffline = isOffline)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean) {
+
+    val offline by remember { mutableStateOf(isOffline) }
+    
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = modifier.fillMaxHeight()) {
             SignalStrengthCard(modifier = modifier)
             ConnectivityCard(modifier = modifier)
         }
 
-        FloatingActionButton(onClick = {}, modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(end = 12.dp, bottom = 12.dp)) {
+        FloatingActionButton(onClick = { if (offline) {} else {
+            print("hi, you are connected")
+        } },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 12.dp, bottom = 12.dp)) {
             Icon(imageVector = Filled.PlayArrow, contentDescription = null)
         }
     }
+}
+
+@Composable
+fun ShowMessage(isOffline: Boolean, msg: String, snackbarHostState: SnackbarHostState) {
+    LaunchedEffect(isOffline) {
+            snackbarHostState.showSnackbar(message = msg, duration = SnackbarDuration.Long)    
+    }
+    
 }
 
 @Composable
@@ -121,6 +135,6 @@ fun DataEntry(icon: ImageVector, text: String) {
 @Composable
 fun HomePreview() {
     BoxWithConstraints {
-        HomeScreen()
+        HomeScreen(isOffline = false)
     }
 }

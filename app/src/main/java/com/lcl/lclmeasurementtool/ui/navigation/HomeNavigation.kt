@@ -12,8 +12,8 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null) {
     this.navigate(homeNavigationRoute, navOptions)
 }
 
-fun NavGraphBuilder.homeScreen() {
+fun NavGraphBuilder.homeScreen(isOffline: Boolean) {
     composable(route = homeNavigationRoute) {
-        HomeRoute()
+        HomeRoute(isOffline)
     }
 }
