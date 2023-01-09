@@ -2,6 +2,7 @@ package com.lcl.lclmeasurementtool.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,13 +23,22 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lcl.lclmeasurementtool.R
+import com.lcl.lclmeasurementtool.model.viewmodels.SettingsViewModel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 
+@OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun SettingsDialog(
     onDismiss: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
 
+    val showData = viewModel.shouldShowData.collectAsStateWithLifecycle()
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
@@ -53,7 +63,7 @@ fun SettingsDialog(
 //                        )
 //                    }
 //                }
-                    SettingsPanel(onSelectPublishData = {})
+                    SettingsPanel(onSelectShowData = {viewModel.toggleShowData(!showData.value)}, showData = showData.value)
                 Divider(Modifier.padding(top = 8.dp))
                 LinksPanel()
                 VersionInfo()
@@ -74,14 +84,15 @@ fun SettingsDialog(
 
 @Composable
 private fun SettingsPanel(
-    onSelectPublishData: (Boolean) -> Unit
+    onSelectShowData: (Boolean) -> Unit,
+    showData: Boolean
 ) {
     SettingsDialogSectionTitle(text = "General")
     Column(Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row {
-            Checkbox(checked = false, onCheckedChange = onSelectPublishData)
+            Checkbox(checked = showData, onCheckedChange = onSelectShowData)
             Column {
                 Text(text = "Show Data on SCN website")
                 TextSummary(text = "Display signal and speed test data on SCN public map. Your data will help others understand our coverage!")
@@ -136,7 +147,10 @@ private fun TextSummary(text: String) {
 
 @Composable
 private fun VersionInfo() {
-    Column( Modifier.fillMaxWidth().padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = "v1.0")
         TextSummary(text = "By Local Connectivity Lab @ UWCSE")
     }

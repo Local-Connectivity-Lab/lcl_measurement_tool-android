@@ -142,7 +142,7 @@ public class NetworkTestViewModel extends ViewModel {
     private Data preparePingWorkerData() {
         Data.Builder builder = new Data.Builder();
         builder.putInt(NetworkConstants.IPERF_COUNTS_TAG, NetworkConstants.IPERF_COUNTS);
-        builder.putString(NetworkConstants.IPERF_TEST_ADDRESS_TAG, NetworkConstants.IPERF_TEST_ADDRESS);
+        builder.putString(NetworkConstants.PING_TEST_ADDRESS_TAG, NetworkConstants.PING_TEST_ADDRESS);
         return builder.build();
     }
 }

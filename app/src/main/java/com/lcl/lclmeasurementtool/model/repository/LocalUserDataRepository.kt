@@ -6,7 +6,9 @@ import com.lcl.lclmeasurementtool.model.datamodel.UserData
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class LocalUserDataRepository @Inject constructor(private val preferenceDataSource: PreferencesDataSource) : UserDataRepository {
+class LocalUserDataRepository @Inject constructor(
+    private val preferenceDataSource: PreferencesDataSource
+    ) : UserDataRepository {
     override val userData: Flow<UserData> = preferenceDataSource.userData
     override suspend fun toggleShowData(showData: Boolean) = preferenceDataSource.toggleShowData(showData)
 

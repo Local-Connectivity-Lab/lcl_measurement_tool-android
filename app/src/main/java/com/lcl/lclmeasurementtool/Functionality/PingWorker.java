@@ -2,8 +2,8 @@ package com.lcl.lclmeasurementtool.Functionality;
 
 import static com.lcl.lclmeasurementtool.constants.NetworkConstants.IPERF_COUNTS;
 import static com.lcl.lclmeasurementtool.constants.NetworkConstants.IPERF_COUNTS_TAG;
-import static com.lcl.lclmeasurementtool.constants.NetworkConstants.IPERF_TEST_ADDRESS;
-import static com.lcl.lclmeasurementtool.constants.NetworkConstants.IPERF_TEST_ADDRESS_TAG;
+import static com.lcl.lclmeasurementtool.constants.NetworkConstants.PING_TEST_ADDRESS;
+import static com.lcl.lclmeasurementtool.constants.NetworkConstants.PING_TEST_ADDRESS_TAG;
 
 import android.content.Context;
 
@@ -25,8 +25,8 @@ public class PingWorker extends AbstractPingWorker {
     @Override
     void prepareConfig() {
         int times = getInputData().getInt(IPERF_COUNTS_TAG, IPERF_COUNTS);
-        String address = getInputData().getString(IPERF_TEST_ADDRESS_TAG);
-        if (address == null) address = IPERF_TEST_ADDRESS;
+        String address = getInputData().getString(PING_TEST_ADDRESS_TAG);
+        if (address == null) address = PING_TEST_ADDRESS;
         pingClient = pingClient.setTimes(times).setAddress(address).setTimeout(1000);
     }
 

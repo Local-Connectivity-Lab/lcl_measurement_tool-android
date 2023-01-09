@@ -15,8 +15,8 @@ class NetworkConstants {
         const val WORKER_TAG = "backgroundTest"
         const val IPERF_COUNTS_TAG = "TIMES"
         const val IPERF_COUNTS = 5
-        const val IPERF_TEST_ADDRESS = "google.com"
-        const val IPERF_TEST_ADDRESS_TAG = "ADDRESS"
+        const val PING_TEST_ADDRESS = "google.com"
+        const val PING_TEST_ADDRESS_TAG = "ADDRESS"
     }
 
 }
