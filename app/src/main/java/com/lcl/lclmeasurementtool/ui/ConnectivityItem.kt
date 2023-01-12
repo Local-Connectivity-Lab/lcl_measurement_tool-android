@@ -2,10 +2,7 @@ package com.lcl.lclmeasurementtool.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons.Rounded
-import androidx.compose.material.icons.rounded.CloudDownload
-import androidx.compose.material.icons.rounded.CloudUpload
-import androidx.compose.material.icons.rounded.NetworkCheck
-import androidx.compose.material.icons.rounded.NetworkPing
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -15,17 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 
 @Composable
 fun ConnectivityItem(
-    name: String,
-    following: Boolean,
-    topicImageUrl: String,
-    onClick: () -> Unit,
-    onFollowButtonClick: (Boolean) -> Unit,
+    data: ConnectivityReportModel,
     modifier: Modifier = Modifier,
-    iconModifier: Modifier = Modifier,
-    description: String = "",
+    onClick: () -> Unit,
     itemSeparation: Dp = 12.dp
 ) {
     Row(
@@ -40,28 +33,30 @@ fun ConnectivityItem(
         ) {
             TagIcon(modifier = modifier, icon = Rounded.NetworkCheck)
             Spacer(modifier = Modifier.width(12.dp))
-            ConnectivityContent(name, description)
+            ConnectivityContent(data = data)
         }
     }
 }
 
 @Composable
-private fun ConnectivityContent(value: String, time: String, modifier: Modifier = Modifier) {
+private fun ConnectivityContent(data: ConnectivityReportModel, modifier: Modifier = Modifier) {
     Column(modifier) {
         Row {
             Column {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    DataEntry(icon = Rounded.CloudUpload, text = "123 mbps")
-                    DataEntry(icon = Rounded.CloudDownload, text = "123 mbps")
+                    Text(text = "Speed")
+                    DataEntry(icon = Rounded.CloudUpload, text = "${data.uploadSpeed} mbps")
+                    DataEntry(icon = Rounded.CloudDownload, text = "${data.downloadSpeed} mbps")
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    DataEntry(icon = Rounded.NetworkPing, text = "123 ms")
-                    DataEntry(icon = Rounded.NetworkPing, text = "123 ms")
+                    Text(text = "Ping")
+                    DataEntry(icon = Rounded.NetworkPing, text = "${data.ping} ms")
+                    DataEntry(icon = Rounded.Cancel, text = "${data.packetLoss}%")
                 }
             }
         }
         Text(
-            text = time,
+            text = data.timestamp,
             style = MaterialTheme.typography.bodySmall
         )
     }
@@ -71,14 +66,11 @@ private fun ConnectivityContent(value: String, time: String, modifier: Modifier 
 @Preview
 @Composable
 private fun InterestsCardPreview() {
+        val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3)
         Surface {
             ConnectivityItem(
-                name = "-85",
-                description = "fhewukrhweurhuwe",
-                following = false,
-                topicImageUrl = "",
-                onClick = { },
-                onFollowButtonClick = { }
+                data = data,
+                onClick = { }
             )
         }
 }
@@ -86,14 +78,11 @@ private fun InterestsCardPreview() {
 @Preview
 @Composable
 private fun InterestsCardLongNamePreview() {
+    val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3)
         Surface {
             ConnectivityItem(
-                name = "-100",
-                description = "rhewkrweruwier",
-                following = true,
-                topicImageUrl = "",
-                onClick = { },
-                onFollowButtonClick = { }
+                data = data,
+                onClick = { }
             )
         }
 }
@@ -101,15 +90,11 @@ private fun InterestsCardLongNamePreview() {
 @Preview
 @Composable
 private fun InterestsCardLongDescriptionPreview() {
+    val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3)
     Surface {
         ConnectivityItem(
-            name = "Compose",
-            description = "This is a very very very very very very very " +
-                    "very very very long description",
-            following = false,
-            topicImageUrl = "",
-            onClick = { },
-            onFollowButtonClick = { }
+            data = data,
+            onClick = { }
         )
     }
 }

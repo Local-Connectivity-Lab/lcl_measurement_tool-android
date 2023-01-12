@@ -13,17 +13,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 
 @Composable
 fun SignalStrengthItem(
-    name: String,
-    following: Boolean,
-    topicImageUrl: String,
+    data: SignalStrengthReportModel,
     onClick: () -> Unit,
-    onFollowButtonClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    iconModifier: Modifier = Modifier,
-    description: String = "",
     itemSeparation: Dp = 12.dp
 ) {
     Row(
@@ -38,18 +34,18 @@ fun SignalStrengthItem(
         ) {
             TagIcon(modifier, Icons.Rounded.SignalCellularAlt)
             Spacer(modifier = Modifier.width(12.dp))
-            ConnectivityContent(name, description)
+            SignalStrengthContent(data = data)
         }
     }
 }
 
 
 @Composable
-private fun ConnectivityContent(value: String, time: String, modifier: Modifier = Modifier) {
+private fun SignalStrengthContent(data: SignalStrengthReportModel, modifier: Modifier = Modifier) {
     Column(modifier) {
         Row {
             Text(
-                text = "$value dBm",
+                text = "${data.dbm} dBm",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(
                     vertical = 4.dp
@@ -57,14 +53,14 @@ private fun ConnectivityContent(value: String, time: String, modifier: Modifier 
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.padding(start = 10.dp))
-            Text(text = "(level)",
+            Text(text = "(level code: ${data.levelCode})",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(
                     vertical = 4.dp
                 ))
         }
         Text(
-            text = time,
+            text = data.timestamp,
             style = MaterialTheme.typography.bodySmall
         )
     }
@@ -73,14 +69,11 @@ private fun ConnectivityContent(value: String, time: String, modifier: Modifier 
 @Preview
 @Composable
 private fun InterestsCardPreview() {
+    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
         Surface {
             SignalStrengthItem(
-                name = "-85",
-                description = "fhewukrhweurhuwe",
-                following = false,
-                topicImageUrl = "",
+                data = data,
                 onClick = { },
-                onFollowButtonClick = { }
             )
         }
 }
@@ -88,14 +81,11 @@ private fun InterestsCardPreview() {
 @Preview
 @Composable
 private fun InterestsCardLongNamePreview() {
+    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
         Surface {
             SignalStrengthItem(
-                name = "-100",
-                description = "rhewkrweruwier",
-                following = true,
-                topicImageUrl = "",
+                data = data,
                 onClick = { },
-                onFollowButtonClick = { }
             )
         }
 
@@ -104,16 +94,12 @@ private fun InterestsCardLongNamePreview() {
 @Preview
 @Composable
 private fun InterestsCardLongDescriptionPreview() {
-
+    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
     Surface {
+
         SignalStrengthItem(
-            name = "Compose",
-            description = "This is a very very very very very very very " +
-                    "very very very long description",
-            following = false,
-            topicImageUrl = "",
+            data = data,
             onClick = { },
-            onFollowButtonClick = { }
         )
     }
 }

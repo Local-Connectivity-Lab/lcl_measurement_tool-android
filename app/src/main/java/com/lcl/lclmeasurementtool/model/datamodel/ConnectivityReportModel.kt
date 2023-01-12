@@ -16,7 +16,8 @@ data class ConnectivityReportModel(
     override var deviceId: String,
     @ColumnInfo(name = "upload_speed") @get:JsonProperty("upload_speed") var uploadSpeed: Double,
     @ColumnInfo(name = "download_speed") @get:JsonProperty("download_speed") var downloadSpeed: Double,
-    @ColumnInfo(name = "ping") @get:JsonProperty("ping") var ping: Double
+    @ColumnInfo(name = "ping") @get:JsonProperty("ping") var ping: Double,
+    @ColumnInfo(name = "package_loss") @get:JsonProperty("package_loss") var packetLoss: Double
 ) : BaseMeasureDataModel {
 //    companion object {
 //        val diffCallback = object: DiffUtil.ItemCallback<ConnectivityReportModel>() {

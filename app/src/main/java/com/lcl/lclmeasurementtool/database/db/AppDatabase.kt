@@ -13,20 +13,19 @@ import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 abstract class AppDatabase: RoomDatabase() {
     abstract fun signalStrengthDao(): SignalStrengthDao
     abstract fun connectivityDao(): ConnectivityDao
-
-    companion object {
-
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
-
-        fun getDatabase(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room
-                    .databaseBuilder(context, AppDatabase::class.java, "measurement_db")
-                    .build()
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
+//    companion object {
+//
+//        @Volatile
+//        private var INSTANCE: AppDatabase? = null
+//
+//        fun getDatabase(context: Context): AppDatabase {
+//            return INSTANCE ?: synchronized(this) {
+//                val instance = Room
+//                    .databaseBuilder(context, AppDatabase::class.java, "measurement_db")
+//                    .build()
+//                INSTANCE = instance
+//                instance
+//            }
+//        }
+//    }
 }

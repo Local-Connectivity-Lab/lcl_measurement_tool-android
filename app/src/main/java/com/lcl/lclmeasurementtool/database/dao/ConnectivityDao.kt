@@ -8,9 +8,10 @@ import kotlinx.coroutines.flow.Flow
 interface ConnectivityDao {
     // CREATE
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(vararg connectivity: ConnectivityReportModel)
+    suspend fun insert(connectivity: ConnectivityReportModel)
 
     // READ
+    @Transaction
     @Query("SELECT * FROM connectivity_table ORDER BY time_stamp ASC")
     fun getAll(): Flow<List<ConnectivityReportModel>>
 

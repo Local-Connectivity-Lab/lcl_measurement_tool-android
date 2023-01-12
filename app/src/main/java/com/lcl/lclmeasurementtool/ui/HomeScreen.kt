@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons.Rounded
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SignalCellularAlt
+import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.NetworkPing
@@ -61,7 +62,7 @@ fun ShowMessage(isOffline: Boolean, msg: String, snackbarHostState: SnackbarHost
 
 @Composable
 private fun SignalStrengthCard(modifier: Modifier = Modifier) {
-    val fontSize = 20.sp
+    val fontSize = 18.sp
     Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 10.dp)
@@ -114,7 +115,7 @@ private fun ConnectivityCard(modifier: Modifier = Modifier) {
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     DataEntry(icon = Rounded.NetworkPing, text = "123 ms")
-                    DataEntry(icon = Rounded.NetworkPing, text = "123 ms")
+                    DataEntry(icon = Rounded.Cancel, text = "123 ms")
                 }
             }
         }

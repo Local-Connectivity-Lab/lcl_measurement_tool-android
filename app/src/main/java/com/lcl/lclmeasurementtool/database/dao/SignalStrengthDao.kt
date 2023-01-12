@@ -8,9 +8,10 @@ import kotlinx.coroutines.flow.Flow
 interface SignalStrengthDao {
     // CREATE
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(vararg signalStrength: SignalStrengthReportModel)
+    suspend fun insert(signalStrength: SignalStrengthReportModel)
 
     // READ
+    @Transaction
     @Query("SELECT * FROM signal_strength_table ORDER BY time_stamp ASC")
     fun getAll(): Flow<List<SignalStrengthReportModel>>
 

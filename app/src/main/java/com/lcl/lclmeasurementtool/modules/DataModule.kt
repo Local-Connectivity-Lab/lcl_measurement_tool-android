@@ -1,10 +1,9 @@
 package com.lcl.lclmeasurementtool.modules
 
 import com.lcl.lclmeasurementtool.datasource.ConnectivityMonitorDataSource
-import com.lcl.lclmeasurementtool.datasource.PreferencesDataSource
-import com.lcl.lclmeasurementtool.datastore.UserPreferences
-import com.lcl.lclmeasurementtool.model.repository.LocalUserDataRepository
-import com.lcl.lclmeasurementtool.model.repository.UserDataRepository
+import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
+import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
+import com.lcl.lclmeasurementtool.model.repository.*
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
 import dagger.Binds
 import dagger.Module
@@ -23,4 +22,14 @@ interface DataModule {
     fun bindsNetworkMonitor(
         networkMonitor: ConnectivityMonitorDataSource
     ): NetworkMonitor
+
+    @Binds
+    fun bindsSignalStrengthRepository(
+        measurementRepository: SignalStrengthRepository
+    ) : HistoryDataRepository<SignalStrengthReportModel>
+
+    @Binds
+    fun bindsConnectivityRepository(
+        measurementRepository: ConnectivityRepository
+    ) : HistoryDataRepository<ConnectivityReportModel>
 }

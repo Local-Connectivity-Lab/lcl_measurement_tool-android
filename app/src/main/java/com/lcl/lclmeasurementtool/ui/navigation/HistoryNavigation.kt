@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.lcl.lclmeasurementtool.ui.HistoryRoute
 
 private const val historyGraphRoutePattern = "history_graph"
 const val historyRoute = "history_route"
@@ -19,9 +20,7 @@ fun NavGraphBuilder.historyGraph() {
         startDestination = historyRoute
     ) {
         composable(route = historyRoute) {
-//            InterestsRoute(
-//                navigateToTopic = navigateToTopic,
-//            )
+            HistoryRoute()
         }
     }
 }
