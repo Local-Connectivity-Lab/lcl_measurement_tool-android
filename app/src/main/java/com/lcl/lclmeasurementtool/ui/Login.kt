@@ -15,7 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.lcl.lclmeasurementtool.R
 
 @Composable
-fun Login() {
+fun Login(
+    onLoginButtonClicked: () -> Unit
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -25,7 +27,7 @@ fun Login() {
         Image(painter = painterResource(id = R.drawable.lcl_purple_gold_uw), contentDescription = null, modifier = Modifier
             .width(300.dp)
             .height(300.dp).padding(top = 50.dp))
-        Button(onClick = {  }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
+        Button(onClick = onLoginButtonClicked, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer), modifier = Modifier.padding(top = 30.dp)) {
             Text(text = "Scan to Login")
         }
     }
@@ -34,5 +36,5 @@ fun Login() {
 @Preview
 @Composable
 fun LoginPreview() {
-    Login()
+    Login({})
 }

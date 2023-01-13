@@ -62,13 +62,6 @@ fun LCLTabContents(
     signalStrengthViewModel: SignalStrengthViewModel,
     connectivityViewModel: ConnectivityViewModel
 ) {
-    val data = if (selectedTabIndex == 1) listOf<ConnectivityReportModel>(
-
-    ) else listOf<SignalStrengthReportModel>(
-        SignalStrengthReportModel("deviceID1", 123.121, 456.451, "timestamp1", "cellID1", -81, 1),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2),
-    )
-
     val signalUiState: SignalStrengthUiState by signalStrengthViewModel.dataFlow.collectAsStateWithLifecycle()
     val connectivityUiState: ConnectivityUiState by connectivityViewModel.dataFlow.collectAsStateWithLifecycle()
     LazyColumn {

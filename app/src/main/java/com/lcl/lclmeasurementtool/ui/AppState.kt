@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.ui
 
+import android.content.Intent
 import android.util.Log
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.*
@@ -10,8 +11,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
+import com.lcl.lclmeasurementtool.MainActivity2
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
 import com.lcl.lclmeasurementtool.ui.navigation.*
+import com.yzq.zxinglibrary.android.CaptureActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -40,6 +43,7 @@ class AppState(
 
     var shouldShowSettingsDialog by mutableStateOf(false)
         private set
+
 
     val currentTopLevelDestination : TopLevelDestination?
         @Composable get() = when(currentDestination?.route) {

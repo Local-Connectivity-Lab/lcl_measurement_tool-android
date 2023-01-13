@@ -13,10 +13,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 
@@ -33,8 +31,15 @@ import com.lcl.lclmeasurementtool.ui.navigation.homeScreen
 fun LCLApp(
     windowSizeClass: WindowSizeClass,
     networkMonitor: NetworkMonitor,
+//    shouldLogin: Boolean,
     appState: AppState = rememberAppState(windowSizeClass = windowSizeClass, networkMonitor = networkMonitor)
 ) {
+//    Log.d("LCLAPP", "isLoggedIn=$shouldLogin")
+//    if (shouldLogin) {
+//
+//        return
+//    }
+
 
     if (appState.shouldShowSettingsDialog) {
         SettingsDialog(

@@ -63,7 +63,7 @@ fun SettingsDialog(
 //                        )
 //                    }
 //                }
-                    SettingsPanel(onSelectShowData = {viewModel.toggleShowData(!showData.value)}, showData = showData.value)
+                    SettingsPanel(onSelectShowData = {viewModel.toggleShowData(!showData.value)}, onLogoutClicked = {viewModel.logout()}, showData = showData.value)
                 Divider(Modifier.padding(top = 8.dp))
                 LinksPanel()
                 VersionInfo()
@@ -85,6 +85,7 @@ fun SettingsDialog(
 @Composable
 private fun SettingsPanel(
     onSelectShowData: (Boolean) -> Unit,
+    onLogoutClicked: () -> Unit,
     showData: Boolean
 ) {
     SettingsDialogSectionTitle(text = "General")
@@ -109,7 +110,7 @@ private fun SettingsPanel(
     Column(Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally) {
         ClickableRow(text = "Send Feedback", icon = Icons.Rounded.Email, onClick = {})
-        ClickableRow(text = "Logout", icon = Icons.Rounded.Logout, onClick = {})
+        ClickableRow(text = "Logout", icon = Icons.Rounded.Logout, onClick = onLogoutClicked)
     }
 }
 

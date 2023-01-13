@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.datasource
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
@@ -18,14 +19,6 @@ val Context.dataStore by preferencesDataStore(name = "settings")
 class PreferencesDataSource @Inject constructor(
     private val userPreferences: DataStore<UserPreferences>){
 
-//    private object PreferenceKeys {
-//        val SHOW_DATA = booleanPreferencesKey("show_data")
-//        val DEVICE_ID = stringPreferencesKey("device_id")
-//        val LOGGED_IN = booleanPreferencesKey("logged_in")
-//        val H_PKR = stringPreferencesKey("h_pkr")
-//        val SK_T = stringPreferencesKey("sk_t")
-//    }
-
     val userData = userPreferences.data.map {
         UserData(
             skT = it.skT,
@@ -34,21 +27,6 @@ class PreferencesDataSource @Inject constructor(
             loggedIn = it.loggedIn  // !(it.skT.isEmpty || it.hPkr.isEmpty)
         )
     }
-
-//    val preferences: Flow<Settings> = dataStore.data.map {
-//        val showData = it[PreferenceKeys.SHOW_DATA] ?: false
-//        val loggedIn = it[PreferenceKeys.LOGGED_IN] ?: false
-//        val hPKR = it[PreferenceKeys.H_PKR] ?: ""
-//        val skT = it[PreferenceKeys.SK_T] ?: ""
-//
-//        Settings(UserPref(showData = showData), DeviceSettings(loggedIn, hPKR, skT))
-//    }.catch { exception ->
-//        if (exception is IOException) {
-//            emit(Settings(null, null))
-//        } else {
-//            throw exception
-//        }
-//    }
 
     suspend fun toggleShowData(showData: Boolean) {
         try {
@@ -88,7 +66,7 @@ class PreferencesDataSource @Inject constructor(
             userPreferences.updateData {
                 it.toBuilder().setHPkr(newKey).build()
                 if (it.hPkr.isEmpty || it.skT.isEmpty) {
-                    it.toBuilder().setLoggedIn(false).build()
+                    it.toBuilder().setLoggedIn(false).clearHPkr().build()
                 }
                 return@updateData it
             }
@@ -103,7 +81,7 @@ class PreferencesDataSource @Inject constructor(
             userPreferences.updateData {
                 it.toBuilder().setSkT(newKey).build()
                 if (it.hPkr.isEmpty || it.skT.isEmpty) {
-                    it.toBuilder().setLoggedIn(false).build()
+                    it.toBuilder().setLoggedIn(false).clearSkT().build()
                 }
                 return@updateData it
             }
@@ -113,9 +91,20 @@ class PreferencesDataSource @Inject constructor(
         }
     }
 
+    suspend fun setKeys(hPKR: ByteString, skT: ByteString) {
+        userPreferences.updateData {
+            if (!it.hPkr.isEmpty || !it.skT.isEmpty) {
+                logout()
+            }
+            Log.d("PreferenceDataSource", "set login to true")
+            it.toBuilder().setHPkr(hPKR).setSkT(skT).setLoggedIn(true).build()
+        }
+    }
+
     suspend fun logout() {
         try {
             userPreferences.updateData {
+                Log.d("PreferenceDataSource", "set login to false")
                 it.toBuilder().setLoggedIn(false).clearHPkr().clearSkT().build()
             }
         } catch (e: IOException) {

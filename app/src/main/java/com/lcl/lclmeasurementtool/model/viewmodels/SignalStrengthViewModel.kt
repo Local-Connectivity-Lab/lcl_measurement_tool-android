@@ -32,28 +32,6 @@ class SignalStrengthViewModel @Inject constructor(
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = SignalStrengthUiState.Loading
             )
-//    private val repository = MeasurementsRepository(AppDatabase.getDatabase(application))
-//    val signalStrengthData = repository.signalStrengthData
-//
-//    fun insert(data: SignalStrengthReportModel) {
-//        viewModelScope.launch {
-//            repository.insertSignalStrengthData(data)
-//        }
-//    }
-//
-//    companion object {
-//        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-//            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-//                if (modelClass.isAssignableFrom(SignalStrengthViewModel::class.java)) {
-//                    val application = checkNotNull(extras[APPLICATION_KEY])
-//
-//                    @Suppress("UNCHECKED_CAST")
-//                    return SignalStrengthViewModel(application) as T
-//                }
-//                throw IllegalArgumentException("Unknown ViewModel class")
-//            }
-//        }
-//    }
 }
 
 sealed interface SignalStrengthUiState {

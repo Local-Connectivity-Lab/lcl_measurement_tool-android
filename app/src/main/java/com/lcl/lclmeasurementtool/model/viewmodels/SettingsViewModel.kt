@@ -32,4 +32,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun logout()  {
+        viewModelScope.launch {
+            userDataRepository.logout()
+        }
+    }
+
 }
