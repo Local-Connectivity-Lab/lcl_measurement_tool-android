@@ -8,5 +8,6 @@ message UserPreferences {
   bool logged_in = 2;
   bytes h_pkr = 3;
   bytes sk_t = 4;
-  string device_id = 5;
+  bytes R = 5;
+  string device_id = 6;
 }

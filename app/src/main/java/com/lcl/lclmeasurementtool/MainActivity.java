@@ -17,7 +17,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,34 +26,25 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.textfield.TextInputEditText;
-import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
-import com.jsoniter.spi.JsonException;
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.dialogs.FullScreenDialog;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBindView;
-import com.lcl.lclmeasurementtool.constants.NetworkConstants;
-import com.lcl.lclmeasurementtool.Models.QRCodeKeysModel;
 import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
 import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
-import com.lcl.lclmeasurementtool.errors.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils;
+import com.lcl.lclmeasurementtool.constants.NetworkConstants;
 import com.lcl.lclmeasurementtool.databinding.ActivityMainBinding;
+import com.lcl.lclmeasurementtool.errors.DecoderException;
 import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
-import com.yanzhenjie.permission.AndPermission;
-import com.yanzhenjie.permission.BuildConfig;
-import com.yanzhenjie.permission.runtime.Permission;
-import com.yzq.zxinglibrary.android.CaptureActivity;
-import com.yzq.zxinglibrary.bean.ZxingConfig;
-import com.yzq.zxinglibrary.common.Constant;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -115,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
             preferences.edit().putString(getString(R.string.device_id), device_id).apply();
         }
 
-        askPermission();
+//        askPermission();
         if (!preferences.contains("sigma_t") || !preferences.contains("pk_a") || !preferences.contains("sk_t")) {
             Log.e(TAG, "key not in shared preferences");
             showLogInPage();
@@ -126,33 +116,33 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(SIM_STATE_CHANGED);
         this.registerReceiver(simStatesReceiver, filter);
-        activityResultLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        Intent data = result.getData();
-                        if (data != null) {
-                            String content = data.getStringExtra(Constant.CODED_CONTENT);
-                            QRCodeKeysModel jsonObj;
-                            try {
-                             jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
-                            } catch (JsonException e) {
-                                TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.qrcode_invalid_format), WaitDialog.TYPE.ERROR);
-                                Map<String, String> reasons = AnalyticsUtils.formatProperties(e.getMessage(), Arrays.toString(e.getStackTrace()));
-                                Analytics.trackEvent(AnalyticsUtils.QR_CODE_PARSING_FAILED, reasons);
-                                return;
-                            }
-
-                            String sigma_t = jsonObj.getSigma_t();
-                            String sk_t = jsonObj.getSk_t();
-                            String pk_a = jsonObj.getPk_a();
-
-                            WaitDialog.show(getString(R.string.validation));
-                            validate(sigma_t, pk_a, sk_t);
-                        }
-                    }
-                }
-        );
+//        activityResultLauncher = registerForActivityResult(
+//                new ActivityResultContracts.StartActivityForResult(),
+//                result -> {
+//                    if (result.getResultCode() == RESULT_OK) {
+//                        Intent data = result.getData();
+//                        if (data != null) {
+//                            String content = data.getStringExtra(Constant.CODED_CONTENT);
+//                            QRCodeKeysModel jsonObj;
+//                            try {
+//                             jsonObj = JsonIterator.deserialize(content, QRCodeKeysModel.class);
+//                            } catch (JsonException e) {
+//                                TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.qrcode_invalid_format), WaitDialog.TYPE.ERROR);
+//                                Map<String, String> reasons = AnalyticsUtils.formatProperties(e.getMessage(), Arrays.toString(e.getStackTrace()));
+//                                Analytics.trackEvent(AnalyticsUtils.QR_CODE_PARSING_FAILED, reasons);
+//                                return;
+//                            }
+//
+//                            String sigma_t = jsonObj.getSigma_t();
+//                            String sk_t = jsonObj.getSk_t();
+//                            String pk_a = jsonObj.getPk_a();
+//
+//                            WaitDialog.show(getString(R.string.validation));
+//                            validate(sigma_t, pk_a, sk_t);
+//                        }
+//                    }
+//                }
+//        );
     }
 
     @Override
@@ -191,11 +181,11 @@ public class MainActivity extends AppCompatActivity {
                 Button qrScanner = v.findViewById(R.id.qr_scanner);
 
                 qrScanner.setOnClickListener(v1 -> {
-                    Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
-                    ZxingConfig config = new ZxingConfig();
-                    config.setFullScreenScan(false);
-                    intent.putExtra(Constant.INTENT_ZXING_CONFIG, config);
-                    activityResultLauncher.launch(intent);
+//                    Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
+//                    ZxingConfig config = new ZxingConfig();
+//                    config.setFullScreenScan(false);
+//                    intent.putExtra(Constant.INTENT_ZXING_CONFIG, config);
+//                    activityResultLauncher.launch(intent);
                 });
 
                 Button next = (Button) v.findViewById(R.id.next);
@@ -220,18 +210,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // check for necessary permission
-    private void askPermission() {
-        boolean hasPermissions = AndPermission.hasPermissions(this, Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION);
-        if (hasPermissions) return;
-        AndPermission.with(this).runtime().permission(Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION)
-                .onDenied(data -> {
-                    Uri packageURI = Uri.parse("package:" + getPackageName());
-                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                    this.activity.startActivity(intent);
-                }).start();
-    }
+//    private void askPermission() {
+//        boolean hasPermissions = AndPermission.hasPermissions(this, Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION);
+//        if (hasPermissions) return;
+//        AndPermission.with(this).runtime().permission(Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION)
+//                .onDenied(data -> {
+//                    Uri packageURI = Uri.parse("package:" + getPackageName());
+//                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
+//                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//
+//                    this.activity.startActivity(intent);
+//                }).start();
+//    }
 
     // save credential to SharedPreferences
     private void saveCredentials(String sigma_t, String pk_a, String sk_t) {

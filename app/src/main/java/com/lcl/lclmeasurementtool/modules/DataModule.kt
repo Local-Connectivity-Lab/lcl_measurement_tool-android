@@ -24,12 +24,17 @@ interface DataModule {
     ): NetworkMonitor
 
     @Binds
+    fun bindsNetworkAPI(
+        lclApiRepository: LCLApiRepository
+    ): NetworkApiRepository
+
+    @Binds
     fun bindsSignalStrengthRepository(
         measurementRepository: SignalStrengthRepository
-    ) : HistoryDataRepository<SignalStrengthReportModel>
+    ): HistoryDataRepository<SignalStrengthReportModel>
 
     @Binds
     fun bindsConnectivityRepository(
         measurementRepository: ConnectivityRepository
-    ) : HistoryDataRepository<ConnectivityReportModel>
+    ): HistoryDataRepository<ConnectivityReportModel>
 }

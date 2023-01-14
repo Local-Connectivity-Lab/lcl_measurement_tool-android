@@ -34,10 +34,6 @@ import androidx.core.app.ActivityCompat;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
-import com.yanzhenjie.permission.AndPermission;
-import com.yanzhenjie.permission.BuildConfig;
-import com.yanzhenjie.permission.runtime.Permission;
-import com.yanzhenjie.permission.runtime.PermissionRequest;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -91,9 +87,9 @@ public class CellularManager {
                 this.report = null;
             }
         } else {
-            if (!AndPermission.hasPermissions(this.context.get(), Permission.ACCESS_FINE_LOCATION)) {
-                AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).start();
-            }
+//            if (!AndPermission.hasPermissions(this.context.get(), Permission.ACCESS_FINE_LOCATION)) {
+//                AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).start();
+//            }
 
             @SuppressLint("MissingPermission") List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
             for (CellInfo info : infos) {
@@ -188,23 +184,23 @@ public class CellularManager {
     }
 
     public String getCellID() {
-        if (!AndPermission.hasPermissions(this.context.get(), Permission.ACCESS_FINE_LOCATION)) {
-            AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> MessageDialog.build()
-                    .setTitle(R.string.location_message_title)
-                    .setMessage(R.string.permission_denied_explanation)
-                    .setOkButton(R.string.settings, (baseDialog, v) -> {
-                        // Build intent that displays the App settings screen.
-                        Intent intent = new Intent();
-                        intent.setAction(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        Uri uri = Uri.fromParts("package",
-                                BuildConfig.APPLICATION_ID, null);
-                        intent.setData(uri);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        this.context.get().startActivity(intent);
-                        return false;
-                    }).setOkButton(android.R.string.cancel).show()).start();
-        }
+//        if (!AndPermission.hasPermissions(this.context.get(), Permission.ACCESS_FINE_LOCATION)) {
+//            AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> MessageDialog.build()
+//                    .setTitle(R.string.location_message_title)
+//                    .setMessage(R.string.permission_denied_explanation)
+//                    .setOkButton(R.string.settings, (baseDialog, v) -> {
+//                        // Build intent that displays the App settings screen.
+//                        Intent intent = new Intent();
+//                        intent.setAction(
+//                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//                        Uri uri = Uri.fromParts("package",
+//                                BuildConfig.APPLICATION_ID, null);
+//                        intent.setData(uri);
+//                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                        this.context.get().startActivity(intent);
+//                        return false;
+//                    }).setOkButton(android.R.string.cancel).show()).start();
+//        }
         @SuppressLint("MissingPermission") List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
         for (CellInfo info : infos) {
             if (info instanceof CellInfoGsm) {
@@ -232,25 +228,25 @@ public class CellularManager {
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     public String getCarrier() {
-        if (ActivityCompat.checkSelfPermission(this.context.get(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> MessageDialog.build()
-                    .setTitle(R.string.location_message_title)
-                    .setMessage(R.string.permission_denied_explanation)
-                    .setOkButton(R.string.settings, (baseDialog, v) -> {
-                        // Build intent that displays the App settings screen.
-                        Intent intent = new Intent();
-                        intent.setAction(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        Uri uri = Uri.fromParts("package",
-                                BuildConfig.APPLICATION_ID, null);
-                        intent.setData(uri);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        this.context.get().startActivity(intent);
-                        return false;
-                    }).setOkButton(android.R.string.cancel).show()).start();
-        }
+//        if (ActivityCompat.checkSelfPermission(this.context.get(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            AndPermission.with(this.context.get()).runtime().permission(Permission.ACCESS_FINE_LOCATION).onDenied(data -> MessageDialog.build()
+//                    .setTitle(R.string.location_message_title)
+//                    .setMessage(R.string.permission_denied_explanation)
+//                    .setOkButton(R.string.settings, (baseDialog, v) -> {
+//                        // Build intent that displays the App settings screen.
+//                        Intent intent = new Intent();
+//                        intent.setAction(
+//                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//                        Uri uri = Uri.fromParts("package",
+//                                BuildConfig.APPLICATION_ID, null);
+//                        intent.setData(uri);
+//                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                        this.context.get().startActivity(intent);
+//                        return false;
+//                    }).setOkButton(android.R.string.cancel).show()).start();
+//        }
 
-        List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
+        @SuppressLint("MissingPermission") List<CellInfo> infos = this.telephonyManager.getAllCellInfo();
         for (CellInfo info : infos) {
             if (info instanceof CellInfoGsm) {
                 CellInfoGsm gsm = (CellInfoGsm) info;

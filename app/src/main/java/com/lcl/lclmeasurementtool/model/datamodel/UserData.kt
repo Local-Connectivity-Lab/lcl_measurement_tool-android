@@ -6,5 +6,6 @@ data class UserData(
     val showData: Boolean,
     val loggedIn: Boolean,
     val hPKR: ByteString,
-    val skT: ByteString
+    val skT: ByteString,
+    val R: ByteString
 )

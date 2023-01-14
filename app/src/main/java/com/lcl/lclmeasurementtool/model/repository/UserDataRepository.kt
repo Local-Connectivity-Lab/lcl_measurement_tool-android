@@ -12,5 +12,6 @@ interface UserDataRepository {
 //    suspend fun setHPKR(newKey: ByteString)
 //    suspend fun setSKT(newKey: ByteString)
     suspend fun setKeys(hPKR: ByteString, skT: ByteString)
+    suspend fun setR(R: ByteString)
     suspend fun logout()
 }

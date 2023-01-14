@@ -24,7 +24,8 @@ class PreferencesDataSource @Inject constructor(
             skT = it.skT,
             hPKR = it.hPkr,
             showData = it.showData,
-            loggedIn = it.loggedIn  // !(it.skT.isEmpty || it.hPkr.isEmpty)
+            loggedIn = it.loggedIn,  // !(it.skT.isEmpty || it.hPkr.isEmpty)
+            R = it.r
         )
     }
 
@@ -50,44 +51,50 @@ class PreferencesDataSource @Inject constructor(
         }
     }
 
-    suspend fun setLogin(loggedIn: Boolean) {
-        try {
-            userPreferences.updateData {
-                it.toBuilder().setLoggedIn(loggedIn).build()
-            }
-        } catch (e: IOException) {
-            // TODO: alert to user
-            throw e
-        }
-    }
+//    suspend fun setLogin(loggedIn: Boolean) {
+//        try {
+//            userPreferences.updateData {
+//                it.toBuilder().setLoggedIn(loggedIn).build()
+//            }
+//        } catch (e: IOException) {
+//            // TODO: alert to user
+//            throw e
+//        }
+//    }
+//
+//    suspend fun setHPKR(newKey: ByteString) {
+//        try {
+//            userPreferences.updateData {
+//                it.toBuilder().setHPkr(newKey).build()
+//                if (it.hPkr.isEmpty || it.skT.isEmpty) {
+//                    it.toBuilder().setLoggedIn(false).clearHPkr().build()
+//                }
+//                return@updateData it
+//            }
+//        } catch (e: IOException) {
+//            // TODO: alert to user
+//            throw e
+//        }
+//    }
+//
+//    suspend fun setSKT(newKey: ByteString) {
+//        try {
+//            userPreferences.updateData {
+//                it.toBuilder().setSkT(newKey).build()
+//                if (it.hPkr.isEmpty || it.skT.isEmpty) {
+//                    it.toBuilder().setLoggedIn(false).clearSkT().build()
+//                }
+//                return@updateData it
+//            }
+//        } catch (e: IOException) {
+//            // TODO: alert to user
+//            throw e
+//        }
+//    }
 
-    suspend fun setHPKR(newKey: ByteString) {
-        try {
-            userPreferences.updateData {
-                it.toBuilder().setHPkr(newKey).build()
-                if (it.hPkr.isEmpty || it.skT.isEmpty) {
-                    it.toBuilder().setLoggedIn(false).clearHPkr().build()
-                }
-                return@updateData it
-            }
-        } catch (e: IOException) {
-            // TODO: alert to user
-            throw e
-        }
-    }
-
-    suspend fun setSKT(newKey: ByteString) {
-        try {
-            userPreferences.updateData {
-                it.toBuilder().setSkT(newKey).build()
-                if (it.hPkr.isEmpty || it.skT.isEmpty) {
-                    it.toBuilder().setLoggedIn(false).clearSkT().build()
-                }
-                return@updateData it
-            }
-        } catch (e: IOException) {
-            // TODO: alert to user
-            throw e
+    suspend fun setR(R: ByteString) {
+        userPreferences.updateData {
+            it.toBuilder().setR(R).build()
         }
     }
 

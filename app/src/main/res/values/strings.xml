@@ -15,8 +15,8 @@
     <string name="no_location_detected">Error: No location detected.</string>
     <string name="enable_location_message">Please enable Location Services to enable core measurement functionality!</string>
     <string name="go_to_setting">Settings</string>
-    <string name="location_message_title">Using Location Services</string>
-    <string name="permission_denied_explanation">"We use Location Services to provide core functionality in this measurement tool. Disabling location services will result in missing functionality."</string>
+    <string name="location_message_title">Using Your Location and Network</string>
+    <string name="permission_denied_explanation">"We use Location Services and Network to provide core functionality in this measurement tool. Disabling them will result in missing functionality."</string>
     <string name="USER_UUID">uuid</string>
     <string name="cellular_on_title">Turn Cellular Data On</string>
     <string name="cellular_on_message">These tests rely on a connection to a cellular network. Please enable cellular data and then proceed with the tests.</string>

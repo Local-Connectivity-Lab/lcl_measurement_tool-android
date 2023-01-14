@@ -88,8 +88,8 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment:2.3.0'
     implementation 'androidx.navigation:navigation-ui:2.3.0'
     implementation 'androidx.preference:preference:1.1.0'
-    implementation 'com.google.android.gms:play-services-location:18.0.0'
-    implementation 'com.google.android.gms:play-services-maps:17.0.0'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
 
 
     implementation "androidx.room:room-runtime:$room_version"
@@ -124,13 +124,17 @@ dependencies {
 
 
     // third-party lib
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
+
     implementation "com.squareup.okhttp3:okhttp:4.9.0"
     implementation 'com.jsoniter:jsoniter:0.9.23'
     implementation 'com.github.kongzue.DialogX:DialogX:0.0.43.beta13'
-    implementation 'com.github.yuzhiqiang1993:zxing:2.2.9'
 
     // https://github.com/getActivity/XXPermissions
-    implementation 'com.yanzhenjie:permission:2.0.2'
+    implementation 'com.github.getActivity:XXPermissions:16.6'
+//    implementation 'com.yanzhenjie:permission:2.0.2'
+    implementation("io.github.g00fy2.quickie:quickie-bundled:1.6.0")
     implementation 'com.fasterxml.jackson.core:jackson-core:2.10.1'
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.10.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.1'

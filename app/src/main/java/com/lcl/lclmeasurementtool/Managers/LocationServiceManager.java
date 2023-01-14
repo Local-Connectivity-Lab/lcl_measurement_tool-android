@@ -28,9 +28,6 @@ import com.google.android.gms.location.LocationServices;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.lcl.lclmeasurementtool.R;
 import com.lcl.lclmeasurementtool.errors.DecoderException;
-import com.yanzhenjie.permission.AndPermission;
-import com.yanzhenjie.permission.BuildConfig;
-import com.yanzhenjie.permission.runtime.Permission;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -126,30 +123,31 @@ public class LocationServiceManager {
      * Retrieve the last location from the device.
      * If last location is null, a new location request will be initiated.
      */
+    @SuppressLint("MissingPermission")
     public void getLastLocation(LocationUpdatesListener listener) {
-        if (ActivityCompat.checkSelfPermission(context.get(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this.context.get(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            AndPermission.with(context.get())
-                    .runtime()
-                    .permission(Permission.ACCESS_FINE_LOCATION)
-                    .onDenied(data -> {
-                        MessageDialog.build()
-                                .setTitle(R.string.location_message_title)
-                                .setMessage(R.string.permission_denied_explanation)
-                                .setOkButton(R.string.settings, (baseDialog, v) -> {
-                                    // Build intent that displays the App settings screen.
-                                    Intent intent = new Intent();
-                                    intent.setAction(
-                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                    Uri uri = Uri.fromParts("package",
-                                            BuildConfig.APPLICATION_ID, null);
-                                    intent.setData(uri);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    this.context.get().startActivity(intent);
-                                    return false;
-                                }).setOkButton(android.R.string.cancel).show();
-                    })
-                    .start();
-        }
+//        if (ActivityCompat.checkSelfPermission(context.get(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this.context.get(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            AndPermission.with(context.get())
+//                    .runtime()
+//                    .permission(Permission.ACCESS_FINE_LOCATION)
+//                    .onDenied(data -> {
+//                        MessageDialog.build()
+//                                .setTitle(R.string.location_message_title)
+//                                .setMessage(R.string.permission_denied_explanation)
+//                                .setOkButton(R.string.settings, (baseDialog, v) -> {
+//                                    // Build intent that displays the App settings screen.
+//                                    Intent intent = new Intent();
+//                                    intent.setAction(
+//                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//                                    Uri uri = Uri.fromParts("package",
+//                                            BuildConfig.APPLICATION_ID, null);
+//                                    intent.setData(uri);
+//                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                                    this.context.get().startActivity(intent);
+//                                    return false;
+//                                }).setOkButton(android.R.string.cancel).show();
+//                    })
+//                    .start();
+//        }
         mFusedLocationClient.getLastLocation()
                 .addOnCompleteListener((Activity) this.context.get(), task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
