@@ -25,6 +25,7 @@ import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 import com.lcl.lclmeasurementtool.model.viewmodels.ConnectivityViewModel
 import com.lcl.lclmeasurementtool.model.viewmodels.SignalStrengthViewModel
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
+import com.lcl.lclmeasurementtool.networking.SimStateMonitor
 import com.lcl.lclmeasurementtool.ui.LCLApp
 import com.lcl.lclmeasurementtool.ui.Login
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,6 +41,9 @@ class MainActivity2 : ComponentActivity() {
 
     @Inject
     lateinit var networkMonitor: NetworkMonitor
+
+    @Inject
+    lateinit var simStateMonitor: SimStateMonitor
 
     val viewModel: MainActivityViewModel by viewModels()
     val signalVM: SignalStrengthViewModel by viewModels()
@@ -140,7 +144,7 @@ class MainActivity2 : ComponentActivity() {
                 Login(viewModel = viewModel)
                 return@setContent
             }
-            LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this), networkMonitor)
+            LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this), networkMonitor, simStateMonitor)
         }
     }
 

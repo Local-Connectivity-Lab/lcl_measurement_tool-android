@@ -3,6 +3,7 @@ package com.lcl.lclmeasurementtool.ui
 import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.NoSim
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.TableChart
@@ -15,6 +16,7 @@ object LCLIcons {
     val HistoryData = Icons.Filled.TableChart
     val HistoryDataBorder = Icons.Outlined.TableChart
     val Settings = Icons.Rounded.Settings
+    val NoSIM = Icons.Filled.NoSim
 }
 
 sealed class Icon {

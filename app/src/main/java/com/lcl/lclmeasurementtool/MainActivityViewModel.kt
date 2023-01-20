@@ -50,6 +50,10 @@ class MainActivityViewModel @Inject constructor(
         userDataRepository.setKeys(hPKR, skT)
     }
 
+    fun logout() = viewModelScope.launch {
+        userDataRepository.logout()
+    }
+
     fun setR(R: ByteString) = viewModelScope.launch {
         userDataRepository.setR(R)
     }

@@ -11,14 +11,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.kongzue.dialogx.dialogs.MessageDialog
+import com.lcl.lclmeasurementtool.MainActivityViewModel
 
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
+import com.lcl.lclmeasurementtool.networking.SimStateMonitor
 import com.lcl.lclmeasurementtool.ui.navigation.TopLevelDestination
 import com.lcl.lclmeasurementtool.ui.navigation.historyGraph
 import com.lcl.lclmeasurementtool.ui.navigation.homeNavigationRoute
@@ -31,8 +35,10 @@ import com.lcl.lclmeasurementtool.ui.navigation.homeScreen
 fun LCLApp(
     windowSizeClass: WindowSizeClass,
     networkMonitor: NetworkMonitor,
+    simStateMonitor: SimStateMonitor,
+    mainViewModel: MainActivityViewModel = hiltViewModel(),
 //    shouldLogin: Boolean,
-    appState: AppState = rememberAppState(windowSizeClass = windowSizeClass, networkMonitor = networkMonitor)
+    appState: AppState = rememberAppState(windowSizeClass = windowSizeClass, networkMonitor = networkMonitor, simStateMonitor = simStateMonitor)
 ) {
 //    Log.d("LCLAPP", "isLoggedIn=$shouldLogin")
 //    if (shouldLogin) {
@@ -49,12 +55,26 @@ fun LCLApp(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val isOffline by appState.isOffline.collectAsStateWithLifecycle()
+    val isSimCardInserted by appState.isSimCardInserted.collectAsStateWithLifecycle()
+
     Log.d("LCLApplication", "isOffline is $isOffline")
+    Log.d("LCLApplication", "isSimCardInserted is $isSimCardInserted")
     LaunchedEffect(isOffline) {
         if (isOffline) {
             Log.d("LCLApplication", "show snack bar")
             snackbarHostState.showSnackbar(message = "Please connect to a cellular network before running the test", duration = SnackbarDuration.Indefinite)
         }
+    }
+
+    if (!isSimCardInserted) {
+//            MessageDialog.show("Error", "Please insert the sim card")
+        Dialog(icon = LCLIcons.NoSIM,
+            onConfirmClicked = {
+                // should logout
+                mainViewModel.logout()
+                Log.d("LCLApplication", "confirm!") },
+            title = "Error",
+            text = "Please insert the sim card")
     }
 
 

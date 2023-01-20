@@ -10,6 +10,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
+import com.lcl.lclmeasurementtool.networking.SimStateMonitor
 import com.lcl.lclmeasurementtool.ui.navigation.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,11 +22,12 @@ import kotlinx.coroutines.flow.stateIn
 fun rememberAppState(
     windowSizeClass: WindowSizeClass,
     networkMonitor: NetworkMonitor,
+    simStateMonitor: SimStateMonitor,
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
     navController: NavHostController = rememberNavController()
 ) : AppState {
-    return remember(navController, coroutineScope, windowSizeClass, networkMonitor) {
-        AppState(navController, coroutineScope, windowSizeClass, networkMonitor)
+    return remember(navController, coroutineScope, windowSizeClass, networkMonitor, simStateMonitor) {
+        AppState(navController, coroutineScope, windowSizeClass, networkMonitor, simStateMonitor)
     }
 }
 
@@ -34,7 +36,8 @@ class AppState(
     val navController: NavHostController,
     val coroutineScope: CoroutineScope,
     val windowSizeClass: WindowSizeClass,
-    val networkMonitor: NetworkMonitor
+    val networkMonitor: NetworkMonitor,
+    simStateMonitor: SimStateMonitor
 ) {
 
     var shouldShowSettingsDialog by mutableStateOf(false)
@@ -54,6 +57,14 @@ class AppState(
             scope = coroutineScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = false
+        )
+
+
+    val isSimCardInserted = simStateMonitor.isSimCardInserted
+        .stateIn(
+            scope = coroutineScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = true
         )
 
     fun navigateToTopLevelDestination(topLevelDestination: TopLevelDestination) {

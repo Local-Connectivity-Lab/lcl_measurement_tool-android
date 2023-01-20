@@ -1,10 +1,12 @@
 package com.lcl.lclmeasurementtool.modules
 
 import com.lcl.lclmeasurementtool.datasource.ConnectivityMonitorDataSource
+import com.lcl.lclmeasurementtool.datasource.SimStateMonitorDataSource
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 import com.lcl.lclmeasurementtool.model.repository.*
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
+import com.lcl.lclmeasurementtool.networking.SimStateMonitor
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -22,6 +24,11 @@ interface DataModule {
     fun bindsNetworkMonitor(
         networkMonitor: ConnectivityMonitorDataSource
     ): NetworkMonitor
+
+    @Binds
+    fun bindsSimStateMonitor(
+        simStateMonitor: SimStateMonitorDataSource
+    ): SimStateMonitor
 
     @Binds
     fun bindsNetworkAPI(
