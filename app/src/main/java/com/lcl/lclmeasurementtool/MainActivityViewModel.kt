@@ -12,6 +12,7 @@ import com.kongzue.dialogx.dialogs.WaitDialog
 import com.lcl.lclmeasurementtool.Utils.ECDSA
 import com.lcl.lclmeasurementtool.Utils.Hex
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils
+import com.lcl.lclmeasurementtool.features.iperf.runIperf
 import com.lcl.lclmeasurementtool.model.datamodel.QRCodeKeysModel
 import com.lcl.lclmeasurementtool.model.datamodel.RegistrationModel
 import com.lcl.lclmeasurementtool.model.datamodel.UserData
