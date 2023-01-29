@@ -1,11 +1,8 @@
 package com.lcl.lclmeasurementtool.Managers;
 
-import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Log;
-
-import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -25,9 +22,9 @@ import java.security.cert.X509Certificate;
  * A key store manager responsible for generating and maintaining private/public keys
  * @deprecated will not be used in the measurement application
  */
-public class KeyStoreManager {
+public class DeprecatedKeyStoreManager {
 
-    private static KeyStoreManager instance;
+    private static DeprecatedKeyStoreManager instance;
 
     private static final String TAG = "KeyStoreManager";
 
@@ -36,7 +33,7 @@ public class KeyStoreManager {
 
     private final KeyStore ks;
 
-    private KeyStoreManager()
+    private DeprecatedKeyStoreManager()
             throws NoSuchProviderException,
             NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
@@ -44,9 +41,9 @@ public class KeyStoreManager {
         ks.load(null);
     }
 
-    public static KeyStoreManager getInstance() throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
+    public static DeprecatedKeyStoreManager getInstance() throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
         if (instance == null) {
-            instance = new KeyStoreManager();
+            instance = new DeprecatedKeyStoreManager();
         }
 
         return instance;

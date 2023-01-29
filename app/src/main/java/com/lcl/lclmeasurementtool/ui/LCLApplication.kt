@@ -18,7 +18,6 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import com.kongzue.dialogx.dialogs.MessageDialog
 import com.lcl.lclmeasurementtool.MainActivityViewModel
 
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
@@ -108,7 +107,7 @@ fun LCLApp(
                         onActionClick = { appState.setShowSettingsDialog(true) }
                     )
                 }
-                LCLNavHost(navController = appState.navController, onBackClick = appState::onBackClick, isOffline = isOffline)
+                LCLNavHost(navController = appState.navController, onBackClick = appState::onBackClick, isOffline = isOffline, mainViewModel = mainViewModel)
             }
         }
 
@@ -168,7 +167,6 @@ fun AppTopBar(@StringRes titleRes: Int,
               colors: TopAppBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
               onActionClick: () -> Unit = {}
 ) {
-    print("hey!!!")
     CenterAlignedTopAppBar(
         title = { Text(text = stringResource(id = titleRes)) },
         colors = colors,
@@ -191,10 +189,11 @@ fun LCLNavHost(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = homeNavigationRoute,
-    isOffline: Boolean
+    isOffline: Boolean,
+    mainViewModel: MainActivityViewModel
 ) {
     NavHost(navController = navController, modifier = modifier, startDestination = startDestination) {
-        homeScreen(isOffline)
+        homeScreen(isOffline, mainViewModel)
         historyGraph()
     }
 }

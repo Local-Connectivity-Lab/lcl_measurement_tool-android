@@ -9,5 +9,6 @@ enum class PingErrorCase(val exitCode: Int) {
     OK(0),
     IO(1),
     PARSING(2),
-    OTHER(3);
+    OTHER(3),
+    CANCELLED(4)
 }
