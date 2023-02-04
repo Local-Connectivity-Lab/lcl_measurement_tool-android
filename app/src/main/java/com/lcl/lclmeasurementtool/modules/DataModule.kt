@@ -1,7 +1,9 @@
 package com.lcl.lclmeasurementtool.modules
 
 import com.lcl.lclmeasurementtool.datasource.ConnectivityMonitorDataSource
+import com.lcl.lclmeasurementtool.datasource.LocationDataSource
 import com.lcl.lclmeasurementtool.datasource.SimStateMonitorDataSource
+import com.lcl.lclmeasurementtool.location.LocationService
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 import com.lcl.lclmeasurementtool.model.repository.*
@@ -29,6 +31,11 @@ interface DataModule {
     fun bindsSimStateMonitor(
         simStateMonitor: SimStateMonitorDataSource
     ): SimStateMonitor
+
+    @Binds
+    fun bindsLocationService(
+        locationService: LocationDataSource
+    ): LocationService
 
     @Binds
     fun bindsNetworkAPI(

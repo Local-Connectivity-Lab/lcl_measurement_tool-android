@@ -140,10 +140,10 @@ class MainActivity2 : ComponentActivity() {
         // including IME animations
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            if (uiState == MainActivityUiState.Login) {
-                Login(viewModel = viewModel)
-                return@setContent
-            }
+//            if (uiState == MainActivityUiState.Login) {
+//                Login(viewModel = viewModel)
+//                return@setContent
+//            }
             LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this), networkMonitor, simStateMonitor)
         }
     }

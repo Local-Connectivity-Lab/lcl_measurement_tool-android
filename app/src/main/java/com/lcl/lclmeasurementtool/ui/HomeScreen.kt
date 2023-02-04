@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lcl.lclmeasurementtool.ConnectivityTestResult
 import com.lcl.lclmeasurementtool.MainActivityViewModel
+import com.lcl.lclmeasurementtool.MainActivityViewModel.Companion.TAG
 import com.lcl.lclmeasurementtool.PingResultState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -42,8 +43,10 @@ fun HomeRoute(isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) 
 fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) {
 
     val offline by remember { mutableStateOf(isOffline) }
-    var isTestActive = mainActivityViewModel.isTestActive.collectAsStateWithLifecycle()
+    val isTestActive = mainActivityViewModel.isTestActive.collectAsStateWithLifecycle()
     val pingResult = mainActivityViewModel.pingResult.collectAsStateWithLifecycle()
+    val uploadResult = mainActivityViewModel.uploadResult.collectAsStateWithLifecycle()
+    val downloadResult = mainActivityViewModel.downloadResult.collectAsStateWithLifecycle()
 
     val jobs = mutableListOf<Job>()
     val context = LocalContext.current
@@ -54,17 +57,17 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
             ConnectivityCard(
                 modifier = modifier,
                 pingResult = pingResult.value,
-                uploadResult = mainActivityViewModel.uploadResult,
-                downloadResult = mainActivityViewModel.downloadResult
+                uploadResult = uploadResult.value,
+                downloadResult = downloadResult.value
             )
         }
 
         FloatingActionButton(onClick = {
-
             if (!isTestActive.value) {
                 jobs.clear()
                 jobs.add(mainActivityViewModel.doPing())
                 Log.d("HOMEScreen", "Test Starts")
+
             } else {
                 jobs.forEach { job -> job.cancel() }
                 Log.d("HOMEScreen", "Test Cancelled")
@@ -128,8 +131,8 @@ private fun SignalStrengthCard(
 private fun ConnectivityCard(
     modifier: Modifier = Modifier,
     pingResult: PingResultState,
-    uploadResult: ConnectivityTestResult.Result?,
-    downloadResult: ConnectivityTestResult.Result?,
+    uploadResult: ConnectivityTestResult,
+    downloadResult: ConnectivityTestResult,
 ) {
     Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
@@ -146,8 +149,23 @@ private fun ConnectivityCard(
                 contentDescription = null)
             Column {
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    DataEntry(icon = Rounded.CloudUpload, text = "${uploadResult?.result ?: "0"} mbps")
-                    DataEntry(icon = Rounded.CloudDownload, text = "${downloadResult?.result ?: "0"} mbps")
+                    when (uploadResult) {
+                        is ConnectivityTestResult.Result -> {
+                            DataEntry(icon = Rounded.CloudUpload, text = "${uploadResult.result} mbps")
+                        }
+                        else -> DataEntry(icon = Rounded.CloudUpload, text = "0.0 mbps")
+                    }
+
+
+                    when (downloadResult) {
+                        is ConnectivityTestResult.Result -> {
+                            DataEntry(icon = Rounded.CloudDownload, text = "${downloadResult.result} mbps")
+                        }
+                        else -> {
+                            DataEntry(icon = Rounded.CloudUpload, text = "0.0 mbps")
+                        }
+                    }
+
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     var pingNum = "0"

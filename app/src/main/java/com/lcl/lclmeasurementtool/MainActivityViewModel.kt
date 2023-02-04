@@ -14,12 +14,14 @@ import com.lcl.lclmeasurementtool.Utils.ECDSA
 import com.lcl.lclmeasurementtool.Utils.Hex
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils
 import com.lcl.lclmeasurementtool.constants.NetworkConstants
+import com.lcl.lclmeasurementtool.datasource.LocationDataSource
 import com.lcl.lclmeasurementtool.features.iperf.IperfRunner
 import com.lcl.lclmeasurementtool.features.iperf.IperfStatus
 import com.lcl.lclmeasurementtool.features.ping.Ping
 import com.lcl.lclmeasurementtool.features.ping.PingError
 import com.lcl.lclmeasurementtool.features.ping.PingErrorCase
 import com.lcl.lclmeasurementtool.features.ping.PingResult
+import com.lcl.lclmeasurementtool.location.LocationService
 import com.lcl.lclmeasurementtool.model.datamodel.QRCodeKeysModel
 import com.lcl.lclmeasurementtool.model.datamodel.RegistrationModel
 import com.lcl.lclmeasurementtool.model.datamodel.UserData
@@ -37,7 +39,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
-    private val networkApi: NetworkApiRepository
+    private val networkApi: NetworkApiRepository,
+    private val locationService: LocationService
 ) : ViewModel() {
 
     companion object {
@@ -52,6 +55,12 @@ class MainActivityViewModel @Inject constructor(
         initialValue = MainActivityUiState.Login,
         started = SharingStarted.WhileSubscribed(5_000)
     )
+
+    fun getLocation() = viewModelScope.launch {
+        locationService.lastLocation().collect {
+            Log.d(TAG, it.toString())
+        }
+    }
 
     // Authentication
     fun login(hPKR: ByteString, skT: ByteString) = viewModelScope.launch {
@@ -189,10 +198,16 @@ class MainActivityViewModel @Inject constructor(
 
 
     // Network Testing
-    var uploadResult: ConnectivityTestResult.Result? = null
-    var downloadResult: ConnectivityTestResult.Result? = null
     private var _pingResult = MutableStateFlow(PingResultState())
+    private var _downloadResult = MutableStateFlow(ConnectivityTestResult())
+    private var _uploadResult = MutableStateFlow(ConnectivityTestResult())
+
+
     val pingResult: StateFlow<PingResultState> = _pingResult.asStateFlow()
+    var downloadResult: StateFlow<ConnectivityTestResult> = _downloadResult.asStateFlow()
+    var uploadResult: StateFlow<ConnectivityTestResult> = _uploadResult.asStateFlow()
+
+
     private val _isTestActive = MutableStateFlow(false)
     val isTestActive = _isTestActive.asStateFlow()
 
@@ -205,8 +220,11 @@ class MainActivityViewModel @Inject constructor(
                 }
                 .onCompletion {
                     Log.d(TAG, "isActive = false")
-                    _pingResult.value = PingResultState.Error(PingError(PingErrorCase.CANCELLED, it?.message))
                     _isTestActive.value = false
+                    if (it != null) {
+                        // save to DB and send over the network
+                        Log.d(TAG, "Error is ${it.message}")
+                    }
                 }
                 .collect {
                     ensureActive()
@@ -223,33 +241,36 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun getUploadResult(context: Context) = viewModelScope.launch {
-        IperfRunner().getTestResult(IperfRunner.iperfUploadConfig, context.cacheDir).collect { result ->
-            uploadResult = when(result.status) {
-                IperfStatus.RUNNING -> {
-                    ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
-                }
-                IperfStatus.FINISHED -> {
-                    ConnectivityTestResult.Result(result.bandWidth, Color.Black)
-                }
-                IperfStatus.ERROR -> TODO()
+        IperfRunner().getTestResult(IperfRunner.iperfUploadConfig, context.cacheDir)
+            .collect { result ->
+            ensureActive()
+
+            _uploadResult.value = when(result.status) {
+                IperfStatus.RUNNING -> ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
+                IperfStatus.FINISHED -> ConnectivityTestResult.Result(result.bandWidth, Color.Black)
+                IperfStatus.ERROR -> ConnectivityTestResult.Error(result.errorMSg!!)
             }
         }
     }
 
 
     fun getDownloadResult(context: Context) = viewModelScope.launch {
-        IperfRunner().getTestResult(IperfRunner.iperfDownloadConfig, context.cacheDir).collect { result ->
-            downloadResult = when(result.status) {
-                IperfStatus.RUNNING -> {
-                    ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
-                }
-                IperfStatus.FINISHED -> {
-                    ConnectivityTestResult.Result(result.bandWidth, Color.Black)
-                }
-                IperfStatus.ERROR -> TODO()
+        IperfRunner().getTestResult(IperfRunner.iperfDownloadConfig, context.cacheDir)
+            .onCompletion {
+                _isTestActive.value = false
+                // TODO: write data to the database
+            }
+            .collect { result ->
+            ensureActive()
+
+            _downloadResult.value = when(result.status) {
+                IperfStatus.RUNNING -> ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
+                IperfStatus.FINISHED -> ConnectivityTestResult.Result(result.bandWidth, Color.Black)
+                IperfStatus.ERROR -> ConnectivityTestResult.Error(result.errorMSg!!)
             }
         }
     }
+
 }
 
 sealed interface MainActivityUiState {
@@ -257,8 +278,9 @@ sealed interface MainActivityUiState {
     data class Success(val userData: UserData) : MainActivityUiState
 }
 
-sealed interface ConnectivityTestResult {
-    data class Result (val result: String, val color: Color): ConnectivityTestResult
+open class ConnectivityTestResult {
+    data class Result (val result: String, val color: Color): ConnectivityTestResult()
+    data class Error(val error: String): ConnectivityTestResult()
 }
 
 open class PingResultState {

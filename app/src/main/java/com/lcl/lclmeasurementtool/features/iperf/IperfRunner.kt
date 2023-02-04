@@ -110,20 +110,12 @@ class IperfRunner {
             doneSignal.countDown()
         }
 
-
-        if (!isActive) {
-            client.cancelTest()
-            onStopped {
-                client.cancelTest()
-            }
-        }
-
         awaitClose {
             onStopped {
                 client.cancelTest()
             }
         }
-    }.flowOn(Dispatchers.IO).conflate().cancellable()
+    }.conflate().flowOn(Dispatchers.IO).cancellable()
 
     private fun onStopped(cancellation: () -> Unit) {
         cancellation()
