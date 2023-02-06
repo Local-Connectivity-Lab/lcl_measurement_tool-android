@@ -28,6 +28,7 @@ import com.lcl.lclmeasurementtool.model.datamodel.UserData
 import com.lcl.lclmeasurementtool.model.repository.NetworkApiRepository
 import com.lcl.lclmeasurementtool.model.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.ByteArrayOutputStream
@@ -198,9 +199,11 @@ class MainActivityViewModel @Inject constructor(
 
 
     // Network Testing
+    private val jobs = mutableListOf<Job>()
     private var _pingResult = MutableStateFlow(PingResultState())
     private var _downloadResult = MutableStateFlow(ConnectivityTestResult())
     private var _uploadResult = MutableStateFlow(ConnectivityTestResult())
+    private val _isTestActive = MutableStateFlow(false)
 
 
     val pingResult: StateFlow<PingResultState> = _pingResult.asStateFlow()
@@ -208,7 +211,6 @@ class MainActivityViewModel @Inject constructor(
     var uploadResult: StateFlow<ConnectivityTestResult> = _uploadResult.asStateFlow()
 
 
-    private val _isTestActive = MutableStateFlow(false)
     val isTestActive = _isTestActive.asStateFlow()
 
     fun doPing() = viewModelScope.launch {
@@ -219,19 +221,17 @@ class MainActivityViewModel @Inject constructor(
                     _isTestActive.value = true
                 }
                 .onCompletion {
-                    Log.d(TAG, "isActive = false")
-                    _isTestActive.value = false
                     if (it != null) {
                         // save to DB and send over the network
                         Log.d(TAG, "Error is ${it.message}")
+                    } else {
+                        _isTestActive.value = false
                     }
                 }
                 .collect {
-                    ensureActive()
-                    Log.d(TAG, "Test is still active")
-                    when(it.error.code) {
-                        PingErrorCase.OK -> _pingResult.value = PingResultState.Success(it)
-                        else -> _pingResult.value = PingResultState.Error(it.error)
+                    _pingResult.value = when(it.error.code) {
+                        PingErrorCase.OK ->  PingResultState.Success(it)
+                        else -> PingResultState.Error(it.error)
                     }
                 }
         } catch (e: IllegalArgumentException) {
@@ -243,8 +243,6 @@ class MainActivityViewModel @Inject constructor(
     fun getUploadResult(context: Context) = viewModelScope.launch {
         IperfRunner().getTestResult(IperfRunner.iperfUploadConfig, context.cacheDir)
             .collect { result ->
-            ensureActive()
-
             _uploadResult.value = when(result.status) {
                 IperfStatus.RUNNING -> ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
                 IperfStatus.FINISHED -> ConnectivityTestResult.Result(result.bandWidth, Color.Black)
@@ -261,8 +259,6 @@ class MainActivityViewModel @Inject constructor(
                 // TODO: write data to the database
             }
             .collect { result ->
-            ensureActive()
-
             _downloadResult.value = when(result.status) {
                 IperfStatus.RUNNING -> ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
                 IperfStatus.FINISHED -> ConnectivityTestResult.Result(result.bandWidth, Color.Black)
@@ -271,6 +267,13 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
+    fun doIperf(context: Context) = viewModelScope.launch {
+        val uploadJob = getUploadResult(context = context)
+        jobs.add(uploadJob)
+        uploadJob.join()
+        val downloadJob = getDownloadResult(context = context)
+        jobs.add(downloadJob)
+    }
 }
 
 sealed interface MainActivityUiState {

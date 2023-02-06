@@ -1,13 +1,13 @@
 package com.lcl.lclmeasurementtool.features.iperf
 
 data class IperfConfig(
-    var serverAdder: String,
-    var serverPort: Int,
+    var mServerAddr: String,
+    var mServerPort: Int,
     var isDownMode: Boolean,
-    var testInterval: Double,
+    var interval: Double,
     var bandwidth: Long = BANDWIDTH_1M,
-    var unit: Char = 'm',
-    var numParallels: Int = 1,
+    var formatUnit: Char = 'm',
+    var parallels: Int = 1,
     var userName: String,
     var password: String,
     var rsaKey: String

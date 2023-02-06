@@ -4,11 +4,7 @@ import android.util.Log
 import com.lcl.lclmeasurementtool.constants.IperfConstants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.*
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -18,27 +14,36 @@ class IperfRunner {
     companion object {
         const val TAG = "IperfRunner"
         val iperfUploadConfig: IperfConfig = IperfConfig(
-            serverAdder = IperfConstants.IC_serverAddr,
-            serverPort = IperfConstants.IC_serverPort,
+            mServerAddr = IperfConstants.IC_serverAddr,
+            mServerPort = IperfConstants.IC_serverPort,
             isDownMode = false,
             userName = IperfConstants.IC_test_username,
             password = IperfConstants.IC_test_password,
-            rsaKey = IperfConstants.IC_SSL_PK,
-            testInterval = 1.0
+            rsaKey = IperfConstants.base64Encode(IperfConstants.IC_SSL_PK),
+            interval = 1.0
         )
 
         val iperfDownloadConfig: IperfConfig = IperfConfig(
-            serverAdder = IperfConstants.IC_serverAddr,
-            serverPort = IperfConstants.IC_serverPort,
+            mServerAddr = IperfConstants.IC_serverAddr,
+            mServerPort = IperfConstants.IC_serverPort,
             isDownMode = true,
             userName = IperfConstants.IC_test_username,
             password = IperfConstants.IC_test_password,
-            rsaKey = IperfConstants.IC_SSL_PK,
-            testInterval = 1.0
+            rsaKey = IperfConstants.base64Encode(IperfConstants.IC_SSL_PK),
+            interval = 1.0
         )
     }
 
     private val doneSignal = CountDownLatch(1)
+
+    fun fakeGetResult(config: IperfConfig, cacheDir: File) = flowOf(
+        IperfResult(123.123f, 123.124f, "100", "45.3", true, null, IperfStatus.RUNNING),
+        IperfResult(123.123f, 123.124f, "100", "45.5", true, null, IperfStatus.RUNNING),
+        IperfResult(123.123f, 123.124f, "100", "42.3", true, null, IperfStatus.RUNNING),
+        IperfResult(123.123f, 123.124f, "100", "45.7", true, null, IperfStatus.RUNNING),
+        IperfResult(123.123f, 123.124f, "100", "41.3", true, null, IperfStatus.RUNNING),
+        IperfResult(123.123f, 123.124f, "100", "40.3", true, null, IperfStatus.FINISHED),
+    ).flowOn(Dispatchers.IO).cancellable()
 
     fun getTestResult(config: IperfConfig, cacheDir: File) = callbackFlow {
         val client = IperfClient()
@@ -50,6 +55,8 @@ class IperfRunner {
                 bandWidth: String,
                 isDown: Boolean
             ) {
+
+                Log.d(TAG, "isDown = $isDown, bandWidth = $bandWidth")
                 channel.trySend(
                     IperfResult(
                         timeStart,
@@ -70,6 +77,7 @@ class IperfRunner {
                 bandWidth: String,
                 isDown: Boolean
             ) {
+                Log.d(TAG, "isDown = $isDown, bandWidth = $bandWidth")
                 channel.trySend(
                     IperfResult(
                         timeStart,
@@ -107,18 +115,19 @@ class IperfRunner {
         } catch (e: RuntimeException) {
             client.cancelTest()
         } finally {
+            close()
             doneSignal.countDown()
         }
 
         awaitClose {
-            onStopped {
-                client.cancelTest()
-            }
+            onStopped(cancellation = null)
         }
     }.conflate().flowOn(Dispatchers.IO).cancellable()
 
-    private fun onStopped(cancellation: () -> Unit) {
-        cancellation()
+    private fun onStopped(cancellation: (() -> Unit)?) {
+        if (cancellation != null) {
+            cancellation()
+        }
         try {
             Log.d(TAG,
                 "Awaiting shutdown notification" + Thread.currentThread().name + ":" + Thread.currentThread().state

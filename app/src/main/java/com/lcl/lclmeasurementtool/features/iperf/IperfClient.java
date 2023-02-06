@@ -49,6 +49,7 @@ public class IperfClient {
             // TODO(matt9j) Propagate the error cause in the exception
             throw new RuntimeException("Iperf test failed to run");
         }
+        Log.d(TAG, "Iperf Test with config" + testConfig.toString() + " is finished");
     }
 
     /**

@@ -58,14 +58,16 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
                 modifier = modifier,
                 pingResult = pingResult.value,
                 uploadResult = uploadResult.value,
-                downloadResult = downloadResult.value
+                downloadResult = downloadResult.value,
+                jobs = jobs
             )
         }
 
         FloatingActionButton(onClick = {
             if (!isTestActive.value) {
                 jobs.clear()
-                jobs.add(mainActivityViewModel.doPing())
+                mainActivityViewModel.doIperf(context)
+//                jobs.add(mainActivityViewModel.getDownloadResult(context))
                 Log.d("HOMEScreen", "Test Starts")
 
             } else {
@@ -133,6 +135,7 @@ private fun ConnectivityCard(
     pingResult: PingResultState,
     uploadResult: ConnectivityTestResult,
     downloadResult: ConnectivityTestResult,
+    jobs: List<Job>
 ) {
     Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
@@ -151,18 +154,21 @@ private fun ConnectivityCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     when (uploadResult) {
                         is ConnectivityTestResult.Result -> {
-                            DataEntry(icon = Rounded.CloudUpload, text = "${uploadResult.result} mbps")
+                            DataEntry(icon = Rounded.CloudUpload, text = uploadResult.result)
                         }
-                        else -> DataEntry(icon = Rounded.CloudUpload, text = "0.0 mbps")
+                        is ConnectivityTestResult.Error -> {
+                            jobs.forEach { job -> job.cancel() }
+                        }
+                        else -> DataEntry(icon = Rounded.CloudUpload, text = "0.0 MBit")
                     }
 
 
                     when (downloadResult) {
                         is ConnectivityTestResult.Result -> {
-                            DataEntry(icon = Rounded.CloudDownload, text = "${downloadResult.result} mbps")
+                            DataEntry(icon = Rounded.CloudDownload, text = downloadResult.result)
                         }
                         else -> {
-                            DataEntry(icon = Rounded.CloudUpload, text = "0.0 mbps")
+                            DataEntry(icon = Rounded.CloudDownload, text = "0.0 Mbit")
                         }
                     }
 
