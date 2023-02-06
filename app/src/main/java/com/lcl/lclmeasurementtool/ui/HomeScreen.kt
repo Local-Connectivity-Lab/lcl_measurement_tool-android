@@ -30,6 +30,7 @@ import com.lcl.lclmeasurementtool.ConnectivityTestResult
 import com.lcl.lclmeasurementtool.MainActivityViewModel
 import com.lcl.lclmeasurementtool.MainActivityViewModel.Companion.TAG
 import com.lcl.lclmeasurementtool.PingResultState
+import com.lcl.lclmeasurementtool.SignalStrengthResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 
@@ -47,13 +48,14 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
     val pingResult = mainActivityViewModel.pingResult.collectAsStateWithLifecycle()
     val uploadResult = mainActivityViewModel.uploadResult.collectAsStateWithLifecycle()
     val downloadResult = mainActivityViewModel.downloadResult.collectAsStateWithLifecycle()
+    val signalStrength = mainActivityViewModel.signalStrengthResult.collectAsStateWithLifecycle()
 
     val jobs = mutableListOf<Job>()
     val context = LocalContext.current
     
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = modifier.fillMaxHeight()) {
-            SignalStrengthCard(modifier = modifier)
+            SignalStrengthCard(modifier = modifier, signalStrengthResult = signalStrength.value)
             ConnectivityCard(
                 modifier = modifier,
                 pingResult = pingResult.value,
@@ -95,9 +97,11 @@ fun ShowMessage(isOffline: Boolean, msg: String, snackbarHostState: SnackbarHost
 @Composable
 private fun SignalStrengthCard(
     modifier: Modifier = Modifier,
+    signalStrengthResult: SignalStrengthResult
 ) {
     val fontSize = 18.sp
 
+    val (dbm, level) = signalStrengthResult
 
     Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
@@ -115,7 +119,7 @@ private fun SignalStrengthCard(
             Spacer(modifier = Modifier.width(12.dp))
             Text(text = "Signal Strength:", fontSize = fontSize)
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "val", fontWeight = FontWeight.Bold, fontSize = fontSize)
+            Text(text = "$dbm", fontWeight = FontWeight.Bold, fontSize = fontSize)
             Spacer(modifier = Modifier.width(4.dp))
             Text(text = "dBm", fontSize = fontSize)
             Spacer(modifier = Modifier.width(20.dp))
@@ -124,7 +128,7 @@ private fun SignalStrengthCard(
                 .clip(
                     CircleShape
                 )
-                .background(Color.Green))
+                .background(level.color()))
         }
     }
 }

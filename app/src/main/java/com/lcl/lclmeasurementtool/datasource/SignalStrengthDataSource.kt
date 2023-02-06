@@ -9,6 +9,7 @@ import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresApi
 import androidx.core.content.getSystemService
+import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
@@ -19,9 +20,9 @@ import javax.inject.Inject
 
 class SignalStrengthDataSource @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+): SignalStrengthMonitor {
     @OptIn(FlowPreview::class)
-    val signalStrength = callbackFlow {
+    override val signalStrength = callbackFlow<SignalStrength> {
         val telephonyManager = context.getSystemService<TelephonyManager>()
         val executor = Executors.newSingleThreadExecutor()
 
@@ -41,7 +42,7 @@ class SignalStrengthDataSource @Inject constructor(
         } else {
             @Suppress("OVERRIDE_DEPRECATION")
             val callback = object : PhoneStateListener(executor) {
-                override fun onSignalStrengthsChanged(s: SignalStrength?) {
+                override fun onSignalStrengthsChanged(s: SignalStrength) {
                     super.onSignalStrengthsChanged(s)
                     channel.trySend(s)
                 }

@@ -299,7 +299,7 @@ public class CellularManager {
                                 dBm = report.getDbm();
                             } else {
                                 level = SignalStrengthLevel.POOR;
-                                dBm = level.getLevelCode();
+                                dBm = report.getDbm();
                             }
                         } else {
                             dBm = signalStrength.getGsmSignalStrength();

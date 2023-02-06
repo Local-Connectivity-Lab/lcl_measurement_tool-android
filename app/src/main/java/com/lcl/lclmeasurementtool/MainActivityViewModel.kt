@@ -1,8 +1,9 @@
 package com.lcl.lclmeasurementtool
 
 import android.content.Context
+import android.os.Build
+import android.telephony.CellSignalStrength
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,8 +14,8 @@ import com.kongzue.dialogx.dialogs.TipDialog
 import com.lcl.lclmeasurementtool.Utils.ECDSA
 import com.lcl.lclmeasurementtool.Utils.Hex
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils
+import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel
 import com.lcl.lclmeasurementtool.constants.NetworkConstants
-import com.lcl.lclmeasurementtool.datasource.LocationDataSource
 import com.lcl.lclmeasurementtool.features.iperf.IperfRunner
 import com.lcl.lclmeasurementtool.features.iperf.IperfStatus
 import com.lcl.lclmeasurementtool.features.ping.Ping
@@ -27,8 +28,9 @@ import com.lcl.lclmeasurementtool.model.datamodel.RegistrationModel
 import com.lcl.lclmeasurementtool.model.datamodel.UserData
 import com.lcl.lclmeasurementtool.model.repository.NetworkApiRepository
 import com.lcl.lclmeasurementtool.model.repository.UserDataRepository
+import com.lcl.lclmeasurementtool.telephony.SignalStrengthLevelEnum
+import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.ByteArrayOutputStream
@@ -41,7 +43,8 @@ import javax.inject.Inject
 class MainActivityViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
     private val networkApi: NetworkApiRepository,
-    private val locationService: LocationService
+    private val locationService: LocationService,
+    private val signalStrengthMonitor: SignalStrengthMonitor
 ) : ViewModel() {
 
     companion object {
@@ -199,7 +202,7 @@ class MainActivityViewModel @Inject constructor(
 
 
     // Network Testing
-    private val jobs = mutableListOf<Job>()
+    private val _jobs = mutableListOf<Job>()
     private var _pingResult = MutableStateFlow(PingResultState())
     private var _downloadResult = MutableStateFlow(ConnectivityTestResult())
     private var _uploadResult = MutableStateFlow(ConnectivityTestResult())
@@ -209,7 +212,25 @@ class MainActivityViewModel @Inject constructor(
     val pingResult: StateFlow<PingResultState> = _pingResult.asStateFlow()
     var downloadResult: StateFlow<ConnectivityTestResult> = _downloadResult.asStateFlow()
     var uploadResult: StateFlow<ConnectivityTestResult> = _uploadResult.asStateFlow()
-
+    var signalStrengthResult = signalStrengthMonitor.signalStrength.map {s ->
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val report = s.getCellSignalStrengths(CellSignalStrength::class.java)
+            if (report.isEmpty()) {
+                SignalStrengthResult(0, SignalStrengthLevelEnum.POOR)
+            } else {
+                val data = report[0]
+                SignalStrengthResult(data.dbm, SignalStrengthLevelEnum.init(data.level))
+            }
+        } else {
+            val dBm = s.getGsmSignalStrength()
+            val level = SignalStrengthLevelEnum.init(s.level)
+            SignalStrengthResult(dBm, level)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        initialValue = SignalStrengthResult(0, SignalStrengthLevelEnum.POOR),
+        started = SharingStarted.WhileSubscribed(5_000)
+    )
 
     val isTestActive = _isTestActive.asStateFlow()
 
@@ -269,10 +290,10 @@ class MainActivityViewModel @Inject constructor(
 
     fun doIperf(context: Context) = viewModelScope.launch {
         val uploadJob = getUploadResult(context = context)
-        jobs.add(uploadJob)
+        _jobs.add(uploadJob)
         uploadJob.join()
         val downloadJob = getDownloadResult(context = context)
-        jobs.add(downloadJob)
+        _jobs.add(downloadJob)
     }
 }
 
@@ -290,3 +311,5 @@ open class PingResultState {
     data class Success(val result: PingResult): PingResultState()
     data class Error(val error: PingError): PingResultState()
 }
+
+data class SignalStrengthResult(val dbm: Int, val level: SignalStrengthLevelEnum)
