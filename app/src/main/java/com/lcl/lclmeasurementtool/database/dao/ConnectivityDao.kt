@@ -12,7 +12,7 @@ interface ConnectivityDao {
 
     // READ
     @Transaction
-    @Query("SELECT * FROM connectivity_table ORDER BY time_stamp ASC")
+    @Query("SELECT * FROM connectivity_table ORDER BY time_stamp DESC")
     fun getAll(): Flow<List<ConnectivityReportModel>>
 
     // DELETE

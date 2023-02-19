@@ -46,46 +46,11 @@ class MainActivity2 : ComponentActivity() {
     lateinit var simStateMonitor: SimStateMonitor
 
     val viewModel: MainActivityViewModel by viewModels()
-    val signalVM: SignalStrengthViewModel by viewModels()
-    val connectivityVM: ConnectivityViewModel by viewModels()
-
-    val signals = listOf(
-        SignalStrengthReportModel("deviceID1", 123.121, 456.451, "timestamp1", "cellID1", -81, 1),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp3", "cellID2", -82, 2),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp4", "cellID2", -82, 2),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp5", "cellID2", -82, 2),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp6", "cellID2", -82, 2),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp7", "cellID2", -82, 2),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp8", "cellID2", -82, 2),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp9", "cellID2", -82, 2),
-        SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp10", "cellID2", -82, 2),
-    )
-
-    val connectivities = listOf(
-        ConnectivityReportModel(123.123, 345.345, "timestamp1", "hi1", "deviceID1", 123.31, 345.51, 23.21, 0.0),
-        ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-        ConnectivityReportModel(123.123, 345.345, "timestamp3", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-        ConnectivityReportModel(123.123, 345.345, "timestamp4", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-        ConnectivityReportModel(123.123, 345.345, "timestamp5", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-        ConnectivityReportModel(123.123, 345.345, "timestamp6", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-        ConnectivityReportModel(123.123, 345.345, "timestamp7", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-        ConnectivityReportModel(123.123, 345.345, "timestamp8", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-        ConnectivityReportModel(123.123, 345.345, "timestamp9", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-        ConnectivityReportModel(123.123, 345.345, "timestamp10", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3),
-    )
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-        signals.forEach {
-            signalVM.insert(it)
-        }
-
-        connectivities.forEach {
-            connectivityVM.insert(it)
-        }
 
         if (!hasPermission()) {
             XXPermissions.with(this)
@@ -119,9 +84,6 @@ class MainActivity2 : ComponentActivity() {
                 }
         }
 
-
-
-
         var uiState: MainActivityUiState by mutableStateOf(MainActivityUiState.Login)
 
         lifecycleScope.launch {
@@ -141,6 +103,7 @@ class MainActivity2 : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
 //            if (uiState == MainActivityUiState.Login) {
+//                viewModel.setDeviceId(UUID.randomUUID().toString())
 //                Login(viewModel = viewModel)
 //                return@setContent
 //            }

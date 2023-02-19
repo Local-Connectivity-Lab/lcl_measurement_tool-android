@@ -9,31 +9,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @Entity(tableName = "signal_strength_table")
 data class SignalStrengthReportModel(
-    override var deviceId: String,
     @ColumnInfo(name = "latitude") override var latitude: Double,
     @ColumnInfo(name = "longitude") override var longitude: Double,
     @PrimaryKey @ColumnInfo(name = "time_stamp") override var timestamp: String,
     override var cellId: String,
+    override var deviceId: String,
     @get:JsonProperty("dbm") @ColumnInfo(name = "signal_strength") var dbm: Int,
     @get:JsonProperty("level_code") @ColumnInfo(name = "signal_strength_level") var levelCode: Int
-    ) : BaseMeasureDataModel {
-
-//    companion object {
-//        val diffCallback = object: DiffUtil.ItemCallback<SignalStrengthReportModel>() {
-//            override fun areItemsTheSame(
-//                oldItem: SignalStrengthReportModel,
-//                newItem: SignalStrengthReportModel
-//            ): Boolean {
-//                return oldItem.timestamp == newItem.timestamp
-//            }
-//
-//            override fun areContentsTheSame(
-//                oldItem: SignalStrengthReportModel,
-//                newItem: SignalStrengthReportModel
-//            ): Boolean {
-//                return newItem == oldItem
-//            }
-//
-//        }
-//    }
-}
+    ) : BaseMeasureDataModel

@@ -18,22 +18,4 @@ data class ConnectivityReportModel(
     @ColumnInfo(name = "download_speed") @get:JsonProperty("download_speed") var downloadSpeed: Double,
     @ColumnInfo(name = "ping") @get:JsonProperty("ping") var ping: Double,
     @ColumnInfo(name = "package_loss") @get:JsonProperty("package_loss") var packetLoss: Double
-) : BaseMeasureDataModel {
-//    companion object {
-//        val diffCallback = object: DiffUtil.ItemCallback<ConnectivityReportModel>() {
-//            override fun areItemsTheSame(
-//                oldItem: ConnectivityReportModel,
-//                newItem: ConnectivityReportModel
-//            ): Boolean {
-//                return oldItem.timestamp == newItem.timestamp
-//            }
-//
-//            override fun areContentsTheSame(
-//                oldItem: ConnectivityReportModel,
-//                newItem: ConnectivityReportModel
-//            ): Boolean {
-//                return oldItem == newItem
-//            }
-//        }
-//    }
-}
+) : BaseMeasureDataModel

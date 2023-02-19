@@ -12,7 +12,7 @@ interface SignalStrengthDao {
 
     // READ
     @Transaction
-    @Query("SELECT * FROM signal_strength_table ORDER BY time_stamp ASC")
+    @Query("SELECT * FROM signal_strength_table ORDER BY time_stamp DESC")
     fun getAll(): Flow<List<SignalStrengthReportModel>>
 
     // DELETE

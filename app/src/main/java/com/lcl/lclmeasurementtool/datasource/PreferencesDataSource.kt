@@ -17,10 +17,11 @@ import javax.inject.Inject
 val Context.dataStore by preferencesDataStore(name = "settings")
 
 class PreferencesDataSource @Inject constructor(
-    private val userPreferences: DataStore<UserPreferences>){
+    private val userPreferences: DataStore<UserPreferences>) {
 
     val userData = userPreferences.data.map {
         UserData(
+            deviceID = it.deviceId,
             skT = it.skT,
             hPKR = it.hPkr,
             showData = it.showData,
@@ -51,46 +52,9 @@ class PreferencesDataSource @Inject constructor(
         }
     }
 
-//    suspend fun setLogin(loggedIn: Boolean) {
-//        try {
-//            userPreferences.updateData {
-//                it.toBuilder().setLoggedIn(loggedIn).build()
-//            }
-//        } catch (e: IOException) {
-//            // TODO: alert to user
-//            throw e
-//        }
-//    }
-//
-//    suspend fun setHPKR(newKey: ByteString) {
-//        try {
-//            userPreferences.updateData {
-//                it.toBuilder().setHPkr(newKey).build()
-//                if (it.hPkr.isEmpty || it.skT.isEmpty) {
-//                    it.toBuilder().setLoggedIn(false).clearHPkr().build()
-//                }
-//                return@updateData it
-//            }
-//        } catch (e: IOException) {
-//            // TODO: alert to user
-//            throw e
-//        }
-//    }
-//
-//    suspend fun setSKT(newKey: ByteString) {
-//        try {
-//            userPreferences.updateData {
-//                it.toBuilder().setSkT(newKey).build()
-//                if (it.hPkr.isEmpty || it.skT.isEmpty) {
-//                    it.toBuilder().setLoggedIn(false).clearSkT().build()
-//                }
-//                return@updateData it
-//            }
-//        } catch (e: IOException) {
-//            // TODO: alert to user
-//            throw e
-//        }
-//    }
+    suspend fun getDeviceID() {
+
+    }
 
     suspend fun setR(R: ByteString) {
         userPreferences.updateData {
@@ -112,15 +76,11 @@ class PreferencesDataSource @Inject constructor(
         try {
             userPreferences.updateData {
                 Log.d("PreferenceDataSource", "set login to false")
-                it.toBuilder().setLoggedIn(false).clearHPkr().clearSkT().build()
+                it.toBuilder().setLoggedIn(false).clearHPkr().clearSkT().clearDeviceId().build()
             }
         } catch (e: IOException) {
             // TODO: alert to user
             throw e
         }
     }
-
-//    data class UserPref(private val showData: Boolean)
-//    data class DeviceSettings(private val loggedIn: Boolean, private val hPKR: String, private val skT: String)
-//    data class Settings(private val userPreference: UserPref?, private val deviceSettings: DeviceSettings?)
 }

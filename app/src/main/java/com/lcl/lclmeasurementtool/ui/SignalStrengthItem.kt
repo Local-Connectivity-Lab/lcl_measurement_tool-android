@@ -66,40 +66,40 @@ private fun SignalStrengthContent(data: SignalStrengthReportModel, modifier: Mod
     }
 }
 
-@Preview
-@Composable
-private fun InterestsCardPreview() {
-    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
-        Surface {
-            SignalStrengthItem(
-                data = data,
-                onClick = { },
-            )
-        }
-}
+//@Preview
+//@Composable
+//private fun InterestsCardPreview() {
+//    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
+//        Surface {
+//            SignalStrengthItem(
+//                data = data,
+//                onClick = { },
+//            )
+//        }
+//}
+//
+//@Preview
+//@Composable
+//private fun InterestsCardLongNamePreview() {
+//    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
+//        Surface {
+//            SignalStrengthItem(
+//                data = data,
+//                onClick = { },
+//            )
+//        }
+//
+//}
 
-@Preview
-@Composable
-private fun InterestsCardLongNamePreview() {
-    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
-        Surface {
-            SignalStrengthItem(
-                data = data,
-                onClick = { },
-            )
-        }
-
-}
-
-@Preview
-@Composable
-private fun InterestsCardLongDescriptionPreview() {
-    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
-    Surface {
-
-        SignalStrengthItem(
-            data = data,
-            onClick = { },
-        )
-    }
-}
+//@Preview
+//@Composable
+//private fun InterestsCardLongDescriptionPreview() {
+//    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
+//    Surface {
+//
+//        SignalStrengthItem(
+//            data = data,
+//            onClick = { },
+//        )
+//    }
+//}

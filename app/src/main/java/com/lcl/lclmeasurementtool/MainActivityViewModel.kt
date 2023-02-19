@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool
 
 import android.content.Context
+import android.location.Location
 import android.os.Build
 import android.telephony.CellSignalStrength
 import android.util.Log
@@ -14,7 +15,6 @@ import com.kongzue.dialogx.dialogs.TipDialog
 import com.lcl.lclmeasurementtool.Utils.ECDSA
 import com.lcl.lclmeasurementtool.Utils.Hex
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils
-import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel
 import com.lcl.lclmeasurementtool.constants.NetworkConstants
 import com.lcl.lclmeasurementtool.features.iperf.IperfRunner
 import com.lcl.lclmeasurementtool.features.iperf.IperfStatus
@@ -23,13 +23,15 @@ import com.lcl.lclmeasurementtool.features.ping.PingError
 import com.lcl.lclmeasurementtool.features.ping.PingErrorCase
 import com.lcl.lclmeasurementtool.features.ping.PingResult
 import com.lcl.lclmeasurementtool.location.LocationService
-import com.lcl.lclmeasurementtool.model.datamodel.QRCodeKeysModel
-import com.lcl.lclmeasurementtool.model.datamodel.RegistrationModel
-import com.lcl.lclmeasurementtool.model.datamodel.UserData
+import com.lcl.lclmeasurementtool.model.datamodel.*
+import com.lcl.lclmeasurementtool.model.repository.ConnectivityRepository
 import com.lcl.lclmeasurementtool.model.repository.NetworkApiRepository
+import com.lcl.lclmeasurementtool.model.repository.SignalStrengthRepository
 import com.lcl.lclmeasurementtool.model.repository.UserDataRepository
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthLevelEnum
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
+import com.lcl.lclmeasurementtool.ui.LCLLoadingWheel
+import com.lcl.lclmeasurementtool.util.TimeUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -44,7 +46,9 @@ class MainActivityViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
     private val networkApi: NetworkApiRepository,
     private val locationService: LocationService,
-    private val signalStrengthMonitor: SignalStrengthMonitor
+    private val signalStrengthMonitor: SignalStrengthMonitor,
+    private val connectivityRepository: ConnectivityRepository,
+    private val signalStrengthRepository: SignalStrengthRepository
 ) : ViewModel() {
 
     companion object {
@@ -60,12 +64,6 @@ class MainActivityViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000)
     )
 
-    fun getLocation() = viewModelScope.launch {
-        locationService.lastLocation().collect {
-            Log.d(TAG, it.toString())
-        }
-    }
-
     // Authentication
     fun login(hPKR: ByteString, skT: ByteString) = viewModelScope.launch {
         userDataRepository.setKeys(hPKR, skT)
@@ -78,6 +76,14 @@ class MainActivityViewModel @Inject constructor(
     fun setR(R: ByteString) = viewModelScope.launch {
         userDataRepository.setR(R)
     }
+
+    fun setDeviceId(id: String) = viewModelScope.launch {
+        userDataRepository.setDeviceID(id)
+    }
+
+    private val getDeviceID = userDataRepository.userData.map { it.deviceID }
+
+
 
     private suspend fun register(registration: RegistrationModel) = networkApi.register(registration)
 
@@ -202,13 +208,13 @@ class MainActivityViewModel @Inject constructor(
 
 
     // Network Testing
-    private val _jobs = mutableListOf<Job>()
     private var _pingResult = MutableStateFlow(PingResultState())
     private var _downloadResult = MutableStateFlow(ConnectivityTestResult())
     private var _uploadResult = MutableStateFlow(ConnectivityTestResult())
     private val _isTestActive = MutableStateFlow(false)
 
 
+    val isTestActive = _isTestActive.asStateFlow()
     val pingResult: StateFlow<PingResultState> = _pingResult.asStateFlow()
     var downloadResult: StateFlow<ConnectivityTestResult> = _downloadResult.asStateFlow()
     var uploadResult: StateFlow<ConnectivityTestResult> = _uploadResult.asStateFlow()
@@ -232,9 +238,7 @@ class MainActivityViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000)
     )
 
-    val isTestActive = _isTestActive.asStateFlow()
-
-    fun doPing() = viewModelScope.launch {
+    private suspend fun runPing() {
         try {
             Ping.cancellableStart(address = NetworkConstants.PING_TEST_ADDRESS, timeout = 1000)
                 .onStart {
@@ -243,9 +247,7 @@ class MainActivityViewModel @Inject constructor(
                 }
                 .onCompletion {
                     if (it != null) {
-                        // save to DB and send over the network
                         Log.d(TAG, "Error is ${it.message}")
-                    } else {
                         _isTestActive.value = false
                     }
                 }
@@ -261,39 +263,143 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
-    fun getUploadResult(context: Context) = viewModelScope.launch {
+    private suspend fun getUploadResult(context: Context) {
         IperfRunner().getTestResult(IperfRunner.iperfUploadConfig, context.cacheDir)
-            .collect { result ->
-            _uploadResult.value = when(result.status) {
-                IperfStatus.RUNNING -> ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
-                IperfStatus.FINISHED -> ConnectivityTestResult.Result(result.bandWidth, Color.Black)
-                IperfStatus.ERROR -> ConnectivityTestResult.Error(result.errorMSg!!)
+            .onStart {
+                _isTestActive.value = true
             }
-        }
-    }
-
-
-    fun getDownloadResult(context: Context) = viewModelScope.launch {
-        IperfRunner().getTestResult(IperfRunner.iperfDownloadConfig, context.cacheDir)
             .onCompletion {
-                _isTestActive.value = false
-                // TODO: write data to the database
+                if (it != null) {
+                    // save to DB and send over the network
+                    Log.d(TAG, "Error is ${it.message}")
+                    _isTestActive.value = false
+                }
             }
-            .collect { result ->
-            _downloadResult.value = when(result.status) {
+            .collectLatest { result ->
+                _uploadResult.value = when(result.status) {
                 IperfStatus.RUNNING -> ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
                 IperfStatus.FINISHED -> ConnectivityTestResult.Result(result.bandWidth, Color.Black)
-                IperfStatus.ERROR -> ConnectivityTestResult.Error(result.errorMSg!!)
+                IperfStatus.ERROR -> {
+                    _isTestActive.value = false
+                    ConnectivityTestResult.Error(result.errorMSg!!)
+                }
             }
         }
     }
 
-    fun doIperf(context: Context) = viewModelScope.launch {
-        val uploadJob = getUploadResult(context = context)
-        _jobs.add(uploadJob)
-        uploadJob.join()
-        val downloadJob = getDownloadResult(context = context)
-        _jobs.add(downloadJob)
+
+    private suspend fun getDownloadResult(context: Context) {
+        IperfRunner().getTestResult(IperfRunner.iperfDownloadConfig, context.cacheDir)
+            .onStart {
+                _isTestActive.value = true
+            }
+            .onCompletion {
+                if (it != null) {
+                    // save to DB and send over the network
+                    Log.d(TAG, "Error is ${it.message}")
+                    _isTestActive.value = false
+                }
+            }
+            .collectLatest { result ->
+                _downloadResult.value = when(result.status) {
+                IperfStatus.RUNNING -> ConnectivityTestResult.Result(result.bandWidth, Color.LightGray)
+                IperfStatus.FINISHED -> ConnectivityTestResult.Result(result.bandWidth, Color.Black)
+                IperfStatus.ERROR -> {
+                    _isTestActive.value = false
+                    ConnectivityTestResult.Error(result.errorMSg!!)
+                }
+            }
+        }
+    }
+
+    private var testJob: Job? = null
+
+    fun runTest(context: Context) {
+        if (testJob?.isActive == true) {
+            testJob?.cancel()
+        }
+
+        testJob = viewModelScope.launch {
+            resetTestResult()
+
+            try {
+                runPing()
+
+                if (_pingResult.value is PingResultState.Error) {
+                    this.cancel("Ping Test Failed")
+                }
+                ensureActive()
+
+                getUploadResult(context = context)
+
+                if (_uploadResult.value is ConnectivityTestResult.Error) {
+                    this.cancel("Upload Test Failed")
+                }
+
+                ensureActive()
+
+                getDownloadResult(context = context)
+
+                if (_downloadResult.value is ConnectivityTestResult.Error) {
+                    this.cancel("Download Test Failed")
+                }
+
+                ensureActive()
+
+                _isTestActive.value = false
+                Log.d(TAG, "ping, upload, download are finished")
+                val curTime = TimeUtil.getCurrentTime()
+                val cellID = signalStrengthMonitor.getCellID()
+
+                locationService.lastLocation().combine(getDeviceID) { locaion, deviceID ->
+                    Pair(locaion, deviceID)
+                }.collect {
+                    Log.d(TAG, it.first.toString())
+                    Log.d(TAG, it.second)
+                    val connectivityResult = ConnectivityReportModel(
+                        it.first.latitude,
+                        it.first.longitude,
+                        curTime,
+                        cellID,
+                        it.second,
+                        (_uploadResult.value as ConnectivityTestResult.Result).result.dropLast(5)
+                            .toDouble(),
+                        (_downloadResult.value as ConnectivityTestResult.Result).result.dropLast(5)
+                            .toDouble(),
+                        (_pingResult.value as PingResultState.Success).result.avg!!.toDouble(),
+                        (_pingResult.value as PingResultState.Success).result.numLoss!!.toDouble(),
+                    )
+
+                    connectivityRepository.insert(connectivityResult)
+
+                    val signalStrengthResult = SignalStrengthReportModel(
+                        it.first.latitude,
+                        it.first.longitude,
+                        curTime,
+                        cellID,
+                        it.second,
+                        signalStrengthResult.value.dbm,
+                        signalStrengthResult.value.level.level
+                    )
+                    signalStrengthRepository.insert(signalStrengthResult)
+                }
+            } catch (e: Exception) {
+                Log.d(TAG, "catch $e")
+            }
+        }
+    }
+
+    fun cancelTest() {
+        Log.d(TAG, "cancellation: the test job is $testJob")
+        testJob?.cancel(CancellationException("Shit, cancel this test!!!"))
+        Log.d(TAG, "Tests cancelled")
+        resetTestResult()
+    }
+
+    private fun resetTestResult() {
+        _pingResult.value = PingResultState.Error(PingError(PingErrorCase.OK, null))
+        _uploadResult.value = ConnectivityTestResult.Result("0.0 Mbit", Color.LightGray)
+        _downloadResult.value = ConnectivityTestResult.Result("0.0 Mbit", Color.LightGray)
     }
 }
 

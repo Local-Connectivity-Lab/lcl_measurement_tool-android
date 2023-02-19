@@ -5,4 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface SignalStrengthMonitor {
     val signalStrength: Flow<SignalStrength>
+    fun getCellID(): String
 }

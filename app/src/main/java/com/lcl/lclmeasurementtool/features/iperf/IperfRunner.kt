@@ -2,8 +2,9 @@ package com.lcl.lclmeasurementtool.features.iperf
 
 import android.util.Log
 import com.lcl.lclmeasurementtool.constants.IperfConstants
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onClosed
 import kotlinx.coroutines.flow.*
 import java.io.File
 import java.util.concurrent.CountDownLatch
@@ -45,6 +46,7 @@ class IperfRunner {
         IperfResult(123.123f, 123.124f, "100", "40.3", true, null, IperfStatus.FINISHED),
     ).flowOn(Dispatchers.IO).cancellable()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getTestResult(config: IperfConfig, cacheDir: File) = callbackFlow {
         val client = IperfClient()
         val callback = object : IperfCallback {
@@ -57,17 +59,21 @@ class IperfRunner {
             ) {
 
                 Log.d(TAG, "isDown = $isDown, bandWidth = $bandWidth")
-                channel.trySend(
-                    IperfResult(
-                        timeStart,
-                        timeEnd,
-                        sendBytes,
-                        bandWidth,
-                        isDown,
-                        null,
-                        IperfStatus.RUNNING
+                if (!channel.isClosedForSend) {
+                    channel.trySend(
+                        IperfResult(
+                            timeStart,
+                            timeEnd,
+                            sendBytes,
+                            bandWidth,
+                            isDown,
+                            null,
+                            IperfStatus.RUNNING
+                        )
                     )
-                )
+                } else {
+                    client.cancelTest()
+                }
             }
 
             override fun onResult(
@@ -78,17 +84,21 @@ class IperfRunner {
                 isDown: Boolean
             ) {
                 Log.d(TAG, "isDown = $isDown, bandWidth = $bandWidth")
-                channel.trySend(
-                    IperfResult(
-                        timeStart,
-                        timeEnd,
-                        sendBytes,
-                        bandWidth,
-                        isDown,
-                        null,
-                        IperfStatus.FINISHED
+                if (!channel.isClosedForSend) {
+                    channel.trySend(
+                        IperfResult(
+                            timeStart,
+                            timeEnd,
+                            sendBytes,
+                            bandWidth,
+                            isDown,
+                            null,
+                            IperfStatus.FINISHED
+                        )
                     )
-                )
+                } else {
+                    client.cancelTest()
+                }
             }
 
             override fun onError(errMsg: String) {
@@ -112,25 +122,28 @@ class IperfRunner {
 
         try {
             client.exec(config, callback, cacheDir)
-        } catch (e: RuntimeException) {
+        } catch (e: Exception) {
+            Log.d(TAG, "Cancel test in getTestResult for config $config")
             client.cancelTest()
         } finally {
             close()
             doneSignal.countDown()
         }
 
+
         awaitClose {
-            onStopped(cancellation = null)
+            Log.d(TAG, "Closing the iperf channel ...")
+            channel.close()
+            onStopped { client.cancelTest() }
         }
     }.conflate().flowOn(Dispatchers.IO).cancellable()
 
     private fun onStopped(cancellation: (() -> Unit)?) {
-        if (cancellation != null) {
-            cancellation()
-        }
+        if (cancellation != null) { cancellation() }
+
         try {
             Log.d(TAG,
-                "Awaiting shutdown notification" + Thread.currentThread().name + ":" + Thread.currentThread().state
+                "Awaiting shutdown notification: " + Thread.currentThread().name + ":" + Thread.currentThread().state
             )
             val shutdown = doneSignal.await(10000, TimeUnit.MILLISECONDS)
             if (!shutdown) {

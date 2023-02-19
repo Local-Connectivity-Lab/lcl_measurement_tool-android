@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons.Filled
 import androidx.compose.material.icons.Icons.Rounded
 import androidx.compose.material.icons.filled.NetworkCheck
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.rounded.Cancel
@@ -18,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -28,18 +28,20 @@ import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lcl.lclmeasurementtool.ConnectivityTestResult
 import com.lcl.lclmeasurementtool.MainActivityViewModel
-import com.lcl.lclmeasurementtool.MainActivityViewModel.Companion.TAG
 import com.lcl.lclmeasurementtool.PingResultState
 import com.lcl.lclmeasurementtool.SignalStrengthResult
+import com.lcl.lclmeasurementtool.features.ping.PingErrorCase
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeRoute(isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) {
     HomeScreen(isOffline = isOffline, mainActivityViewModel = mainActivityViewModel)
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLifecycleComposeApi::class)
+@OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) {
 
@@ -49,39 +51,39 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
     val uploadResult = mainActivityViewModel.uploadResult.collectAsStateWithLifecycle()
     val downloadResult = mainActivityViewModel.downloadResult.collectAsStateWithLifecycle()
     val signalStrength = mainActivityViewModel.signalStrengthResult.collectAsStateWithLifecycle()
-
-    val jobs = mutableListOf<Job>()
     val context = LocalContext.current
-    
+    val coroutineScope = rememberCoroutineScope()
+
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = modifier.fillMaxHeight()) {
+        Column(
+            modifier = modifier.fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             SignalStrengthCard(modifier = modifier, signalStrengthResult = signalStrength.value)
             ConnectivityCard(
                 modifier = modifier,
                 pingResult = pingResult.value,
                 uploadResult = uploadResult.value,
-                downloadResult = downloadResult.value,
-                jobs = jobs
+                downloadResult = downloadResult.value
             )
+
+            if (isTestActive.value) {
+                LCLLoadingWheel(contentDesc = "")
+            }
         }
 
         FloatingActionButton(onClick = {
             if (!isTestActive.value) {
-                jobs.clear()
-                mainActivityViewModel.doIperf(context)
-//                jobs.add(mainActivityViewModel.getDownloadResult(context))
-                Log.d("HOMEScreen", "Test Starts")
-
+                mainActivityViewModel.runTest(context)
             } else {
-                jobs.forEach { job -> job.cancel() }
-                Log.d("HOMEScreen", "Test Cancelled")
+                coroutineScope.cancel("User initiated the cancellation")
+                mainActivityViewModel.cancelTest()
             }
-
         },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 12.dp, bottom = 12.dp)) {
-            Icon(imageVector = Filled.PlayArrow, contentDescription = null)
+            Icon(imageVector = if (isTestActive.value) Filled.Pause else Filled.PlayArrow, contentDescription = null)
         }
     }
 }
@@ -139,7 +141,6 @@ private fun ConnectivityCard(
     pingResult: PingResultState,
     uploadResult: ConnectivityTestResult,
     downloadResult: ConnectivityTestResult,
-    jobs: List<Job>
 ) {
     Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
@@ -159,9 +160,6 @@ private fun ConnectivityCard(
                     when (uploadResult) {
                         is ConnectivityTestResult.Result -> {
                             DataEntry(icon = Rounded.CloudUpload, text = uploadResult.result)
-                        }
-                        is ConnectivityTestResult.Error -> {
-                            jobs.forEach { job -> job.cancel() }
                         }
                         else -> DataEntry(icon = Rounded.CloudUpload, text = "0.0 MBit")
                     }
@@ -188,8 +186,10 @@ private fun ConnectivityCard(
                         is PingResultState.Error -> {
                             pingNum = "0"
                             pingLoss = "0"
-                            Log.d("HOMEScreen", pingResult.error.message ?: "Error occurred")
-                            // TODO: show error message
+                            if (pingResult.error.code != PingErrorCase.OK) {
+                                Log.d("HOMEScreen", pingResult.error.message ?: "Error occurred")
+                                // TODO: show error message
+                            }
                         }
                     }
 

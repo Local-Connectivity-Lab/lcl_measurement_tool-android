@@ -14,12 +14,6 @@ class LocalUserDataRepository @Inject constructor(
 
     override suspend fun setDeviceID(newDeviceID: String) = preferenceDataSource.setDeviceID(newDeviceID)
 
-//    override suspend fun setLogin(loggedIn: Boolean) = preferenceDataSource.setLogin(loggedIn)
-
-//    override suspend fun setHPKR(newKey: ByteString) = preferenceDataSource.setHPKR(newKey)
-//
-//    override suspend fun setSKT(newKey: ByteString) = preferenceDataSource.setSKT(newKey)
-
     override suspend fun setKeys(hPKR: ByteString, skT: ByteString) = preferenceDataSource.setKeys(hPKR, skT)
     override suspend fun setR(R: ByteString) = preferenceDataSource.setR(R)
     override suspend fun logout() = preferenceDataSource.logout()
