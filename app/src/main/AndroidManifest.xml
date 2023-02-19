@@ -18,6 +18,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
     <permission-group android:name="${applicationId}.andpermission"/>
     <queries>
         <intent>
@@ -34,17 +35,10 @@
         android:roundIcon="@mipmap/icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.LCLMeasurementTool"
-        android:name=".LCLApplication">
-<!--        <activity-->
-<!--            android:name=".MainActivity2"-->
-<!--            android:exported="false"-->
-<!--            android:label="@string/title_activity_main2"-->
-<!--            android:theme="@style/Theme.LCLMeasurementTool.NoActionBar">-->
-<!--            <meta-data-->
-<!--                android:name="android.app.lib_name"-->
-<!--                android:value="" />-->
-<!--        </activity>-->
-
+        android:name=".LCLApplication"
+        android:requestLegacyExternalStorage="true"
+        >
+        <meta-data android:name="ScopedStorage" android:value="true" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.lcl.lclmeasurementtool.fileprovider"
