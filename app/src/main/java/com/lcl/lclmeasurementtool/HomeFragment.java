@@ -25,45 +25,34 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.work.Data;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
-import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
-import com.lcl.lclmeasurementtool.constants.NetworkConstants;
-import com.lcl.lclmeasurementtool.database.Entity.AbstractViewModel;
-import com.lcl.lclmeasurementtool.database.Entity.Connectivity;
-import com.lcl.lclmeasurementtool.database.Entity.ConnectivityViewModel;
-import com.lcl.lclmeasurementtool.database.Entity.SignalStrength;
-import com.lcl.lclmeasurementtool.database.Entity.SignalViewModel;
 import com.lcl.lclmeasurementtool.Functionality.NetworkTestViewModel;
 import com.lcl.lclmeasurementtool.Managers.CellularManager;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceListener;
 import com.lcl.lclmeasurementtool.Managers.LocationServiceManager;
 import com.lcl.lclmeasurementtool.Managers.NetworkChangeListener;
 import com.lcl.lclmeasurementtool.Managers.NetworkManager;
-import com.lcl.lclmeasurementtool.Managers.UploadManager;
-import com.lcl.lclmeasurementtool.Models.ConnectivityMessageModel;
-import com.lcl.lclmeasurementtool.Models.MeasurementDataModel;
-import com.lcl.lclmeasurementtool.Models.MeasurementDataReportModel;
-import com.lcl.lclmeasurementtool.Models.SignalStrengthMessageModel;
 import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
-import com.lcl.lclmeasurementtool.errors.DecoderException;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
 import com.lcl.lclmeasurementtool.Utils.Hex;
 import com.lcl.lclmeasurementtool.Utils.LocationUtils;
-import com.lcl.lclmeasurementtool.Utils.SerializationUtils;
 import com.lcl.lclmeasurementtool.Utils.SignalStrengthLevel;
 import com.lcl.lclmeasurementtool.Utils.TimeUtils;
 import com.lcl.lclmeasurementtool.Utils.UnitUtils;
+import com.lcl.lclmeasurementtool.constants.NetworkConstants;
+import com.lcl.lclmeasurementtool.database.Entity.AbstractViewModel;
+import com.lcl.lclmeasurementtool.database.Entity.Connectivity;
+import com.lcl.lclmeasurementtool.database.Entity.ConnectivityViewModel;
+import com.lcl.lclmeasurementtool.database.Entity.SignalStrength;
+import com.lcl.lclmeasurementtool.database.Entity.SignalViewModel;
 import com.lcl.lclmeasurementtool.databinding.HomeFragmentBinding;
+import com.lcl.lclmeasurementtool.errors.DecoderException;
 import com.microsoft.appcenter.analytics.Analytics;
 
-import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -168,17 +157,17 @@ public class HomeFragment extends Fragment {
                         return;
                     }
                     LatLng latLng = LocationUtils.toLatLng(location);
-                    SignalStrengthMessageModel signalStrengthMessageModel =
-                            new SignalStrengthMessageModel(
-                                    latLng.latitude,
-                                    latLng.longitude,
-                                    ts,
-                                    dBm,
-                                    level.getLevelCode(),
-                                    cell_id,
-                                    device_id);
-                    signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
-                    uploadData(signalStrengthMessageModel, sk_t, h_pkr, NetworkConstants.SIGNAL_ENDPOINT);
+//                    SignalStrengthMessageModel signalStrengthMessageModel =
+//                            new SignalStrengthMessageModel(
+//                                    latLng.latitude,
+//                                    latLng.longitude,
+//                                    ts,
+//                                    dBm,
+//                                    level.getLevelCode(),
+//                                    cell_id,
+//                                    device_id);
+//                    signalViewModel.insert(new SignalStrength(ts, dBm, level.getLevelCode(), latLng));
+//                    uploadData(signalStrengthMessageModel, sk_t, h_pkr, NetworkConstants.SIGNAL_ENDPOINT);
                 });
             }
         });
@@ -465,16 +454,16 @@ public class HomeFragment extends Fragment {
                                 return;
                             }
                             LatLng latLng = LocationUtils.toLatLng(location);
-                            ConnectivityMessageModel connectivityMessageModel =
-                                    new ConnectivityMessageModel(
-                                            latLng.latitude,
-                                            latLng.longitude,
-                                            ts,
-                                            prevUpload,
-                                            prevDownload,
-                                            prevPing, cell_id, device_id);
-                            connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
-                            uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
+//                            ConnectivityMessageModel connectivityMessageModel =
+//                                    new ConnectivityMessageModel(
+//                                            latLng.latitude,
+//                                            latLng.longitude,
+//                                            ts,
+//                                            prevUpload,
+//                                            prevDownload,
+//                                            prevPing, cell_id, device_id);
+//                            connectivityViewModel.insert(new Connectivity(ts, prevPing, prevUpload, prevDownload, latLng));
+//                            uploadData(connectivityMessageModel, sk_t, h_pkr, NetworkConstants.CONNECTIVITY_ENDPOINT);
                         });
                     }
                     WorkManager.getInstance(this.context).pruneWork();
@@ -530,28 +519,28 @@ public class HomeFragment extends Fragment {
         return prevDownload != -1.0 && prevPing != -1.0 && prevUpload != -1.0;
     }
 
-    private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
-            InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
+//    private void uploadData(MeasurementDataModel data, byte[] sk_t, byte[] h_pkr, String endpoint) throws NoSuchAlgorithmException,
+//            InvalidKeySpecException, SignatureException, InvalidKeyException, JsonProcessingException, NoSuchProviderException {
+//
+//        byte[] serialized = SerializationUtils.serializeToBytes(data);
+//
+//        byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
+//
+//        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
+//        boolean show_data = preferences.getBoolean("showData", false);
 
-        byte[] serialized = SerializationUtils.serializeToBytes(data);
-
-        byte[] sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(sk_t));
-
-        SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);
-        boolean show_data = preferences.getBoolean("showData", false);
-
-        MeasurementDataReportModel reportModel = new MeasurementDataReportModel(sig_m, h_pkr, serialized, show_data);
-
-        // upload data
-        UploadManager upload = UploadManager.Builder()
-                .addPayload(JsonStream.serialize(reportModel))
-                .addEndpoint(endpoint);
-        try {
-            upload.post();
-        } catch (IOException e) {
-            TipDialog.show(getString(R.string.upload_ioexception), WaitDialog.TYPE.ERROR);
-        }
-    }
+//        MeasurementDataReportModel reportModel = new MeasurementDataReportModel(sig_m, h_pkr, serialized, show_data);
+//
+//        // upload data
+//        UploadManager upload = UploadManager.Builder()
+//                .addPayload(JsonStream.serialize(reportModel))
+//                .addEndpoint(endpoint);
+//        try {
+//            upload.post();
+//        } catch (IOException e) {
+//            TipDialog.show(getString(R.string.upload_ioexception), WaitDialog.TYPE.ERROR);
+//        }
+//    }
 
     private byte[][] retrieveKeysInformation() {
         SharedPreferences preferences = this.activity.getPreferences(MODE_PRIVATE);

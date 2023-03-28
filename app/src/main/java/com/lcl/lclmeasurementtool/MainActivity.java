@@ -26,14 +26,12 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.textfield.TextInputEditText;
-import com.jsoniter.output.JsonStream;
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.dialogs.FullScreenDialog;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.interfaces.OnBindView;
-import com.lcl.lclmeasurementtool.Models.RegistrationMessageModel;
 import com.lcl.lclmeasurementtool.Receivers.SimStatesReceiver;
 import com.lcl.lclmeasurementtool.Utils.AnalyticsUtils;
 import com.lcl.lclmeasurementtool.Utils.ECDSA;
@@ -326,39 +324,41 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // prepare for registration message and then register
-        RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(sigma_r, h_concat, R);
-        String registration = JsonStream.serialize(registrationMessageModel);
+//        RegistrationMessageModel registrationMessageModel = new RegistrationMessageModel(sigma_r, h_concat, R);
+//        ObjectMapper mapper = new ObjectMapper();
+//        mapper.writeValueAsString(registrationMessageModel)
+//        String registration = JsonStream.serialize(registrationMessageModel);
 
-        OkHttpClient client = new OkHttpClient();
-        RequestBody requestBody = RequestBody.create(registration, JSON);
-
-        Request request = new Request.Builder()
-                .url(NetworkConstants.URL + NetworkConstants.REGISTRATION_ENDPOINT)
-                .post(requestBody)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                showMessageOnFailure();
-                Map<String, String> reasons = AnalyticsUtils.formatProperties(e.getMessage(), Arrays.toString(e.getStackTrace()));
-                Analytics.trackEvent(AnalyticsUtils.REGISTRATION_FAILED, reasons);
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.validation_success), WaitDialog.TYPE.SUCCESS);
-                    saveCredentials(sigma_t, pk_a, sk_t);
-                    activity.runOnUiThread(() -> fullScreenDialog.dismiss());
-                } else {
-                    Log.e(TAG, response.body().string());
-                    Map<String, String> reasons = AnalyticsUtils.formatProperties("status code", String.valueOf(response.code()), "body", response.body().string());
-                    Analytics.trackEvent(AnalyticsUtils.REGISTRATION_FAILED, reasons);
-                    TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.registration_failure), WaitDialog.TYPE.ERROR);
-                }
-                response.close();
-            }
-        });
+//        OkHttpClient client = new OkHttpClient();
+//        RequestBody requestBody = RequestBody.create(registration, JSON);
+//
+//        Request request = new Request.Builder()
+//                .url(NetworkConstants.URL + NetworkConstants.REGISTRATION_ENDPOINT)
+//                .post(requestBody)
+//                .build();
+//        client.newCall(request).enqueue(new Callback() {
+//            @Override
+//            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+//                showMessageOnFailure();
+//                Map<String, String> reasons = AnalyticsUtils.formatProperties(e.getMessage(), Arrays.toString(e.getStackTrace()));
+//                Analytics.trackEvent(AnalyticsUtils.REGISTRATION_FAILED, reasons);
+//            }
+//
+//            @Override
+//            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+//                if (response.isSuccessful()) {
+//                    TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.validation_success), WaitDialog.TYPE.SUCCESS);
+//                    saveCredentials(sigma_t, pk_a, sk_t);
+//                    activity.runOnUiThread(() -> fullScreenDialog.dismiss());
+//                } else {
+//                    Log.e(TAG, response.body().string());
+//                    Map<String, String> reasons = AnalyticsUtils.formatProperties("status code", String.valueOf(response.code()), "body", response.body().string());
+//                    Analytics.trackEvent(AnalyticsUtils.REGISTRATION_FAILED, reasons);
+//                    TipDialog.show(getString(com.lcl.lclmeasurementtool.R.string.registration_failure), WaitDialog.TYPE.ERROR);
+//                }
+//                response.close();
+//            }
+//        });
 
     }
 

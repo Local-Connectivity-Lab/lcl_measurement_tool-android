@@ -1,17 +1,16 @@
 package com.lcl.lclmeasurementtool
 
 import android.content.Context
-import android.location.Location
 import android.os.Build
 import android.telephony.CellSignalStrength
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.protobuf.ByteString
-import com.jsoniter.JsonIterator
-import com.jsoniter.spi.JsonException
 import com.kongzue.dialogx.dialogs.TipDialog
+import com.kongzue.dialogx.dialogs.WaitDialog
 import com.lcl.lclmeasurementtool.Utils.ECDSA
 import com.lcl.lclmeasurementtool.Utils.Hex
 import com.lcl.lclmeasurementtool.Utils.SecurityUtils
@@ -30,11 +29,16 @@ import com.lcl.lclmeasurementtool.model.repository.SignalStrengthRepository
 import com.lcl.lclmeasurementtool.model.repository.UserDataRepository
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthLevelEnum
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
-import com.lcl.lclmeasurementtool.ui.LCLLoadingWheel
+import com.lcl.lclmeasurementtool.ui.Login
 import com.lcl.lclmeasurementtool.util.TimeUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import retrofit2.HttpException
 import java.io.ByteArrayOutputStream
 import java.security.SecureRandom
 import java.security.interfaces.ECPrivateKey
@@ -56,13 +60,17 @@ class MainActivityViewModel @Inject constructor(
     }
 
     // UI
-    val uiState: StateFlow<MainActivityUiState> = userDataRepository.userData.map {
+    var uiState: StateFlow<MainActivityUiState> = userDataRepository.userData.map {
         if (it.loggedIn) MainActivityUiState.Success(it) else MainActivityUiState.Login
     }.stateIn(
         scope = viewModelScope,
         initialValue = MainActivityUiState.Login,
         started = SharingStarted.WhileSubscribed(5_000)
     )
+        private set
+
+    private var _loginState = MutableStateFlow(LoginStatus())
+    var loginState = _loginState.asStateFlow()
 
     // Authentication
     fun login(hPKR: ByteString, skT: ByteString) = viewModelScope.launch {
@@ -70,6 +78,7 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun logout() = viewModelScope.launch {
+        _loginState.value = LoginStatus.Initial
         userDataRepository.logout()
     }
 
@@ -83,41 +92,40 @@ class MainActivityViewModel @Inject constructor(
 
     private val getDeviceID = userDataRepository.userData.map { it.deviceID }
 
-
-
-    private suspend fun register(registration: RegistrationModel) = networkApi.register(registration)
-
-    suspend fun saveAndSend(result: String): LoginStatus {
-
+    suspend fun login(result: String) {
         val job = viewModelScope.async {
-            val jsonObj: QRCodeKeysModel = try {
-                JsonIterator.deserialize(
-                    result,
-                    QRCodeKeysModel::class.java
-                )
-            } catch (e: JsonException) {
-//                TipDialog.show("The QR Code is invalid. Please rescan the code or contact the administrator at lcl@seattlecommunitynetwork.org.", WaitDialog.TYPE.ERROR)
+            val jsonObj: QRCodeKeysModel
+            try {
+                jsonObj = Json.decodeFromString<QRCodeKeysModel>(result)
+            } catch (e: SerializationException) {
                 Log.d(TAG, "The QR Code is invalid. Please rescan the code or contact the administrator at lcl@seattlecommunitynetwork.org.")
 //                val reasons =
 //                    AnalyticsUtils.formatProperties(e.message, Arrays.toString(e.stackTrace))
 //                Analytics.trackEvent(AnalyticsUtils.QR_CODE_PARSING_FAILED, reasons)
-                return@async LoginStatus.QRCodeParseFailed
+                _loginState.value = LoginStatus.RegistrationFailed("QRCodeParseFailed")
+                return@async
             }
+
+            Log.d(TAG, "the scanner result is $result")
 
             val sigma_t = jsonObj.sigmaT
             val sk_t = jsonObj.skT
             val pk_a = jsonObj.pk_a
 
             when (val validationResult = validate(sigmaT = sigma_t, pkA = pk_a, skT = sk_t)) {
-                is LoginStatus.KeyVerificationFailed -> {
-                    return@async validationResult
+                is ScanStatus.KeyVerificationFailed -> {
+                    Log.d(TAG, "KeyVerificationFailed")
+                    _loginState.value = LoginStatus.RegistrationFailed("KeyVerificationFailed")
+                    return@async
                 }
 
-                is LoginStatus.KeyVerificationException -> {
-                    return@async validationResult
+                is ScanStatus.KeyVerificationException -> {
+                    Log.d(TAG, "KeyVerificationException")
+                    _loginState.value = LoginStatus.RegistrationFailed(validationResult.exception.toString())
+                    return@async
                 }
 
-                is LoginStatus.ScanSuccess -> {
+                is ScanStatus.ScanSuccess -> {
                     val skTHex = validationResult.skTHex
                     val pk_t: ECPublicKey
                     val ecPrivateKey: ECPrivateKey
@@ -125,9 +133,9 @@ class MainActivityViewModel @Inject constructor(
                         ecPrivateKey = ECDSA.DeserializePrivateKey(skTHex)
                         pk_t = ECDSA.DerivePublicKey(ecPrivateKey)
                     } catch (e: Exception) {
-                        TipDialog.show("Key Deserialization Failed")
-                        // TODO: return some error code
-                        return@async LoginStatus.KeyGenerationFailed
+                        Log.d(TAG, "KeyGenerationFailed")
+                        _loginState.value = LoginStatus.RegistrationFailed("KeyGenerationFailed")
+                        return@async
                     }
 
                     val secureRandom = SecureRandom()
@@ -156,35 +164,49 @@ class MainActivityViewModel @Inject constructor(
                         }
                         sigma_r = ECDSA.Sign(h_concat, ecPrivateKey)
                     } catch (e: Exception) {
-                        TipDialog.show("Key Signature Failed")
-                        // TODO: return error code
-                        return@async LoginStatus.KeySignFailed
+                        Log.d(TAG, "KeySignFailed")
+                        _loginState.value = LoginStatus.RegistrationFailed("KeySignFailed")
+                        return@async
                     }
 
-                    val registration = RegistrationModel(
+                    val registration = Json.encodeToString(
+                        RegistrationModel(
                         Hex.encodeHexString(sigma_r, false),
                         Hex.encodeHexString(h_concat, false),
-                        Hex.encodeHexString(r, false))
+                        Hex.encodeHexString(r, false)
+                        )
+                    )
 
-                    val response = register(registration)
-                    if (response.isSuccessful) {
-                        login(ByteString.copyFrom(h_pkr), ByteString.copyFrom(skTHex))
-                    } else {
-//                    TipDialog.show("Registration failed. Please try again.", WaitDialog.TYPE.ERROR)
-                        response.close()
-                        return@async LoginStatus.RegistrationFailed
+                    try {
+                        val response = networkApi.register(registration)
+                        Log.d(TAG, "response is ${response.isSuccessful}")
+                        if (response.isSuccessful) {
+                            login(ByteString.copyFrom(h_pkr), ByteString.copyFrom(Hex.decodeHex(sk_t)))
+                            _loginState.value = LoginStatus.RegistrationSucceeded
+                            return@async
+                        }
+
+                        Log.d(TAG, "response registration failed. error: ${response.message()}")
+                        _loginState.value = LoginStatus.RegistrationFailed(response.message())
+                        return@async
+                    } catch (e: HttpException) {
+                        Log.d(TAG, "error occurred during registration. error is $e")
+                        _loginState.value = LoginStatus.RegistrationFailed(e.message())
                     }
 
-                    response.close()
-                    return@async LoginStatus.RegistrationSucceeded
+                    return@async
                 }
-                else -> {return@async LoginStatus.UnexpectedErrorOccurred}
+                else -> {
+                    Log.d(TAG, "UnexpectedErrorOccurred")
+                    _loginState.value = LoginStatus.RegistrationFailed("UnexpectedErrorOccurred")
+                    return@async
+                }
             }
         }
-        return job.await() as LoginStatus
+        return job.await()
     }
 
-    private fun validate(sigmaT: String, pkA: String, skT: String): LoginStatus {
+    private fun validate(sigmaT: String, pkA: String, skT: String): ScanStatus {
         val sigmaTHex: ByteArray
         val pkAHex: ByteArray
         val skTHex: ByteArray
@@ -197,13 +219,13 @@ class MainActivityViewModel @Inject constructor(
                     sigmaTHex,
                     ECDSA.DeserializePublicKey(pkAHex))
             ) {
-                return LoginStatus.KeyVerificationFailed
+                return ScanStatus.KeyVerificationFailed
             }
         } catch (e: Exception) {
-            return LoginStatus.KeyVerificationException(e)
+            return ScanStatus.KeyVerificationException(e)
         }
 
-        return LoginStatus.ScanSuccess(sigmaTHex, pkAHex, skTHex)
+        return ScanStatus.ScanSuccess(sigmaTHex, pkAHex, skTHex)
     }
 
 
@@ -387,6 +409,10 @@ class MainActivityViewModel @Inject constructor(
                 Log.d(TAG, "catch $e")
             }
         }
+    }
+
+    suspend fun uploadSignalStrength(signalStrengthReportModel: String) {
+        networkApi.uploadSignalStrength(signalStrengthReportModel)
     }
 
     fun cancelTest() {

@@ -1,9 +1,11 @@
 package com.lcl.lclmeasurementtool.model.repository
 
-import com.lcl.lclmeasurementtool.model.datamodel.RegistrationModel
-import okhttp3.Response
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 
 interface NetworkApiRepository {
-    suspend fun register(@Body registration: RegistrationModel): Response
+    suspend fun register(@Body registration: String): Response<String>
+    suspend fun uploadSignalStrength(@Body signalStrengthReportModel: String): Response<String>
+    suspend fun uploadConnectivity(@Body connectivityReportModel: String): Response<String>
 }

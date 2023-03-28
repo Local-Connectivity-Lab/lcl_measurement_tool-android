@@ -102,11 +102,11 @@ class MainActivity2 : ComponentActivity() {
         // including IME animations
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-//            if (uiState == MainActivityUiState.Login) {
-//                viewModel.setDeviceId(UUID.randomUUID().toString())
-//                Login(viewModel = viewModel)
-//                return@setContent
-//            }
+            if (uiState == MainActivityUiState.Login) {
+                viewModel.setDeviceId(UUID.randomUUID().toString())
+                Login(viewModel = viewModel)
+                return@setContent
+            }
             LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this), networkMonitor, simStateMonitor)
         }
     }
@@ -121,17 +121,8 @@ class MainActivity2 : ComponentActivity() {
     }
 }
 
-
-sealed interface LoginStatus {
-    object KeyVerificationFailed: LoginStatus
-    object QRCodeParseFailed: LoginStatus
-    object KeyGenerationFailed: LoginStatus
-    object KeySignFailed: LoginStatus
-    object RegistrationFailed: LoginStatus
-    object UnexpectedErrorOccurred: LoginStatus
-    object RegistrationSucceeded: LoginStatus
-    class KeyVerificationException(e: Exception): LoginStatus
-    data class ScanSuccess(val sigmaTHex: ByteArray, val pkAHex: ByteArray, val skTHex: ByteArray): LoginStatus {
+sealed interface ScanStatus {
+    data class ScanSuccess(val sigmaTHex: ByteArray, val pkAHex: ByteArray, val skTHex: ByteArray): ScanStatus {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -152,4 +143,13 @@ sealed interface LoginStatus {
             return result
         }
     }
+
+    object KeyVerificationFailed: ScanStatus
+    data class KeyVerificationException(val exception: Exception) : ScanStatus
+}
+
+open class LoginStatus {
+    object Initial: LoginStatus()
+    data class RegistrationFailed(val reason: String): LoginStatus()
+    object RegistrationSucceeded: LoginStatus()
 }

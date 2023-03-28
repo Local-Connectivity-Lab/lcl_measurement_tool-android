@@ -1,21 +1,20 @@
 package com.lcl.lclmeasurementtool.model.datamodel
 
-import androidx.room.PrimaryKey
-import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.serialization.SerialName
 
 interface BaseMeasureDataModel {
-    @get:JsonProperty("latitude")
+    @SerialName("latitude")
     var latitude: Double
 
-    @get:JsonProperty("longitude")
+    @SerialName("longitude")
     var longitude: Double
 
-    @get:JsonProperty("timestamp")
+    @SerialName("timestamp")
     var timestamp: String
 
-    @get:JsonProperty("cell_id")
+    @SerialName("cell_id")
     var cellId: String
 
-    @get:JsonProperty("device_id")
+    @SerialName("device_id")
     var deviceId: String
 }

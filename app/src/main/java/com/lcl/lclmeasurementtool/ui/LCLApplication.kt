@@ -58,12 +58,12 @@ fun LCLApp(
 
     Log.d("LCLApplication", "isOffline is $isOffline")
     Log.d("LCLApplication", "isSimCardInserted is $isSimCardInserted")
-//    LaunchedEffect(isOffline) {
-//        if (isOffline) {
-//            Log.d("LCLApplication", "show snack bar")
-//            snackbarHostState.showSnackbar(message = "Please connect to a cellular network before running the test", duration = SnackbarDuration.Indefinite)
-//        }
-//    }
+    LaunchedEffect(isOffline) {
+        if (isOffline) {
+            Log.d("LCLApplication", "show snack bar")
+            snackbarHostState.showSnackbar(message = "Please connect to a cellular network before running the test", duration = SnackbarDuration.Indefinite)
+        }
+    }
 
     if (!isSimCardInserted) {
 //            MessageDialog.show("Error", "Please insert the sim card")

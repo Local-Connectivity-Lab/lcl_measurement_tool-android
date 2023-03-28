@@ -1,9 +1,9 @@
 package com.lcl.lclmeasurementtool.model.datamodel
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.serialization.SerialName
 
+@kotlinx.serialization.Serializable
 data class RegistrationModel(
-    @get:JsonProperty("sigma_r") var sigmaR: String,
-    @get:JsonProperty("r") var h: String,
-    @get:JsonProperty("R") var R: String
-    )
+    @SerialName("sigma_r") var sigmaR: String,
+    @SerialName("h") var h: String,
+    @SerialName("R") var R: String)

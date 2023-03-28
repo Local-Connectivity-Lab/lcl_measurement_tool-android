@@ -1,9 +1,10 @@
 package com.lcl.lclmeasurementtool.model.datamodel
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.serialization.SerialName
 
+@kotlinx.serialization.Serializable
 data class MeasurementReportModel(
-    @get:JsonProperty("sigma_m") var sigmaM: String,
-    @get:JsonProperty("h_pkr") var hPKR: String,
-    @get:JsonProperty("M") var M: String,
-    @get:JsonProperty("show_data") var showData: Boolean)
+    @SerialName("sigma_m") var sigmaM: String,
+    @SerialName("h_pkr") var hPKR: String,
+    @SerialName("M") var M: String,
+    @SerialName("show_data") var showData: Boolean)

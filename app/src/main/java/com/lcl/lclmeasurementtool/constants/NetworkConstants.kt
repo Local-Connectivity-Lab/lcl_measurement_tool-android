@@ -7,6 +7,7 @@ class NetworkConstants {
         const val REGISTRATION_ENDPOINT = "register"
         const val SIGNAL_ENDPOINT = "report_signal"
         const val CONNECTIVITY_ENDPOINT = "report_measurement"
+        const val MEDIA_TYPE = "application/json"
 
         // NetworkTestViewModel Constants
         const val PING_TAG = "PING"
