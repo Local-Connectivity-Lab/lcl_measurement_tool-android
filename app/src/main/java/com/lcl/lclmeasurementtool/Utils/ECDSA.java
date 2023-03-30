@@ -170,8 +170,7 @@ public class ECDSA {
      * @return        the private key associated with the raw bytes
      * @throws InvalidKeySpecException  if the key spec is invalid
      */
-    private static ECPrivateKey decodePKCS8ECPrivateKey(byte[] encoded)
-            throws InvalidKeySpecException {
+    private static ECPrivateKey decodePKCS8ECPrivateKey(byte[] encoded) throws InvalidKeySpecException {
         KeyFactory keyFactory = getKeyFactory();
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
 

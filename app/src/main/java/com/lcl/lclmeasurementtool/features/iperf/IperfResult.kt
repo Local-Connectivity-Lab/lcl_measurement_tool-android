@@ -6,7 +6,7 @@ data class IperfResult(
     val sendBytes: String,
     val bandWidth: String,
     val isDownMode: Boolean,
-    val errorMSg: String?,
+    val errorMsg: String?,
     val status: IperfStatus
 )
 

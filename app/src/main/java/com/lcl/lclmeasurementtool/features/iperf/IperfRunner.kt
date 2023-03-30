@@ -33,6 +33,8 @@ class IperfRunner {
             rsaKey = IperfConstants.base64Encode(IperfConstants.IC_SSL_PK),
             interval = 1.0
         )
+
+        val regex = "(\\d+\\.\\d+)".toRegex()
     }
 
     private val doneSignal = CountDownLatch(1)
@@ -45,6 +47,7 @@ class IperfRunner {
         IperfResult(123.123f, 123.124f, "100", "41.3", true, null, IperfStatus.RUNNING),
         IperfResult(123.123f, 123.124f, "100", "40.3", true, null, IperfStatus.FINISHED),
     ).flowOn(Dispatchers.IO).cancellable()
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getTestResult(config: IperfConfig, cacheDir: File) = callbackFlow {
@@ -60,17 +63,21 @@ class IperfRunner {
 
                 Log.d(TAG, "isDown = $isDown, bandWidth = $bandWidth")
                 if (!channel.isClosedForSend) {
-                    channel.trySend(
-                        IperfResult(
-                            timeStart,
-                            timeEnd,
-                            sendBytes,
-                            bandWidth,
-                            isDown,
-                            null,
-                            IperfStatus.RUNNING
+                    val match = regex.find(bandWidth)
+                    match?.let {matchResult ->
+                        val (speed) = matchResult.destructured
+                        channel.trySend(
+                            IperfResult(
+                                timeStart,
+                                timeEnd,
+                                sendBytes,
+                                speed,
+                                isDown,
+                                null,
+                                IperfStatus.RUNNING
+                            )
                         )
-                    )
+                    }
                 } else {
                     client.cancelTest()
                 }
@@ -85,17 +92,21 @@ class IperfRunner {
             ) {
                 Log.d(TAG, "isDown = $isDown, bandWidth = $bandWidth")
                 if (!channel.isClosedForSend) {
-                    channel.trySend(
-                        IperfResult(
-                            timeStart,
-                            timeEnd,
-                            sendBytes,
-                            bandWidth,
-                            isDown,
-                            null,
-                            IperfStatus.FINISHED
+                    val match = regex.find(bandWidth)
+                    match?.let {matchResult ->
+                        val (speed) = matchResult.destructured
+                        channel.trySend(
+                            IperfResult(
+                                timeStart,
+                                timeEnd,
+                                sendBytes,
+                                speed,
+                                isDown,
+                                null,
+                                IperfStatus.FINISHED
+                            )
                         )
-                    )
+                    }
                 } else {
                     client.cancelTest()
                 }

@@ -2,7 +2,8 @@ package com.lcl.lclmeasurementtool.model.datamodel
 
 import kotlinx.serialization.SerialName
 
-interface BaseMeasureDataModel {
+@kotlinx.serialization.Serializable
+sealed interface BaseMeasureDataModel {
     @SerialName("latitude")
     var latitude: Double
 

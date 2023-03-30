@@ -19,9 +19,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
@@ -30,11 +32,9 @@ import com.lcl.lclmeasurementtool.ConnectivityTestResult
 import com.lcl.lclmeasurementtool.MainActivityViewModel
 import com.lcl.lclmeasurementtool.PingResultState
 import com.lcl.lclmeasurementtool.SignalStrengthResult
+import com.lcl.lclmeasurementtool.features.ping.PingError
 import com.lcl.lclmeasurementtool.features.ping.PingErrorCase
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.launch
 
 @Composable
 fun HomeRoute(isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) {
@@ -46,10 +46,18 @@ fun HomeRoute(isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) 
 fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) {
 
     val offline by remember { mutableStateOf(isOffline) }
-    val isTestActive = mainActivityViewModel.isTestActive.collectAsStateWithLifecycle()
+    val isIperfTestActive = mainActivityViewModel.isIperfTestActive.collectAsStateWithLifecycle()
+    val isMLabTestActive = mainActivityViewModel.isMLabTestActive.collectAsStateWithLifecycle()
+
     val pingResult = mainActivityViewModel.pingResult.collectAsStateWithLifecycle()
+    val mlabPingResult = mainActivityViewModel.mLabPingResult.collectAsStateWithLifecycle()
+
     val uploadResult = mainActivityViewModel.uploadResult.collectAsStateWithLifecycle()
+    val mlabUploadResult = mainActivityViewModel.mlabUploadResult.collectAsStateWithLifecycle()
+
     val downloadResult = mainActivityViewModel.downloadResult.collectAsStateWithLifecycle()
+    val mlabDownloadResult = mainActivityViewModel.mlabDownloadResult.collectAsStateWithLifecycle()
+
     val signalStrength = mainActivityViewModel.signalStrengthResult.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -61,29 +69,51 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
         ) {
             SignalStrengthCard(modifier = modifier, signalStrengthResult = signalStrength.value)
             ConnectivityCard(
+                label = "Iperf (right)",
                 modifier = modifier,
                 pingResult = pingResult.value,
                 uploadResult = uploadResult.value,
                 downloadResult = downloadResult.value
             )
+            ConnectivityCard(
+                label = "MLab (left)",
+                modifier = modifier,
+                pingResult = mlabPingResult.value,
+                uploadResult = mlabUploadResult.value,
+                downloadResult = mlabDownloadResult.value
+            )
 
-            if (isTestActive.value) {
+            if (isMLabTestActive.value) {
                 LCLLoadingWheel(contentDesc = "")
             }
         }
 
         FloatingActionButton(onClick = {
-            if (!isTestActive.value) {
-                mainActivityViewModel.runTest(context)
+            if (!isIperfTestActive.value) {
+                mainActivityViewModel.runIperfTest(context)
             } else {
-                coroutineScope.cancel("User initiated the cancellation")
-                mainActivityViewModel.cancelTest()
+                coroutineScope.cancel("User initiated the cancellation (iperf)")
+                mainActivityViewModel.cancelIperfTest()
             }
         },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 12.dp, bottom = 12.dp)) {
-            Icon(imageVector = if (isTestActive.value) Filled.Pause else Filled.PlayArrow, contentDescription = null)
+            Icon(imageVector = if (isIperfTestActive.value) Filled.Pause else Filled.PlayArrow, contentDescription = null)
+        }
+
+        FloatingActionButton(onClick = {
+            if (!isMLabTestActive.value) {
+                mainActivityViewModel.runMLabTest()
+            } else {
+                coroutineScope.cancel("User initiated the cancellation (mlab)")
+                mainActivityViewModel.cancelMLabTest()
+            }
+        },
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 12.dp, bottom = 12.dp)) {
+            Icon(imageVector = if (isIperfTestActive.value) Filled.Pause else Filled.PlayArrow, contentDescription = null)
         }
     }
 }
@@ -137,6 +167,7 @@ private fun SignalStrengthCard(
 
 @Composable
 private fun ConnectivityCard(
+    label: String,
     modifier: Modifier = Modifier,
     pingResult: PingResultState,
     uploadResult: ConnectivityTestResult,
@@ -147,6 +178,7 @@ private fun ConnectivityCard(
             .padding(horizontal = 10.dp, vertical = 10.dp)
             .fillMaxWidth()
     ) {
+        Text(text = label, fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(start = 10.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = modifier.padding(12.dp)
@@ -159,18 +191,18 @@ private fun ConnectivityCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     when (uploadResult) {
                         is ConnectivityTestResult.Result -> {
-                            DataEntry(icon = Rounded.CloudUpload, text = uploadResult.result)
+                            DataEntry(icon = Rounded.CloudUpload, text = "${uploadResult.result} Mbps")
                         }
-                        else -> DataEntry(icon = Rounded.CloudUpload, text = "0.0 MBit")
+                        else -> DataEntry(icon = Rounded.CloudUpload, text = "0.0 Mbps")
                     }
 
 
                     when (downloadResult) {
                         is ConnectivityTestResult.Result -> {
-                            DataEntry(icon = Rounded.CloudDownload, text = downloadResult.result)
+                            DataEntry(icon = Rounded.CloudDownload, text = "${downloadResult.result} Mbps")
                         }
                         else -> {
-                            DataEntry(icon = Rounded.CloudDownload, text = "0.0 Mbit")
+                            DataEntry(icon = Rounded.CloudDownload, text = "0.0 Mbps")
                         }
                     }
 
@@ -207,6 +239,25 @@ fun DataEntry(icon: ImageVector, text: String) {
         Icon(imageVector = icon, contentDescription = null)
         Spacer(modifier = Modifier.width(4.dp))
         Text(text = text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Preview
+@Composable
+fun ConnectivityCardPreview() {
+
+    Column {
+        ConnectivityCard(label = "IperfRunner",
+            pingResult = PingResultState.Error(PingError(PingErrorCase.OK, null)),
+            uploadResult = ConnectivityTestResult.Result("1", Color.Blue),
+            downloadResult = ConnectivityTestResult.Result("1", Color.Green)
+        )
+
+        ConnectivityCard(label = "MLab",
+            pingResult = PingResultState.Error(PingError(PingErrorCase.OK, null)),
+            uploadResult = ConnectivityTestResult.Result("1", Color.Blue),
+            downloadResult = ConnectivityTestResult.Result("1", Color.Green)
+        )
     }
 }
 

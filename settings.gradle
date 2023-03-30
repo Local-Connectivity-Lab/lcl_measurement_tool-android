@@ -1,2 +1,3 @@
 rootProject.name = "LCL Measurement Tool"
 include ':app'
+include ':libndt7'

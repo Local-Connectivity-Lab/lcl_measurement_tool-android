@@ -87,5 +87,5 @@ class SignalStrengthDataSource @Inject constructor(
                 executor.shutdown()
             }
         }
-    }.conflate().sample(10000L).distinctUntilChanged()
+    }.conflate().sample(5000L).distinctUntilChanged()
 }
