@@ -1,5 +1,7 @@
 # LCL Network Performance Measurement Tool
 
+**Warning: This doc is outdated! Will update once the kotlin integration is complete.**
+
 **LCL Network Measurement Tool** is an Android App that measures a variety of network metrics, including but not limited to *ping*, *upload/download* speed, *signal strength*.
 It also automatically uploads the testing results to the backend server, which will then be displayed on [our coverage map](https://coverage.seattlecommunitynetwork.org/).
 
