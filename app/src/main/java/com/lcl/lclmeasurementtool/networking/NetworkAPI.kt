@@ -16,15 +16,15 @@ private interface NetworkAPI {
 
     @Headers("Content-Type: ${NetworkConstants.MEDIA_TYPE}")
     @POST(value = NetworkConstants.REGISTRATION_ENDPOINT)
-    suspend fun register(@Body registration: String): Response<String>
+    suspend fun register(@Body registration: String): ResponseBody
 
     @Headers("Content-Type: ${NetworkConstants.MEDIA_TYPE}")
     @POST(value = NetworkConstants.SIGNAL_ENDPOINT)
-    suspend fun uploadSignalStrength(@Body signalStrengthReportModel: String): Response<String>
+    suspend fun uploadSignalStrength(@Body signalStrengthReportModel: String): ResponseBody
 
     @Headers("Content-Type: ${NetworkConstants.MEDIA_TYPE}")
     @POST(value = NetworkConstants.CONNECTIVITY_ENDPOINT)
-    suspend fun uploadConnectivity(@Body connectivityReportModel: String): Response<String>
+    suspend fun uploadConnectivity(@Body connectivityReportModel: String): ResponseBody
 }
 
 @Singleton

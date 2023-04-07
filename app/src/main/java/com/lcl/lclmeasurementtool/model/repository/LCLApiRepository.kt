@@ -9,7 +9,7 @@ class LCLApiRepository @Inject constructor(
     private val dataSource: RetrofitLCLNetwork
 ): NetworkApiRepository {
 
-    override suspend fun register(registration: String): Response<String> = dataSource.register(registration)
-    override suspend fun uploadConnectivity(connectivityReportModel: String): Response<String> = dataSource.uploadConnectivity(connectivityReportModel)
-    override suspend fun uploadSignalStrength(signalStrengthReportModel: String): Response<String> = dataSource.uploadSignalStrength(signalStrengthReportModel)
+    override suspend fun register(registration: String): ResponseBody = dataSource.register(registration)
+    override suspend fun uploadConnectivity(connectivityReportModel: String): ResponseBody = dataSource.uploadConnectivity(connectivityReportModel)
+    override suspend fun uploadSignalStrength(signalStrengthReportModel: String): ResponseBody = dataSource.uploadSignalStrength(signalStrengthReportModel)
 }

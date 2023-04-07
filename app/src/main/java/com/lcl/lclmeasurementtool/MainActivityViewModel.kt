@@ -29,6 +29,7 @@ import com.lcl.lclmeasurementtool.model.repository.UserDataRepository
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthLevelEnum
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
 import com.lcl.lclmeasurementtool.util.TimeUtil
+import com.lcl.lclmeasurementtool.util.prepareReportData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -37,7 +38,9 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.measurementlab.ndt7.android.NDTTest
+import okhttp3.ResponseBody
 import retrofit2.HttpException
+import retrofit2.Response
 import java.io.ByteArrayOutputStream
 import java.security.SecureRandom
 import java.security.interfaces.ECPrivateKey
@@ -179,16 +182,11 @@ class MainActivityViewModel @Inject constructor(
 
                     try {
                         val response = networkApi.register(registration)
-                        Log.d(TAG, "response is ${response.isSuccessful}")
-                        if (response.isSuccessful) {
-                            login(ByteString.copyFrom(h_pkr), ByteString.copyFrom(Hex.decodeHex(sk_t)))
-                            _loginState.value = LoginStatus.RegistrationSucceeded
-                            return@async
-                        }
-
-                        Log.d(TAG, "response registration failed. error: ${response.message()}")
-                        _loginState.value = LoginStatus.RegistrationFailed(response.message())
-                        return@async
+//                        Log.d(TAG, "response is ${response.isSuccessful}")
+//                        if (response.isSuccessful) {
+                        login(ByteString.copyFrom(h_pkr), ByteString.copyFrom(Hex.decodeHex(sk_t)))
+                        _loginState.value = LoginStatus.RegistrationSucceeded
+//                        }
                     } catch (e: HttpException) {
                         Log.d(TAG, "error occurred during registration. error is $e")
                         _loginState.value = LoginStatus.RegistrationFailed(e.message())
@@ -413,52 +411,52 @@ class MainActivityViewModel @Inject constructor(
                 val curTime = TimeUtil.getCurrentTime()
                 val cellID = signalStrengthMonitor.getCellID()
 
-                locationService.lastLocation().combine(getUserPreference) { locaion, userPreference ->
-                    Pair(locaion, userPreference)
-                }.collect {
-//                    Log.d(TAG, it.first.toString())
-//                    Log.d(TAG, it.second)
-                    val connectivityResult = ConnectivityReportModel(
-                        it.first.latitude,
-                        it.first.longitude,
-                        curTime,
-                        cellID,
-                        it.second.deviceID,
-                        (_uploadResult.value as ConnectivityTestResult.Result).result.toDouble(),
-                        (_downloadResult.value as ConnectivityTestResult.Result).result.toDouble(),
-                        (_pingResult.value as PingResultState.Success).result.avg!!.toDouble(),
-                        (_pingResult.value as PingResultState.Success).result.numLoss!!.toDouble(),
-                    )
-
-                    connectivityRepository.insert(connectivityResult)
-                    val connectivityReport = prepareReportData(connectivityResult, it.second)
-
-                    val signalStrengthResult = SignalStrengthReportModel(
-                        it.first.latitude,
-                        it.first.longitude,
-                        curTime,
-                        cellID,
-                        it.second.deviceID,
-                        signalStrengthResult.value.dbm,
-                        signalStrengthResult.value.level.level
-                    )
-                    signalStrengthRepository.insert(signalStrengthResult)
-                    val signalReport = prepareReportData(signalStrengthResult, it.second)
-
-                    try {
-                        val response = networkApi.uploadSignalStrength(signalReport)
-                        Log.d(TAG, "response from signal strength endpoint is ${response.message()}")
-                    } catch (e: HttpException) {
-                        Log.e(TAG, "trying to send signal strength report, but got $e")
-                    }
-
-                    try {
-                        val response = networkApi.uploadConnectivity(connectivityReport)
-                        Log.d(TAG, "response from connectivity endpoint is ${response.message()}")
-                    } catch (e: HttpException) {
-                        Log.e(TAG, "trying to send connectivity report, but got $e")
-                    }
-                }
+//                locationService.lastLocation().combine(getUserPreference) { locaion, userPreference ->
+//                    Pair(locaion, userPreference)
+//                }.collect {
+////                    Log.d(TAG, it.first.toString())
+////                    Log.d(TAG, it.second)
+//                    val connectivityResult = ConnectivityReportModel(
+//                        it.first.latitude,
+//                        it.first.longitude,
+//                        curTime,
+//                        cellID,
+//                        it.second.deviceID,
+//                        (_uploadResult.value as ConnectivityTestResult.Result).result.toDouble(),
+//                        (_downloadResult.value as ConnectivityTestResult.Result).result.toDouble(),
+//                        (_pingResult.value as PingResultState.Success).result.avg!!.toDouble(),
+//                        (_pingResult.value as PingResultState.Success).result.numLoss!!.toDouble(),
+//                    )
+//
+//                    connectivityRepository.insert(connectivityResult)
+//                    val connectivityReport = prepareReportData(connectivityResult, it.second)
+//
+//                    val signalStrengthResult = SignalStrengthReportModel(
+//                        it.first.latitude,
+//                        it.first.longitude,
+//                        curTime,
+//                        cellID,
+//                        it.second.deviceID,
+//                        signalStrengthResult.value.dbm,
+//                        signalStrengthResult.value.level.level
+//                    )
+//                    signalStrengthRepository.insert(signalStrengthResult)
+//                    val signalReport = prepareReportData(signalStrengthResult, it.second)
+//
+//                    try {
+//                        val response = networkApi.uploadSignalStrength(signalReport)
+//                        Log.d(TAG, "response from signal strength endpoint is ${response.message()}")
+//                    } catch (e: HttpException) {
+//                        Log.e(TAG, "trying to send signal strength report, but got $e")
+//                    }
+//
+//                    try {
+//                        val response = networkApi.uploadConnectivity(connectivityReport)
+//                        Log.d(TAG, "response from connectivity endpoint is ${response.message()}")
+//                    } catch (e: HttpException) {
+//                        Log.e(TAG, "trying to send connectivity report, but got $e")
+//                    }
+//                }
             } catch (e: Exception) {
                 Log.d(TAG, "catch $e")
             }
@@ -564,19 +562,40 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
-    private fun saveToDB() {
-
+    private suspend fun saveToDB(signalStrengthReportModel: SignalStrengthReportModel, connectivityReportModel: ConnectivityReportModel) {
+        signalStrengthRepository.insert(signalStrengthReportModel)
+        connectivityRepository.insert(connectivityReportModel)
     }
 
-    private fun report() {
+    private suspend fun report(reportModel: BaseMeasureDataModel, userData: UserData) {
+        try {
+            val reportString = prepareReportData(reportModel, userData)
+            val response: ResponseBody = if (reportModel is SignalStrengthReportModel) {
+                networkApi.uploadSignalStrength(reportString)
+            } else {
+                networkApi.uploadConnectivity(reportString)
+            }
 
-    }
+            Log.i(TAG, "report success! response is $response")
 
-    private fun prepareReportData(measureDataModel: BaseMeasureDataModel, userData: UserData): String {
-        val serialized = Json.encodeToString(measureDataModel).toByteArray()
-        val sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(userData.skT.toByteArray()))
-        val report = MeasurementReportModel(sig_m.toString(), userData.hPKR.toStringUtf8(), serialized.toString(), userData.showData)
-        return Json.encodeToString(report)
+            // update DB to reflect the change
+            if (reportModel is SignalStrengthReportModel) {
+                signalStrengthRepository.update(reportModel.copy(reported = true))
+            } else if (reportModel is ConnectivityReportModel) {
+                connectivityRepository.update(reportModel.copy(reported = true))
+            }
+            return
+
+        } catch (e: HttpException) {
+            // TODO: retry
+            if (e.code() in 400..499) {
+                Log.d(TAG, "client error")
+            }
+
+            if (e.code() in 500..599) {
+                Log.d(TAG, "server error")
+            }
+        }
     }
 
     private fun resetIperfTestResult() {

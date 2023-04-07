@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.lcl.lclmeasurementtool">
 
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
@@ -47,6 +48,25 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/filepaths" />
+        </provider>
+
+        <!-- If you want to disable android.startup completely. -->
+<!--        <provider-->
+<!--            android:name="androidx.startup.InitializationProvider"-->
+<!--            android:authorities="${applicationId}.androidx-startup"-->
+<!--            android:exported="false"-->
+<!--            tools:node="remove">-->
+<!--        </provider>-->
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="com.lcl.lclmeasurementtool.sync.SyncInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
         </provider>
 
         <meta-data

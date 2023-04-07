@@ -104,8 +104,8 @@ class MainActivity2 : ComponentActivity() {
         setContent {
             if (uiState == MainActivityUiState.Login) {
                 viewModel.setDeviceId(UUID.randomUUID().toString())
-                Login(viewModel = viewModel)
-                return@setContent
+//                Login(viewModel = viewModel)
+//                return@setContent
             }
             LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this), networkMonitor, simStateMonitor)
         }

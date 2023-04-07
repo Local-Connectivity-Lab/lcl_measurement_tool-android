@@ -30,11 +30,15 @@ fun SignalStrengthItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .weight(1f)
-                .padding(vertical = itemSeparation, horizontal = 10.dp)
+                .padding(vertical = itemSeparation)
+                .padding(start = 10.dp)
         ) {
             TagIcon(modifier, Icons.Rounded.SignalCellularAlt)
             Spacer(modifier = Modifier.width(12.dp))
             SignalStrengthContent(data = data)
+        }
+        if (data.reported) {
+            TagLabel("Reported", modifier = Modifier.padding(end = 4.dp))
         }
     }
 }
@@ -66,18 +70,18 @@ private fun SignalStrengthContent(data: SignalStrengthReportModel, modifier: Mod
     }
 }
 
-//@Preview
-//@Composable
-//private fun InterestsCardPreview() {
-//    val data = SignalStrengthReportModel("deviceID2", 123.122, 456.452, "timestamp2", "cellID2", -82, 2)
-//        Surface {
-//            SignalStrengthItem(
-//                data = data,
-//                onClick = { },
-//            )
-//        }
-//}
-//
+@Preview
+@Composable
+private fun InterestsCardPreview() {
+    val data = SignalStrengthReportModel(1.1, 2.2, "1223", "1", "1", 1, 1, true)
+    Surface {
+        SignalStrengthItem(
+            data = data,
+            onClick = { },
+        )
+    }
+}
+
 //@Preview
 //@Composable
 //private fun InterestsCardLongNamePreview() {

@@ -29,11 +29,16 @@ fun ConnectivityItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .weight(1f)
-                .padding(vertical = itemSeparation, horizontal = 10.dp)
+                .padding(vertical = itemSeparation)
+                .padding(start = 10.dp)
         ) {
             TagIcon(modifier = modifier, icon = Rounded.NetworkCheck)
             Spacer(modifier = Modifier.width(12.dp))
             ConnectivityContent(data = data)
+        }
+
+        if (data.reported) {
+            TagLabel("Reported", modifier = Modifier.padding(end = 4.dp))
         }
     }
 }
@@ -66,7 +71,7 @@ private fun ConnectivityContent(data: ConnectivityReportModel, modifier: Modifie
 @Preview
 @Composable
 private fun InterestsCardPreview() {
-        val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3)
+        val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3, reported = true)
         Surface {
             ConnectivityItem(
                 data = data,
@@ -75,26 +80,26 @@ private fun InterestsCardPreview() {
         }
 }
 
-@Preview
-@Composable
-private fun InterestsCardLongNamePreview() {
-    val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3)
-        Surface {
-            ConnectivityItem(
-                data = data,
-                onClick = { }
-            )
-        }
-}
-
-@Preview
-@Composable
-private fun InterestsCardLongDescriptionPreview() {
-    val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3)
-    Surface {
-        ConnectivityItem(
-            data = data,
-            onClick = { }
-        )
-    }
-}
+//@Preview
+//@Composable
+//private fun InterestsCardLongNamePreview() {
+//    val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3)
+//        Surface {
+//            ConnectivityItem(
+//                data = data,
+//                onClick = { }
+//            )
+//        }
+//}
+//
+//@Preview
+//@Composable
+//private fun InterestsCardLongDescriptionPreview() {
+//    val data = ConnectivityReportModel(123.123, 345.345, "timestamp2", "hi2", "deviceID2", 123.32, 345.52, 23.22, 10.3)
+//    Surface {
+//        ConnectivityItem(
+//            data = data,
+//            onClick = { }
+//        )
+//    }
+//}

@@ -15,6 +15,15 @@ interface ConnectivityDao {
     @Query("SELECT * FROM connectivity_table ORDER BY time_stamp DESC")
     fun getAll(): Flow<List<ConnectivityReportModel>>
 
+    @Transaction
+    @Query("SELECT * FROM connectivity_table where reported = false")
+    fun getAllNotReported(): Flow<List<ConnectivityReportModel>>
+
+    // WRITE
+    @Transaction
+    @Update
+    suspend fun updateReportStatus(connectivity: ConnectivityReportModel)
+
     // DELETE
     @Query("DELETE FROM connectivity_table")
     fun deleteAll()

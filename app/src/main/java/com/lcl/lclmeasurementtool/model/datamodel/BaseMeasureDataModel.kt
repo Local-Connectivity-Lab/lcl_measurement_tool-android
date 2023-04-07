@@ -18,4 +18,6 @@ sealed interface BaseMeasureDataModel {
 
     @SerialName("device_id")
     var deviceId: String
+
+    var reported: Boolean
 }
