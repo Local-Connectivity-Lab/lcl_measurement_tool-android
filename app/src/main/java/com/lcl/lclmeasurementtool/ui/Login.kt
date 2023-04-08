@@ -11,23 +11,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.kongzue.dialogx.dialogs.TipDialog
-import com.kongzue.dialogx.dialogs.WaitDialog
 import com.lcl.lclmeasurementtool.LoginStatus
 import com.lcl.lclmeasurementtool.MainActivityViewModel
 import com.lcl.lclmeasurementtool.R
 import io.github.g00fy2.quickie.QRResult
 import io.github.g00fy2.quickie.ScanQRCode
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalLifecycleComposeApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Login(
     viewModel: MainActivityViewModel
@@ -56,7 +50,7 @@ fun Login(
             is LoginStatus.Initial -> {}
 
             is LoginStatus.RegistrationFailed -> {
-                Log.d("Login", "⚠️ $status.reason️")
+                Log.d("Login", "⚠️ ${status.reason}")
                 snackbarHostState.showSnackbar("⚠️ ${status.reason}", duration = SnackbarDuration.Long)
             }
 

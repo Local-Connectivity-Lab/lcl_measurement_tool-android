@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.sync
 
 import android.content.Context
+import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.lcl.lclmeasurementtool.datastore.Dispatcher
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 @HiltWorker
 class UploadWorker @AssistedInject constructor(
-    @Assisted context: Context,
+    @Assisted private val context: Context,
     @Assisted workerParameters: WorkerParameters,
     private val signalStrengthRepository: SignalStrengthRepository,
     private val connectivityRepository: ConnectivityRepository,
@@ -33,22 +34,27 @@ class UploadWorker @AssistedInject constructor(
                     async { connectivityRepository.sync() }
                 ).all { it }
                 if (syncSuccessfully) {
+                    Log.d(TAG, "upload successfully")
                     return@withContext Result.success()
                 } else {
+                    Log.d(TAG, "upload failed. some sync work failed")
                     return@withContext Result.failure()
                 }
             } catch (e: Exception) {
+                Log.d(TAG, "upload failed. exception is $e")
                 Result.failure()
             }
         }
 
     companion object {
         fun periodicSyncWork() =
-            PeriodicWorkRequest.Builder(UploadWorker::class.java, 8, TimeUnit.HOURS)
-            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            PeriodicWorkRequest.Builder(UploadWorker::class.java, 15, TimeUnit.MINUTES)
             .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+            .setInitialDelay(5, TimeUnit.MINUTES)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(30))
             .build()
+
+        const val TAG = "UploadWorker"
     }
 
 }

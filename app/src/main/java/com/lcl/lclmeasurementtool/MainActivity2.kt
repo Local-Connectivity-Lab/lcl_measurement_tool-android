@@ -45,7 +45,7 @@ class MainActivity2 : ComponentActivity() {
     @Inject
     lateinit var simStateMonitor: SimStateMonitor
 
-    val viewModel: MainActivityViewModel by viewModels()
+    private val viewModel: MainActivityViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,8 +104,8 @@ class MainActivity2 : ComponentActivity() {
         setContent {
             if (uiState == MainActivityUiState.Login) {
                 viewModel.setDeviceId(UUID.randomUUID().toString())
-//                Login(viewModel = viewModel)
-//                return@setContent
+                Login(viewModel = viewModel)
+                return@setContent
             }
             LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this), networkMonitor, simStateMonitor)
         }

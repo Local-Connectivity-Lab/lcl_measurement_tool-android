@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.sync
 
 import android.content.Context
+import android.util.Log
 import androidx.startup.AppInitializer
 import androidx.startup.Initializer
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -13,6 +14,7 @@ object Sync {
     // automatic initialization with Androidx Startup. It is called from the app module's
     // Application.onCreate() and should be only done once.
     fun initialize(context: Context) {
+        Log.d("Sync", "Sync.initialize called")
         AppInitializer.getInstance(context)
             .initializeComponent(SyncInitializer::class.java)
     }
@@ -22,13 +24,12 @@ internal const val SyncWorkName = "LCLDataReportSync"
 
 class SyncInitializer: Initializer<Sync> {
     override fun create(context: Context): Sync {
-        WorkManager.getInstance(context).apply {
-            enqueueUniquePeriodicWork(
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 SyncWorkName,
                 ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                 UploadWorker.periodicSyncWork()
             )
-        }
+        Log.d("SyncInitializer", "SyncInitializer initialize here!")
         return Sync
     }
 

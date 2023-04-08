@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -27,9 +26,7 @@ import com.lcl.lclmeasurementtool.ui.navigation.historyGraph
 import com.lcl.lclmeasurementtool.ui.navigation.homeNavigationRoute
 import com.lcl.lclmeasurementtool.ui.navigation.homeScreen
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalLifecycleComposeApi::class
-)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LCLApp(
     windowSizeClass: WindowSizeClass,
