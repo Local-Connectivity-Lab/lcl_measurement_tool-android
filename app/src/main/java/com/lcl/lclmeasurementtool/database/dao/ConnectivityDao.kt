@@ -17,7 +17,7 @@ interface ConnectivityDao {
 
     @Transaction
     @Query("SELECT * FROM connectivity_table where reported = false")
-    fun getAllNotReported(): Flow<List<ConnectivityReportModel>>
+    fun getAllNotReported(): List<ConnectivityReportModel>
 
     // WRITE
     @Transaction

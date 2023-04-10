@@ -38,7 +38,7 @@ fun SignalStrengthItem(
             SignalStrengthContent(data = data)
         }
         if (data.reported) {
-            TagLabel("Reported", modifier = Modifier.padding(end = 4.dp))
+            TagLabel("Reported", modifier = Modifier.padding(end = 10.dp))
         }
     }
 }

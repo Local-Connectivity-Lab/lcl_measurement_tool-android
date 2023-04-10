@@ -1,11 +1,12 @@
 package com.lcl.lclmeasurementtool.model.repository
 
+import android.util.Log
 import com.lcl.lclmeasurementtool.database.dao.ConnectivityDao
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
-import com.lcl.lclmeasurementtool.sync.Synchronizer
+import com.lcl.lclmeasurementtool.util.Synchronizer
 import com.lcl.lclmeasurementtool.util.prepareReportData
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class ConnectivityRepository @Inject constructor(
@@ -19,16 +20,30 @@ class ConnectivityRepository @Inject constructor(
     override suspend fun insert(data: ConnectivityReportModel) = connectivityDao.insert(data)
 
     override suspend fun syncWith(synchronizer: Synchronizer) = synchronizer.syncData {
-        userDataRepository.userData.combine(connectivityDao.getAllNotReported()) { preference, connectivity ->
-            Pair(preference, connectivity)
-        }.collect {pair ->
+        val toReportList = connectivityDao.getAllNotReported()
+        if (toReportList.isEmpty()) {
+            Log.d(TAG, "no outstanding connectivity reports")
+            return@syncData
+        }
 
-            val userPreference = pair.first
-            val connectivityList = pair.second
-            connectivityList.forEach {connectivityReportModel ->
-                val reportString = prepareReportData(connectivityReportModel, userPreference)
+        toReportList.asFlow()
+            .flowOn(Dispatchers.IO)
+            .combine(userDataRepository.userData) { connectivity, preference ->
+                Log.d(TAG, "upload worker will upload $connectivity")
+                val reportString = prepareReportData(connectivity, preference)
                 networkApi.uploadConnectivity(reportString)
             }
-        }
+            .catch {
+                Log.d(TAG, "upload worker encounter $it when uploading connectivity")
+                throw it
+            }
+            .onCompletion {
+                Log.d(TAG, "finish uploading all unreported connectivity data")
+            }
+            .collect()
+    }
+
+    companion object {
+        const val TAG = "ConnectivityRepository"
     }
 }

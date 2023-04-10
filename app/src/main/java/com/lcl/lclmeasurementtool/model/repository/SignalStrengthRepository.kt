@@ -1,11 +1,12 @@
 package com.lcl.lclmeasurementtool.model.repository
 
+import android.util.Log
 import com.lcl.lclmeasurementtool.database.dao.SignalStrengthDao
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
-import com.lcl.lclmeasurementtool.sync.Synchronizer
+import com.lcl.lclmeasurementtool.util.Synchronizer
 import com.lcl.lclmeasurementtool.util.prepareReportData
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class SignalStrengthRepository @Inject constructor(
@@ -18,16 +19,30 @@ class SignalStrengthRepository @Inject constructor(
     override suspend fun insert(data: SignalStrengthReportModel) = signalStrengthDao.insert(data)
 
     override suspend fun syncWith(synchronizer: Synchronizer) = synchronizer.syncData {
-        userDataRepository.userData.combine(signalStrengthDao.getAllNotReported()) { preference, signalStrengths ->
-            Pair(preference, signalStrengths)
-        }.collect {pair ->
+        val toReportList = signalStrengthDao.getAllNotReported()
+        if (toReportList.isEmpty()) {
+            Log.d(TAG, "no outstanding signal strength reports")
+            return@syncData
+        }
 
-            val userPreference = pair.first
-            val signalStrengthList = pair.second
-            signalStrengthList.forEach {signalStrengthReportModel ->
-                val reportString = prepareReportData(signalStrengthReportModel, userPreference)
+        toReportList.asFlow()
+            .flowOn(Dispatchers.IO)
+            .combine(userDataRepository.userData) { signalStrength, preference ->
+                Log.d(TAG, "upload worker will upload $signalStrength")
+                val reportString = prepareReportData(signalStrength, preference)
                 networkApi.uploadSignalStrength(reportString)
             }
-        }
+            .catch {
+                Log.d(TAG, "upload worker encounter the following exception when uploading outstanding signal strength report")
+                throw it
+            }
+            .onCompletion {
+                Log.d(TAG, "finish uploading all unreported signal strength data")
+            }
+            .collect()
+    }
+
+    companion object {
+        const val TAG = "SignalStrengthRepository"
     }
 }

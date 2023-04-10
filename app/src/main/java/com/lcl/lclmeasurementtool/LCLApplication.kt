@@ -12,13 +12,14 @@ import javax.inject.Inject
  * [Application] class for LCL Measurement tool
  */
 @HiltAndroidApp
-class LCLApplication : Application(), Configuration.Provider {
-    @Inject lateinit var workerFactory: HiltWorkerFactory
-
-    override fun getWorkManagerConfiguration() = Configuration.Builder()
-                                                    .setMinimumLoggingLevel(Log.DEBUG)
-                                                    .setWorkerFactory(workerFactory)
-                                                    .build()
+//class LCLApplication : Application(), Configuration.Provider {
+class LCLApplication : Application() {
+//    @Inject lateinit var workerFactory: HiltWorkerFactory
+//
+//    override fun getWorkManagerConfiguration() = Configuration.Builder()
+//                                                    .setMinimumLoggingLevel(Log.DEBUG)
+//                                                    .setWorkerFactory(workerFactory)
+//                                                    .build()
 
     override fun onCreate() {
         super.onCreate()

@@ -24,11 +24,13 @@ internal const val SyncWorkName = "LCLDataReportSync"
 
 class SyncInitializer: Initializer<Sync> {
     override fun create(context: Context): Sync {
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        WorkManager.getInstance(context).apply {
+            enqueueUniquePeriodicWork(
                 SyncWorkName,
                 ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                 UploadWorker.periodicSyncWork()
             )
+        }
         Log.d("SyncInitializer", "SyncInitializer initialize here!")
         return Sync
     }

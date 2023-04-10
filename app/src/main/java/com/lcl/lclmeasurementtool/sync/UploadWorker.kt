@@ -8,6 +8,7 @@ import com.lcl.lclmeasurementtool.datastore.Dispatcher
 import com.lcl.lclmeasurementtool.datastore.LCLDispatchers
 import com.lcl.lclmeasurementtool.model.repository.ConnectivityRepository
 import com.lcl.lclmeasurementtool.model.repository.SignalStrengthRepository
+import com.lcl.lclmeasurementtool.util.Synchronizer
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -30,8 +31,16 @@ class UploadWorker @AssistedInject constructor(
         withContext(ioDispatcher) {
             try {
                 val syncSuccessfully = awaitAll(
-                    async { signalStrengthRepository.sync() },
-                    async { connectivityRepository.sync() }
+                    async {
+                        val b = signalStrengthRepository.sync()
+                        Log.d(TAG, "signal strength repository finish sync")
+                        b
+                    },
+                    async {
+                        val b = connectivityRepository.sync()
+                        Log.d(TAG, "connectivity repository finish sync")
+                        b
+                    }
                 ).all { it }
                 if (syncSuccessfully) {
                     Log.d(TAG, "upload successfully")
@@ -48,10 +57,11 @@ class UploadWorker @AssistedInject constructor(
 
     companion object {
         fun periodicSyncWork() =
-            PeriodicWorkRequest.Builder(UploadWorker::class.java, 15, TimeUnit.MINUTES)
+            PeriodicWorkRequestBuilder<DelegatingWorker>(8, TimeUnit.HOURS)
             .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-            .setInitialDelay(5, TimeUnit.MINUTES)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(30))
+            .setInitialDelay(10, TimeUnit.MINUTES)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(10))
+            .setInputData(UploadWorker::class.delegatedData())
             .build()
 
         const val TAG = "UploadWorker"

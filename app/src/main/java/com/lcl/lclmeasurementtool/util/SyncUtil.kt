@@ -1,11 +1,11 @@
-package com.lcl.lclmeasurementtool.sync
+package com.lcl.lclmeasurementtool.util
 
 import android.util.Log
 import retrofit2.HttpException
 import kotlin.coroutines.cancellation.CancellationException
 
 private suspend fun <T> suspendRunCatching(block: suspend () -> T): Result<T> = try {
-    Log.d("suspendRunCatching", "block ${block.javaClass.name} run successfully")
+    Log.d("suspendRunCatching", "block ${block.javaClass.name} is invoked")
     Result.success(block())
 } catch (cancellationException: CancellationException) {
     throw cancellationException

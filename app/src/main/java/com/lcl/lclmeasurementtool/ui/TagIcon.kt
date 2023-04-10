@@ -45,7 +45,7 @@ fun TagLabel(label: String, modifier: Modifier = Modifier) {
 
     ) {
         
-        Text(text = label, fontSize = 8.sp, fontStyle = FontStyle.Italic)
+        Text(text = label, fontSize = 10.sp, fontStyle = FontStyle.Italic)
     }
 }
 

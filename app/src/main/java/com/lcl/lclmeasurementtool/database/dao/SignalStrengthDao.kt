@@ -18,7 +18,7 @@ interface SignalStrengthDao {
 
     @Transaction
     @Query("SELECT * FROM signal_strength_table where reported = false")
-    fun getAllNotReported(): Flow<List<SignalStrengthReportModel>>
+    fun getAllNotReported(): List<SignalStrengthReportModel>
 
     // WRITE
     @Transaction

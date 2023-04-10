@@ -1,6 +1,6 @@
 package com.lcl.lclmeasurementtool.model.repository
 
-import com.lcl.lclmeasurementtool.sync.Syncable
+import com.lcl.lclmeasurementtool.util.Syncable
 import kotlinx.coroutines.flow.Flow
 
 interface HistoryDataRepository<T>: Syncable {
