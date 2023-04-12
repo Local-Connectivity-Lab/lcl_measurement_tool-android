@@ -1,0 +1,37 @@
+name: LCL Measurement Tool CI
+
+env:
+  # The name of the main module repository
+  main_project_module: app
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+       - name: Build with Gradle
+         run: ./gradlew build
+      - name: Generate APK Debug Build with Gradle
+        if: startsWith(github.ref, 'refs/tags/')
+        run: ./gradlew assembleDebug
+      - name: Upload to Github Page
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ${{ env.main_project_module }}/build/outputs/apk/debug/app-debug.apk
+          draft: true
+          prerelease: true

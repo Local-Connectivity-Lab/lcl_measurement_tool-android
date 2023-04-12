@@ -1,36 +1,41 @@
 @file:JvmName("HostnameResponse")
 package net.measurementlab.ndt7.android.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
+@Serializable
 data class HostnameResponse(
-    @SerializedName("results")
-    val results: List<Result>?
+    @SerialName("results")
+    val results: List<Result>? = null
 )
 
+@Serializable
 data class Result(
-    @SerializedName("location")
+    @SerialName("location")
     val location: Location,
-    @SerializedName("machine")
+    @SerialName("machine")
     val machine: String,
-    @SerializedName("urls")
+    @SerialName("urls")
     val urls: Urls
 )
 
+@Serializable
 data class Location(
-    @SerializedName("city")
+    @SerialName("city")
     val city: String,
-    @SerializedName("country")
+    @SerialName("country")
     val country: String
 )
 
+@Serializable
 data class Urls(
-    @SerializedName("ws:///ndt/v7/download")
+    @SerialName("ws:///ndt/v7/download")
     val ndt7DownloadWS: String,
-    @SerializedName("ws:///ndt/v7/upload")
+    @SerialName("ws:///ndt/v7/upload")
     val ndt7UploadWS: String,
-    @SerializedName("wss:///ndt/v7/download")
+    @SerialName("wss:///ndt/v7/download")
     val ndt7DownloadWSS: String,
-    @SerializedName("wss:///ndt/v7/upload")
+    @SerialName("wss:///ndt/v7/upload")
     val ndt7UploadWSS: String
 )

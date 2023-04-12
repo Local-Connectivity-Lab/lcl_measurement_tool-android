@@ -1,14 +1,17 @@
 package net.measurementlab.ndt7.android.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ClientResponse(
-    @SerializedName("AppInfo") val appInfo: AppInfo,
-    @SerializedName("Origin") val origin: String = "client",
-    @SerializedName("Test") val test: String
+    @SerialName("AppInfo") val appInfo: AppInfo,
+    @SerialName("Origin") val origin: String = "client",
+    @SerialName("Test") val test: String
 )
 
+@Serializable
 data class AppInfo(
-    @SerializedName("ElapsedTime") val elapsedTime: Long,
-    @SerializedName("NumBytes") val numBytes: Double
+    @SerialName("ElapsedTime") val elapsedTime: Long,
+    @SerialName("NumBytes") val numBytes: Double
 )

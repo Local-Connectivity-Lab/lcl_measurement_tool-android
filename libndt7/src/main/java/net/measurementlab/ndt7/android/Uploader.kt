@@ -1,7 +1,8 @@
 @file:JvmName("Uploader")
 package net.measurementlab.ndt7.android
 
-import com.google.gson.Gson
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import net.measurementlab.ndt7.android.NDTTest.TestType
 import net.measurementlab.ndt7.android.models.CallbackRegistry
 import net.measurementlab.ndt7.android.models.Measurement
@@ -29,12 +30,12 @@ class Uploader(
     private var startTime: Long = 0
     private var previous: Long = 0
     private var totalBytesSent = 0.0
-    private val gson = Gson()
+//    private val gson = Gson()
 
     override fun onMessage(webSocket: WebSocket, text: String) {
 
         try {
-            val measurement = gson.fromJson(text, Measurement::class.java)
+            val measurement = Json.decodeFromString<Measurement>(text)
             cbRegistry.measurementProgressCbk(measurement)
         } catch (e: Exception) {
             // we don't care that much if a single measurement has trouble

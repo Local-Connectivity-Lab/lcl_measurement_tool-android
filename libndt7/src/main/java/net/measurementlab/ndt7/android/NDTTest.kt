@@ -1,7 +1,8 @@
 @file:JvmName("NDTTest")
 package net.measurementlab.ndt7.android
 
-import com.google.gson.Gson
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import net.measurementlab.ndt7.android.models.CallbackRegistry
 import net.measurementlab.ndt7.android.models.HostnameResponse
 import net.measurementlab.ndt7.android.models.Urls
@@ -49,8 +50,8 @@ abstract class NDTTest(private var httpClient: OkHttpClient? = null) : DataPubli
 
                 override fun onResponse(call: Call, response: Response) {
                     try {
-                        val hostInfo: HostnameResponse = Gson().fromJson(response.body?.string(), HostnameResponse::class.java)
-                        val numUrls = hostInfo.results?.size!!
+                        val hostInfo: HostnameResponse? = response.body?.string()?.let { Json.decodeFromString<HostnameResponse>(it) }
+                        val numUrls = hostInfo?.results?.size ?: return
                         for (i in 0 until numUrls) {
                             try {
                                 selectTestType(testType, hostInfo.results[i].urls, speedtestLock)
