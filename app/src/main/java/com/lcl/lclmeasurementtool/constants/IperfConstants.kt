@@ -2,9 +2,9 @@ package com.lcl.lclmeasurementtool.constants
 
 import android.os.Build
 import android.util.Base64
-import com.lcl.lclmeasurementtool.BuildConfig
 import java.nio.charset.StandardCharsets
 
+@Deprecated(message = "This class is deprecated as Iperf is not supported in the measurement testbed")
 class IperfConstants {
     companion object {
         const val IC_isDebug = true
@@ -23,8 +23,8 @@ class IperfConstants {
             -----END PUBLIC KEY-----
             """.trimIndent()
 
-        const val IC_test_username = BuildConfig.USERNAME
-        const val IC_test_password = BuildConfig.PASSWORD
+        const val IC_test_username = "secrettestuser"
+        const val IC_test_password = "secrettestuser"
 
         const val IC_serverAddr = "othello-iperf.westus2.cloudapp.azure.com"
         const val IC_serverPort = 40404

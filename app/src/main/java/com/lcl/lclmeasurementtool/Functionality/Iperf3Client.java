@@ -4,6 +4,7 @@ import android.util.Log;
 import java.io.File;
 import java.lang.Thread;
 
+@Deprecated
 /**
  * A wrapper narrowly translating the c-language iperf API to/from java.
  */

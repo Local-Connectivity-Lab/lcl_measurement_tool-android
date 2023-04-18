@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
+@Deprecated
 /**
  * Callback interface for handling iperf tests
  */

@@ -17,6 +17,7 @@ import com.lcl.lclmeasurementtool.constants.NetworkConstants;
 import java.util.List;
 import java.util.UUID;
 
+@Deprecated
 /**
  * A viewmodel handling running the ping and iperf test asynchronously
  */

@@ -17,13 +17,10 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.viewbinding.BuildConfig
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.kongzue.dialogx.dialogs.MessageDialog
-import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
-import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
-import com.lcl.lclmeasurementtool.model.viewmodels.ConnectivityViewModel
-import com.lcl.lclmeasurementtool.model.viewmodels.SignalStrengthViewModel
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
 import com.lcl.lclmeasurementtool.networking.SimStateMonitor
 import com.lcl.lclmeasurementtool.ui.LCLApp
@@ -38,6 +35,10 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity2 : ComponentActivity() {
+
+    companion object {
+        const val TAG = "MainActivity"
+    }
 
     @Inject
     lateinit var networkMonitor: NetworkMonitor
@@ -72,7 +73,7 @@ class MainActivity2 : ComponentActivity() {
                                     intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                                     val uri = Uri.fromParts(
                                         "package",
-                                        BuildConfig.APPLICATION_ID, null
+                                        BuildConfig.LIBRARY_PACKAGE_NAME, null
                                     )
                                     intent.data = uri
                                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -96,7 +97,7 @@ class MainActivity2 : ComponentActivity() {
             }
         }
 
-        Log.d("MAIN Activity", "uiState is ${uiState is MainActivityUiState.Login}")
+        Log.d(TAG, "uiState is ${uiState is MainActivityUiState.Login}")
 
         // Turn off the decor fitting system windows, which allows us to handle insets,
         // including IME animations
