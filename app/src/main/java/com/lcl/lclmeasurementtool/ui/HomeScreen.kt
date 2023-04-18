@@ -66,15 +66,15 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             SignalStrengthCard(modifier = modifier, signalStrengthResult = signalStrength.value)
+//            ConnectivityCard(
+//                label = "Iperf",
+//                modifier = modifier,
+//                pingResult = pingResult.value,
+//                uploadResult = uploadResult.value,
+//                downloadResult = downloadResult.value
+//            )
             ConnectivityCard(
-                label = "Iperf (right)",
-                modifier = modifier,
-                pingResult = pingResult.value,
-                uploadResult = uploadResult.value,
-                downloadResult = downloadResult.value
-            )
-            ConnectivityCard(
-                label = "MLab (left)",
+                label = "MLab",
                 modifier = modifier,
                 pingResult = mlabPingResult.value,
                 uploadResult = mlabUploadResult.value,
@@ -176,10 +176,9 @@ private fun ConnectivityCard(
             .padding(horizontal = 10.dp, vertical = 10.dp)
             .fillMaxWidth()
     ) {
-        Text(text = label, fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(start = 10.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier.padding(12.dp)
+            modifier = modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp)
         ) {
 
             Icon(modifier = modifier.padding(end = 12.dp),
@@ -227,6 +226,9 @@ private fun ConnectivityCard(
                     DataEntry(icon = Rounded.Cancel, text = "$pingLoss % loss")
                 }
             }
+        }
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Powered by $label", fontWeight = FontWeight.Thin, fontSize = 10.sp, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 4.dp))
         }
     }
 }
