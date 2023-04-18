@@ -8,6 +8,7 @@ import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+@Deprecated
 /**
  * An abstract worker handling the ping test
  */

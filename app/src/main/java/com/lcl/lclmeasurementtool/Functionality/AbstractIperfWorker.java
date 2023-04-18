@@ -11,6 +11,7 @@ import androidx.work.WorkerParameters;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+@Deprecated
 public abstract class AbstractIperfWorker extends Worker {
     private static final String TAG = "IPERF_WORKER";
 

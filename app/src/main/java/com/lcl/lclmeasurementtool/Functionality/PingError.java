@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
+@Deprecated
 /**
  * A class representing the error during a ping test
  */

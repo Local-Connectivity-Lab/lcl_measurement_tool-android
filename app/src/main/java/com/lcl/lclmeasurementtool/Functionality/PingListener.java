@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.Functionality;
 
+@Deprecated
 /**
  * A listener listening to the ping test status
  */

@@ -44,18 +44,11 @@ fun HomeRoute(isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) 
 fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) {
 
     val offline by remember { mutableStateOf(isOffline) }
-    val isIperfTestActive = mainActivityViewModel.isIperfTestActive.collectAsStateWithLifecycle()
+
     val isMLabTestActive = mainActivityViewModel.isMLabTestActive.collectAsStateWithLifecycle()
-
-    val pingResult = mainActivityViewModel.pingResult.collectAsStateWithLifecycle()
     val mlabPingResult = mainActivityViewModel.mLabPingResult.collectAsStateWithLifecycle()
-
-    val uploadResult = mainActivityViewModel.uploadResult.collectAsStateWithLifecycle()
     val mlabUploadResult = mainActivityViewModel.mlabUploadResult.collectAsStateWithLifecycle()
-
-    val downloadResult = mainActivityViewModel.downloadResult.collectAsStateWithLifecycle()
     val mlabDownloadResult = mainActivityViewModel.mlabDownloadResult.collectAsStateWithLifecycle()
-
     val signalStrength = mainActivityViewModel.signalStrengthResult.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -66,13 +59,6 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             SignalStrengthCard(modifier = modifier, signalStrengthResult = signalStrength.value)
-//            ConnectivityCard(
-//                label = "Iperf",
-//                modifier = modifier,
-//                pingResult = pingResult.value,
-//                uploadResult = uploadResult.value,
-//                downloadResult = downloadResult.value
-//            )
             ConnectivityCard(
                 label = "MLab",
                 modifier = modifier,
@@ -87,20 +73,6 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
         }
 
         FloatingActionButton(onClick = {
-            if (!isIperfTestActive.value) {
-                mainActivityViewModel.runIperfTest(context)
-            } else {
-                coroutineScope.cancel("User initiated the cancellation (iperf)")
-                mainActivityViewModel.cancelIperfTest()
-            }
-        },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 12.dp, bottom = 12.dp)) {
-            Icon(imageVector = if (isIperfTestActive.value) Filled.Pause else Filled.PlayArrow, contentDescription = null)
-        }
-
-        FloatingActionButton(onClick = {
             if (!isMLabTestActive.value) {
                 mainActivityViewModel.runMLabTest()
             } else {
@@ -109,9 +81,9 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
             }
         },
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 12.dp, bottom = 12.dp)) {
-            Icon(imageVector = if (isIperfTestActive.value) Filled.Pause else Filled.PlayArrow, contentDescription = null)
+                .align(Alignment.BottomEnd)
+                .padding(end = 12.dp, bottom = 12.dp)) {
+            Icon(imageVector = if (isMLabTestActive.value) Filled.Pause else Filled.PlayArrow, contentDescription = null)
         }
     }
 }

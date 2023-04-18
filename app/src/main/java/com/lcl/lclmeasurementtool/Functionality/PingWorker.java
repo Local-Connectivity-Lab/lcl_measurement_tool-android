@@ -10,6 +10,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.work.WorkerParameters;
 
+@Deprecated
 /**
  * A worker working on the ping task
  */

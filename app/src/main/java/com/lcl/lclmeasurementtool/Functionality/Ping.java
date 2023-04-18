@@ -3,6 +3,7 @@ package com.lcl.lclmeasurementtool.Functionality;
 import androidx.annotation.NonNull;
 import java.io.IOException;
 
+@Deprecated
 /**
  * class declaration that encapsulates the Ping functionality
  */

@@ -12,6 +12,7 @@ import com.lcl.lclmeasurementtool.constants.IperfConstants;
 
 import java.lang.Thread;
 
+@Deprecated
 /**
  * A worker responsible for handling the iperf upstream test
  */
