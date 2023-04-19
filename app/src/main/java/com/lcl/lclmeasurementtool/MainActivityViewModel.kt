@@ -183,12 +183,9 @@ class MainActivityViewModel @Inject constructor(
                     )
 
                     try {
-                        val response = networkApi.register(registration)
-//                        Log.d(TAG, "response is ${response.isSuccessful}")
-//                        if (response.isSuccessful) {
+                        networkApi.register(registration)
                         login(ByteString.copyFrom(h_pkr), ByteString.copyFrom(Hex.decodeHex(sk_t)))
                         _loginState.value = LoginStatus.RegistrationSucceeded
-//                        }
                     } catch (e: HttpException) {
                         Log.d(TAG, "error occurred during registration. error is $e")
                         _loginState.value = LoginStatus.RegistrationFailed(e.message())
@@ -363,7 +360,37 @@ class MainActivityViewModel @Inject constructor(
                 val curTime = TimeUtil.getCurrentTime()
                 val cellID = signalStrengthMonitor.getCellID()
 
-                // TODO: add data to db + report to remote server
+                // add data to db + report to remote server
+                locationService.lastLocation().combine(userDataRepository.userData) { location, userPreference ->
+                    Pair(location, userPreference)
+                }.collect {
+                    val signalStrengthReportModel = SignalStrengthReportModel(
+                        it.first.latitude,
+                        it.first.longitude,
+                        curTime,
+                        cellID,
+                        it.second.deviceID,
+                        signalStrengthResult.value.dbm,
+                        signalStrengthResult.value.level.level
+                    )
+
+                    val connectivityReportModel = ConnectivityReportModel(
+                        it.first.latitude,
+                        it.first.longitude,
+                        curTime,
+                        cellID,
+                        it.second.deviceID,
+                        (_mLabUploadResult.value as ConnectivityTestResult.Result).result.toDouble(),
+                        (_mLabDownloadResult.value as ConnectivityTestResult.Result).result.toDouble(),
+                        (_mLabPingResult.value as PingResultState.Success).result.avg!!.toDouble(),
+                        (_mLabPingResult.value as PingResultState.Success).result.numLoss!!.toDouble(),
+                    )
+
+                    saveToDB(signalStrengthReportModel, connectivityReportModel)
+
+                    report(signalStrengthReportModel, it.second)
+                    report(connectivityReportModel, it.second)
+                }
             } catch (e: Exception) {
                 Log.d(TAG, "catch $e")
             }
@@ -403,6 +430,8 @@ class MainActivityViewModel @Inject constructor(
             if (e.code() in 500..599) {
                 Log.d(TAG, "server error")
             }
+        } catch (e: Exception) {
+            Log.d(TAG, "unknown exception occurred when uploading data. $e")
         }
     }
 
