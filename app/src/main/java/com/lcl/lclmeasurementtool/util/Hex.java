@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.lcl.lclmeasurementtool.Utils;
+package com.lcl.lclmeasurementtool.util;
 
 import com.lcl.lclmeasurementtool.errors.DecoderException;
 import com.lcl.lclmeasurementtool.errors.EncoderException;
