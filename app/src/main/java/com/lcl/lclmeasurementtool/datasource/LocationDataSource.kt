@@ -5,7 +5,6 @@ import android.content.Context
 import android.location.Location
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions

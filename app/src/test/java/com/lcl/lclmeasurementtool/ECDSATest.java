@@ -11,8 +11,8 @@ import java.security.spec.InvalidKeySpecException;
 import static org.junit.Assert.*;
 
 import com.lcl.lclmeasurementtool.errors.DecoderException;
-import com.lcl.lclmeasurementtool.Utils.ECDSA;
-import com.lcl.lclmeasurementtool.Utils.Hex;
+import com.lcl.lclmeasurementtool.util.ECDSA;
+import com.lcl.lclmeasurementtool.util.Hex;
 
 public class ECDSATest {
     @Test
@@ -21,8 +21,8 @@ public class ECDSATest {
         byte[] pkBytes = Hex.decodeHex(hexFromServer);
 
         // One line call to make the PK_A from server into PublicKey object
-        PublicKey pk = ECDSA.DeserializePublicKey(pkBytes);
-        System.out.println(pk);
+        PublicKey pk = ECDSA.Companion.DeserializePublicKey(pkBytes);
+//        System.out.println(pk);
 
         String pkToHex = Hex.encodeHexString(pk.getEncoded());
         assertEquals(pkToHex, hexFromServer);
@@ -34,18 +34,18 @@ public class ECDSATest {
         byte[] skBytes = Hex.decodeHex(hexFromServer);
 
         // One line calls to deserialize SK from server into Private Key and then use the PrivateKey to derive PublicKey
-        PrivateKey sk = ECDSA.DeserializePrivateKey(skBytes);
-        PublicKey pk = ECDSA.DerivePublicKey((ECPrivateKey) sk);
+        PrivateKey sk = ECDSA.Companion.DeserializePrivateKey(skBytes);
+        PublicKey pk = ECDSA.Companion.DerivePublicKey((ECPrivateKey) sk);
 
         byte[] message = new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
         byte[] invalidMessage = new byte[]{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
 
         // Example Testing of using the converted SK for signing (done by client) and verifying the signature (done by server)
-        byte[] sign = ECDSA.Sign(message, (ECPrivateKey) sk);
-        boolean verify = ECDSA.Verify(message, sign, (ECPublicKey) pk);
+        byte[] sign = ECDSA.Companion.Sign(message, (ECPrivateKey) sk);
+        boolean verify = ECDSA.Companion.Verify(message, sign, (ECPublicKey) pk);
         assertTrue(verify);
 
-        boolean verifyFalse = ECDSA.Verify(invalidMessage, sign, (ECPublicKey) pk);
+        boolean verifyFalse = ECDSA.Companion.Verify(invalidMessage, sign, (ECPublicKey) pk);
         assertFalse(verifyFalse);
     }
 
@@ -60,11 +60,11 @@ public class ECDSATest {
 
         // Obtain the PK_A from the PK sent, this is SPKI Encoded since its directly obtained from the server.
         byte[] pkABytes = Hex.decodeHex(pkHex);
-        PublicKey pkA = ECDSA.DeserializePublicKey(pkABytes);
+        PublicKey pkA = ECDSA.Companion.DeserializePublicKey(pkABytes);
 
         // Convert the Signature to a byte array
         byte[] sigBytes = Hex.decodeHex(sigHex);
-        boolean verifySignature = ECDSA.Verify(skBytes, sigBytes, (ECPublicKey) pkA);
+        boolean verifySignature = ECDSA.Companion.Verify(skBytes, sigBytes, (ECPublicKey) pkA);
         assertTrue(verifySignature);
     }
 }

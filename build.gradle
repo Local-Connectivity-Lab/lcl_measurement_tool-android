@@ -7,13 +7,10 @@ buildscript {
 
     ext.kotlin_version = '1.8.10'
     ext.room_version = "2.5.1"
-    ext.gson_version = '2.10.1'
     ext.okhttp_version = "4.10.0"
 
     dependencies {
         classpath "com.android.tools.build:gradle:7.3.1"
-        classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1"
-        classpath "io.realm:realm-gradle-plugin:10.10.1"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.dagger:hilt-android-gradle-plugin:2.44.2'
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"

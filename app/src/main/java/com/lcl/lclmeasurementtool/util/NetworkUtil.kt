@@ -1,6 +1,5 @@
 package com.lcl.lclmeasurementtool.util
 
-import com.lcl.lclmeasurementtool.Utils.ECDSA
 import com.lcl.lclmeasurementtool.model.datamodel.BaseMeasureDataModel
 import com.lcl.lclmeasurementtool.model.datamodel.MeasurementReportModel
 import com.lcl.lclmeasurementtool.model.datamodel.UserData

@@ -7,9 +7,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.protobuf.ByteString
-import com.lcl.lclmeasurementtool.Utils.ECDSA
-import com.lcl.lclmeasurementtool.Utils.Hex
-import com.lcl.lclmeasurementtool.Utils.SecurityUtils
 import com.lcl.lclmeasurementtool.constants.NetworkConstants
 import com.lcl.lclmeasurementtool.features.mlab.MLabRunner
 import com.lcl.lclmeasurementtool.features.mlab.MLabTestStatus
@@ -25,8 +22,7 @@ import com.lcl.lclmeasurementtool.model.repository.SignalStrengthRepository
 import com.lcl.lclmeasurementtool.model.repository.UserDataRepository
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthLevelEnum
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
-import com.lcl.lclmeasurementtool.util.TimeUtil
-import com.lcl.lclmeasurementtool.util.prepareReportData
+import com.lcl.lclmeasurementtool.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -161,11 +157,11 @@ class MainActivityViewModel @Inject constructor(
                         withContext(Dispatchers.IO) {
                             byteArray.write(pk_t.encoded)
                             byteArray.write(r)
-                            h_pkr = SecurityUtils.digest(byteArray.toByteArray(), SecurityUtils.SHA_256_HASH)
+                            h_pkr = SecurityUtil.digest(byteArray.toByteArray(), SecurityUtil.SHA_256_HASH)
                             byteArray.reset()
                             byteArray.write(skTHex)
                             byteArray.write(pk_t.encoded)
-                            h_sec = SecurityUtils.digest(byteArray.toByteArray(), SecurityUtils.SHA_256_HASH)
+                            h_sec = SecurityUtil.digest(byteArray.toByteArray(), SecurityUtil.SHA_256_HASH)
                             byteArray.reset()
                             byteArray.write(h_pkr)
                             byteArray.write(h_sec)
@@ -366,6 +362,8 @@ class MainActivityViewModel @Inject constructor(
                 Log.d(TAG, "ping, upload, download are finished. isMLabTestActive.value=${isMLabTestActive.value}")
                 val curTime = TimeUtil.getCurrentTime()
                 val cellID = signalStrengthMonitor.getCellID()
+
+                // TODO: add data to db + report to remote server
             } catch (e: Exception) {
                 Log.d(TAG, "catch $e")
             }

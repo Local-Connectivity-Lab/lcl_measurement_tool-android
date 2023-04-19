@@ -19,10 +19,14 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: gradle
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew build
+    - name: Run Tests
+      run: ./gradlew app:testDebugUnitTest
     - name: Generate APK Debug Build with Gradle
       if: startsWith(github.ref, 'refs/tags/')
       run: ./gradlew assembleDebug
