@@ -362,6 +362,8 @@ class MainActivityViewModel @Inject constructor(
                 Log.d(TAG, "ping, upload, download are finished. isMLabTestActive.value=${isMLabTestActive.value}")
                 val curTime = TimeUtil.getCurrentTime()
                 val cellID = signalStrengthMonitor.getCellID()
+
+                // TODO: add data to db + report to remote server
             } catch (e: Exception) {
                 Log.d(TAG, "catch $e")
             }
