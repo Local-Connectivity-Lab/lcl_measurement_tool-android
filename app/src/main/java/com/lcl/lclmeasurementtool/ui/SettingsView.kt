@@ -19,11 +19,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lcl.lclmeasurementtool.BuildConfig
 import com.lcl.lclmeasurementtool.R
 import com.lcl.lclmeasurementtool.model.viewmodels.SettingsViewModel
 
@@ -45,20 +47,7 @@ fun SettingsDialog(
         text = {
             Divider()
             Column(Modifier.verticalScroll(rememberScrollState())) {
-//                when (settingsUiState) {
-//                    Loading -> {
-//                        Text(
-//                            text = stringResource(string.loading),
-//                            modifier = Modifier.padding(vertical = 16.dp)
-//                        )
-//                    }
-//                    is Success -> {
-//                        SettingsPanel(
-//                            onSelectPublishData = {}
-//                        )
-//                    }
-//                }
-                    SettingsPanel(onSelectShowData = {viewModel.toggleShowData(!showData.value)}, onLogoutClicked = {viewModel.logout()}, showData = showData.value)
+                SettingsPanel(onSelectShowData = {viewModel.toggleShowData(!showData.value)}, onLogoutClicked = {viewModel.logout()}, showData = showData.value)
                 Divider(Modifier.padding(top = 8.dp))
                 LinksPanel()
                 VersionInfo()
@@ -147,7 +136,7 @@ private fun VersionInfo() {
         Modifier
             .fillMaxWidth()
             .padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = "v1.0")
+        Text(text = BuildConfig.VERSION_NAME)
         TextSummary(text = "By Local Connectivity Lab @ UWCSE")
     }
 }

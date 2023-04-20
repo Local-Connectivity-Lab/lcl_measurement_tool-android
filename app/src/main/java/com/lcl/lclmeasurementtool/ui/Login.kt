@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lcl.lclmeasurementtool.BuildConfig
 import com.lcl.lclmeasurementtool.LoginStatus
 import com.lcl.lclmeasurementtool.MainActivityViewModel
 import com.lcl.lclmeasurementtool.R
@@ -74,7 +75,16 @@ fun Login(
                 .width(300.dp)
                 .height(300.dp)
                 .padding(top = 50.dp))
-            Button(onClick = {qrCodeLauncher.launch(null)}, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer), modifier = Modifier.padding(top = 30.dp)) {
+            Button(onClick = {
+                    if (BuildConfig.FLAVOR == "full") {
+                        qrCodeLauncher.launch(null)
+                    } else if (BuildConfig.FLAVOR == "demo") {
+                        viewModel.demoLogin()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                modifier = Modifier.padding(top = 30.dp))
+            {
                 Text(text = "Scan to Login")
             }
         }

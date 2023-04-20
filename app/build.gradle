@@ -29,8 +29,35 @@ android {
         multiDexEnabled true
     }
 
+    flavorDimensions "mode"
+    productFlavors {
+
+        dev {
+            dimension "mode"
+            versionNameSuffix "-dev"
+        }
+
+        demo {
+            dimension "mode"
+            versionNameSuffix "-demo"
+        }
+
+        full {
+            dimension "mode"
+            versionNameSuffix "-full"
+        }
+
+    }
+
     buildTypes {
         release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+            // below will add the suffix to the *com.lcl.lclmeasurementtool* => **com.lcl.lclmeasurementtool.debug**
+//            applicationIdSuffix ".debug"
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

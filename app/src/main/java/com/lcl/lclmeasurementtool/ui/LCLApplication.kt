@@ -17,6 +17,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.lcl.lclmeasurementtool.BuildConfig
 import com.lcl.lclmeasurementtool.MainActivityViewModel
 
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
@@ -55,22 +56,23 @@ fun LCLApp(
 
     Log.d("LCLApplication", "isOffline is $isOffline")
     Log.d("LCLApplication", "isSimCardInserted is $isSimCardInserted")
-//    LaunchedEffect(isOffline) {
-//        if (isOffline) {
-//            Log.d("LCLApplication", "show snack bar")
-//            snackbarHostState.showSnackbar(message = "Please connect to a cellular network before running the test", duration = SnackbarDuration.Indefinite)
-//        }
-//    }
+    if (BuildConfig.FLAVOR.equals("full")) {
+        LaunchedEffect(isOffline) {
+            if (isOffline) {
+                Log.d("LCLApplication", "show snack bar")
+                snackbarHostState.showSnackbar(message = "Please connect to a cellular network before running the test", duration = SnackbarDuration.Indefinite)
+            }
+        }
 
-    if (!isSimCardInserted) {
-//            MessageDialog.show("Error", "Please insert the sim card")
-        Dialog(icon = LCLIcons.NoSIM,
-            onConfirmClicked = {
-                // should logout
-                mainViewModel.logout()
-                Log.d("LCLApplication", "confirm!") },
-            title = "Error",
-            text = "Please insert the sim card")
+        if (!isSimCardInserted) {
+            Dialog(icon = LCLIcons.NoSIM,
+                onConfirmClicked = {
+                    // should logout
+                    mainViewModel.logout()
+                    Log.d("LCLApplication", "confirm!") },
+                title = "Error",
+                text = "Please insert the sim card")
+        }
     }
 
 

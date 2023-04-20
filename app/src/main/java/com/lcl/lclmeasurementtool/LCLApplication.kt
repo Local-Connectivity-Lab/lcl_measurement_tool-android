@@ -14,13 +14,6 @@ import javax.inject.Inject
 @HiltAndroidApp
 //class LCLApplication : Application(), Configuration.Provider {
 class LCLApplication : Application() {
-//    @Inject lateinit var workerFactory: HiltWorkerFactory
-//
-//    override fun getWorkManagerConfiguration() = Configuration.Builder()
-//                                                    .setMinimumLoggingLevel(Log.DEBUG)
-//                                                    .setWorkerFactory(workerFactory)
-//                                                    .build()
-
     override fun onCreate() {
         super.onCreate()
 

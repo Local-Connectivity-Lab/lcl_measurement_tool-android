@@ -103,10 +103,12 @@ class MainActivity2 : ComponentActivity() {
         // including IME animations
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            if (uiState == MainActivityUiState.Login) {
-                viewModel.setDeviceId(UUID.randomUUID().toString())
-                Login(viewModel = viewModel)
-                return@setContent
+            if (com.lcl.lclmeasurementtool.BuildConfig.FLAVOR != "dev") {
+                if (uiState == MainActivityUiState.Login) {
+                    viewModel.setDeviceId(UUID.randomUUID().toString())
+                    Login(viewModel = viewModel)
+                    return@setContent
+                }
             }
             LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this), networkMonitor, simStateMonitor)
         }

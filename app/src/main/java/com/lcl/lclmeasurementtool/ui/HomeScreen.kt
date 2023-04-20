@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lcl.lclmeasurementtool.BuildConfig
 import com.lcl.lclmeasurementtool.ConnectivityTestResult
 import com.lcl.lclmeasurementtool.MainActivityViewModel
 import com.lcl.lclmeasurementtool.PingResultState
@@ -44,6 +45,7 @@ fun HomeRoute(isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) 
 fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) {
 
     val offline by remember { mutableStateOf(isOffline) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val isMLabTestActive = mainActivityViewModel.isMLabTestActive.collectAsStateWithLifecycle()
     val mlabPingResult = mainActivityViewModel.mLabPingResult.collectAsStateWithLifecycle()
@@ -73,6 +75,12 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
         }
 
         FloatingActionButton(onClick = {
+
+            if (BuildConfig.FLAVOR == "full" && offline) {
+                Log.d("HomeScreen", "device is currently offline")
+                return@FloatingActionButton
+            }
+
             if (!isMLabTestActive.value) {
                 mainActivityViewModel.runMLabTest()
             } else {
@@ -86,6 +94,10 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
             Icon(imageVector = if (isMLabTestActive.value) Filled.Pause else Filled.PlayArrow, contentDescription = null)
         }
     }
+
+    if (BuildConfig.FLAVOR == "full" && offline) {
+        ShowMessage(isOffline = true, msg = "Your Device is offline. Please connect to the Internet via Cellular network", snackbarHostState = snackbarHostState)
+    }
 }
 
 @Composable
@@ -93,7 +105,6 @@ fun ShowMessage(isOffline: Boolean, msg: String, snackbarHostState: SnackbarHost
     LaunchedEffect(isOffline) {
         snackbarHostState.showSnackbar(message = msg, duration = SnackbarDuration.Long)
     }
-    
 }
 
 @Composable
@@ -200,7 +211,9 @@ private fun ConnectivityCard(
             }
         }
         Box(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Powered by $label", fontWeight = FontWeight.Thin, fontSize = 10.sp, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 4.dp))
+            Text(text = "Powered by $label", fontWeight = FontWeight.Thin, fontSize = 10.sp, modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 10.dp, bottom = 4.dp))
         }
     }
 }
