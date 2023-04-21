@@ -227,4 +227,4 @@ private fun PreviewSettingsDialog() {
 /* ktlint-disable max-line-length */
 private const val PRIVACY_POLICY_URL = "https://seattlecommunitynetwork.org/"
 private const val TOU = "https://seattlecommunitynetwork.org/"
-private const val FEATURE_LIST = "https://docs.google.com/document/d/1cYU7ksEwtEyIS7jMeBPD1vM9Dz23Pzq0WJ8wqbnvjYQ/edit?usp=sharing"
+private const val FEATURE_LIST = "https://docs.google.com/document/d/e/2PACX-1vTWyg_FFPtKEsNIuD85VauCPy42fLQNk0QoZ6c8NzTH8-d5_AsUX4d-RDAuOoWKPMj_fHppi8Ve8VVv/pub"
