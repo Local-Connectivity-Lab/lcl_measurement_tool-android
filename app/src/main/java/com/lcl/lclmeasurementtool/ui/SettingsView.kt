@@ -36,6 +36,21 @@ fun SettingsDialog(
 ) {
 
     val showData = viewModel.shouldShowData.collectAsStateWithLifecycle()
+    SettingDialog(
+        onDismiss = onDismiss,
+        toggleShowData = viewModel::toggleShowData,
+        logout = viewModel::logout,
+        showData = showData.value
+    )
+}
+
+@Composable
+fun SettingDialog(
+    onDismiss: () -> Unit,
+    toggleShowData: (Boolean) -> Unit,
+    logout: () -> Unit,
+    showData: Boolean
+) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
@@ -47,7 +62,7 @@ fun SettingsDialog(
         text = {
             Divider()
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                SettingsPanel(onSelectShowData = {viewModel.toggleShowData(!showData.value)}, onLogoutClicked = {viewModel.logout()}, showData = showData.value)
+                SettingsPanel(onSelectShowData = {toggleShowData(!showData)}, onLogoutClicked = {logout()}, showData = showData)
                 Divider(Modifier.padding(top = 8.dp))
                 LinksPanel()
                 VersionInfo()
@@ -136,7 +151,7 @@ private fun VersionInfo() {
         Modifier
             .fillMaxWidth()
             .padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = BuildConfig.VERSION_NAME)
+        Text(text = "${BuildConfig.VERSION_NAME} (${BuildConfig.FLAVOR})")
         TextSummary(text = "By Local Connectivity Lab @ UWCSE")
     }
 }
@@ -161,6 +176,10 @@ private fun LinksPanel() {
                     url = TOU
                 )
             }
+            Spacer(Modifier.height(8.dp))
+            Row {
+                TextLink(text = "Feature List", url = FEATURE_LIST)
+            }
         }
     }
 }
@@ -181,23 +200,16 @@ private fun TextLink(text: String, url: String) {
     )
 }
 
-//@Preview
-//@Composable
-//private fun PreviewSettingsDialog() {
-//    NiaTheme {
-//        SettingsDialog(
-//            onDismiss = {},
-//            settingsUiState = Success(
-//                UserEditableSettings(
-//                    brand = DEFAULT,
-//                    darkThemeConfig = FOLLOW_SYSTEM
-//                )
-//            ),
-//            onChangeThemeBrand = { },
-//            onChangeDarkThemeConfig = { }
-//        )
-//    }
-//}
+@Preview
+@Composable
+private fun PreviewSettingsDialog() {
+    SettingDialog(
+        onDismiss = {},
+        toggleShowData = {},
+        logout = {},
+        showData = false
+    )
+}
 //
 //@Preview
 //@Composable
@@ -215,3 +227,4 @@ private fun TextLink(text: String, url: String) {
 /* ktlint-disable max-line-length */
 private const val PRIVACY_POLICY_URL = "https://seattlecommunitynetwork.org/"
 private const val TOU = "https://seattlecommunitynetwork.org/"
+private const val FEATURE_LIST = "https://docs.google.com/document/d/1cYU7ksEwtEyIS7jMeBPD1vM9Dz23Pzq0WJ8wqbnvjYQ/edit?usp=sharing"
