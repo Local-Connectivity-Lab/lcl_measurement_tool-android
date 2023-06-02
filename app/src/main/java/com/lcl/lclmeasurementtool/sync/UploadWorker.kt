@@ -59,8 +59,8 @@ class UploadWorker @AssistedInject constructor(
         fun periodicSyncWork() =
             PeriodicWorkRequestBuilder<DelegatingWorker>(4, TimeUnit.HOURS)
             .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-            .setInitialDelay(10, TimeUnit.MINUTES)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(5))
+            .setInitialDelay(5, TimeUnit.MINUTES)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(10))
             .setInputData(UploadWorker::class.delegatedData())
             .build()
 

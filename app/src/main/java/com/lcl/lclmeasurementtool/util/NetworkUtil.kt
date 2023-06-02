@@ -9,6 +9,6 @@ import kotlinx.serialization.json.Json
 fun prepareReportData(measureDataModel: BaseMeasureDataModel, userData: UserData): String {
     val serialized = Json.encodeToString(measureDataModel).toByteArray()
     val sig_m = ECDSA.Sign(serialized, ECDSA.DeserializePrivateKey(userData.skT.toByteArray()))
-    val report = MeasurementReportModel(sig_m.toString(), userData.hPKR.toStringUtf8(), serialized.toString(), userData.showData)
+    val report = MeasurementReportModel(Hex.encodeHexString(sig_m), Hex.encodeHexString(userData.hPKR.toByteArray()), Hex.encodeHexString(serialized), userData.showData)
     return Json.encodeToString(report)
 }
