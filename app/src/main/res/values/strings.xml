@@ -1,20 +1,80 @@
 <resources>
-    <string name="app_name">LCL Measurement Tool</string>
+    <string name="app_name">SCN Measurement Tool</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-
+    <string name="sim_missing">Error: Missing SIM card</string>
+    <string name="sim_missing_message">The measurement requires a Seattle Community Network SIM card. Please insert your SIM card before proceeding.</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
-    <string name="permission_rationale">"We use Location Service to provide more accurate core network measurement and other related service. Granting the permission of the location service will help us improve our service. We will upload anonymized and fused location data to our encrypted server for post-analysis to better network experience."</string>
+    <string name="permission_rationale">"We use Location Services to provide more accurate network measurements of our network coverage. We will upload anonymous and aggregated location data to our encrypted server for analysis to help us serve more people in our community. See https://seattlecommunitynetwork.org/ for more details."</string>
     <string name="settings">Settings</string>
-    <string name="no_location_detected">No location detected</string>
-    <string name="enable_location_message">The core functionality relies on location to provide better cellular network experience. Disabling the location service will result in missing in functionality.</string>
+    <string name="no_location_detected">Error: No location detected.</string>
+    <string name="enable_location_message">Please enable Location Services to enable core measurement functionality!</string>
     <string name="go_to_setting">Settings</string>
-    <string name="location_message_title">Using Location Service</string>
-    <string name="permission_denied_explanation">"We use Location Service to provide core functionalities in this measurement tool. Disabling location service will result in missing in functionality."</string>
+    <string name="location_message_title">Using Your Location and Network</string>
+    <string name="permission_denied_explanation">"We use Location Services and Network to provide core functionality in this measurement tool. Disabling them will result in missing functionality."</string>
     <string name="USER_UUID">uuid</string>
+    <string name="cellular_on_title">Turn Cellular Data On</string>
+    <string name="cellular_on_message">These tests rely on a connection to a cellular network. Please enable cellular data and then proceed with the tests.</string>
+    <string name="measurement_test_error">Error: An error occurred while testing connection speed.</string>
+    <string name="error">Error</string>
+    <string name="device_id">device_id</string>
+    <string name="PING_TAG">PING</string>
+    <string name="IPERF_UP_TAG">IPERF_UP</string>
+    <string name="IPERF_DOWN_TAG">IPERF_DOWN</string>
+    <string name="validation">Validating …</string>
+    <string name="validation_failure">Cannot validate authentication code. Please retry or contact the administrator at lcl@seattlecommunitynetwork.org.</string>
+    <string name="validation_success">Validation success.</string>
+    <string name="registration_failure">Registration failed. Please try again.</string>
+    <string name="qrcode_invalid_format">The QR Code is invalid. Please rescan the code or contact the administrator at lcl@seattlecommunitynetwork.org.</string>
+    <string name="keys_compromised">Authentication keys are compromised. Please rescan the QR Code.</string>
+    <string name="keys_missing">Error: Authentication key information is missing.</string>
+    <string name="iperf_test_canceled">Test canceled.</string>
+    <string name="location_not_available">Location is not available. Test canceled.</string>
+    <string name="iperf_test_starts">Test started.</string>
+    <string name="iperf_test_completed">Test completed.</string>
+    <string name="unknown_test">Unknown test.</string>
+    <string name="upload_ioexception">Cannot connect to the server. Please retry or contact the administrator at lcl@seattlecommunitynetwork.org.</string>
+    <string name="data_upload_failure">Data upload failed. Please contact the administrator at lcl@seattlecommunitynetwork.org.</string>
+    <string name="setting_fatal_error_message">Key information is missing</string>
+    <string name="title_activity_main2">MainActivity2</string>
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+
+    <!--  From nowinandroid project  -->
+    <string name="top_app_bar_action_icon_description">Settings</string>
+    <string name="settings_title">Settings</string>
+    <string name="loading">Loading…</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="licenses">Licenses</string>
+    <string name="brand_guidelines">Brand Guidelines</string>
+    <string name="feedback">Feedback</string>
+    <string name="theme">Theme</string>
+    <string name="brand_default">Default</string>
+    <string name="brand_android">Android</string>
+    <string name="dark_mode_config_system_default">System default</string>
+    <string name="dark_mode_config_light">Light</string>
+    <string name="dark_mode_config_dark">Dark</string>
+    <string name="dismiss_dialog_button_text">OK</string>
+
+    <string name="home_icon_text">Home</string>
+    <string name="home_title_text">Home</string>
+    <string name="history_data_title_text">History</string>
+    <string name="history_data_icon_text">History</string>
 </resources>

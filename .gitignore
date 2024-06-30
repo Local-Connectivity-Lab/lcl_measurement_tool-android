@@ -11,7 +11,7 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
+#*.jar
 *.war
 *.nar
 *.ear
@@ -54,3 +54,6 @@ captures/
 .idea
 # Keystore files
 *.jks
+*.properties
+# External native build objects
+.cxx/
