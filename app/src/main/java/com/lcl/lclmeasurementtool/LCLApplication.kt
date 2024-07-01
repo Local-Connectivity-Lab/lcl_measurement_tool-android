@@ -12,7 +12,6 @@ import javax.inject.Inject
  * [Application] class for LCL Measurement tool
  */
 @HiltAndroidApp
-//class LCLApplication : Application(), Configuration.Provider {
 class LCLApplication : Application() {
     override fun onCreate() {
         super.onCreate()

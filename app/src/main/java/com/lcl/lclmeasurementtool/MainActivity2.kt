@@ -18,19 +18,22 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewbinding.BuildConfig
+import com.azhon.appupdate.manager.DownloadManager
+import com.azhon.appupdate.util.ApkUtil
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.kongzue.dialogx.dialogs.MessageDialog
+import com.lcl.lclmeasurementtool.datasource.APKAutoUpdaterDataSource
+import com.lcl.lclmeasurementtool.networking.APKAutoUpdater
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
 import com.lcl.lclmeasurementtool.networking.SimStateMonitor
 import com.lcl.lclmeasurementtool.ui.LCLApp
 import com.lcl.lclmeasurementtool.ui.Login
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import java.security.*
-import java.util.*
+import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -46,12 +49,53 @@ class MainActivity2 : ComponentActivity() {
     @Inject
     lateinit var simStateMonitor: SimStateMonitor
 
+    @Inject
+    lateinit var autoUpdater: APKAutoUpdater
+
+    private var apkDownloader: DownloadManager? = null
+
     private val viewModel: MainActivityViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
+
+        ApkUtil.deleteOldApk(this, "${externalCacheDir?.path}/${APKAutoUpdaterDataSource.APKNAME}")
+        apkDownloader = DownloadManager.Builder(this).run {
+            smallIcon(R.mipmap.icon)
+            apkUrl(APKAutoUpdaterDataSource.APKURL)
+            apkName(APKAutoUpdaterDataSource.APKNAME)
+            showNotification(true)
+            showNewerToast(true)
+            enableLog(true)
+            apkVersionName("1.0.4")
+            forcedUpgrade(false)
+            build()
+        }
+
+        apkDownloader!!.download()
+
+        apkDownloader!!.download()
+//        CoroutineScope(Dispatchers.IO).launch {
+//            if (autoUpdater.canUpdate()) {
+//                apkDownloader = DownloadManager.Builder(this@MainActivity2).run {
+//                    apkUrl(APKAutoUpdaterDataSource.RELEASEURL)
+//                    apkName(APKAutoUpdaterDataSource.APKNAME)
+//                    showNotification(true)
+//                    showNewerToast(true)
+//                    enableLog(true)
+//                    apkVersionName(autoUpdater.latestRelease.tagName)
+//                    forcedUpgrade(autoUpdater.shouldForceUpdate)
+//                    build()
+//                }
+//
+//                apkDownloader!!.download()
+//            }
+//
+//            apkDownloader!!.download()
+//        }
+
 
         if (!hasPermission()) {
             XXPermissions.with(this)

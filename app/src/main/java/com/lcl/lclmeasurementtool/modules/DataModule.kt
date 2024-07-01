@@ -1,5 +1,6 @@
 package com.lcl.lclmeasurementtool.modules
 
+import com.lcl.lclmeasurementtool.datasource.APKAutoUpdaterDataSource
 import com.lcl.lclmeasurementtool.datasource.ConnectivityMonitorDataSource
 import com.lcl.lclmeasurementtool.datasource.LocationDataSource
 import com.lcl.lclmeasurementtool.datasource.SignalStrengthDataSource
@@ -8,6 +9,7 @@ import com.lcl.lclmeasurementtool.location.LocationService
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 import com.lcl.lclmeasurementtool.model.repository.*
+import com.lcl.lclmeasurementtool.networking.APKAutoUpdater
 import com.lcl.lclmeasurementtool.networking.NetworkMonitor
 import com.lcl.lclmeasurementtool.networking.SimStateMonitor
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
@@ -58,4 +60,9 @@ interface DataModule {
     fun bindsConnectivityRepository(
         measurementRepository: ConnectivityRepository
     ): HistoryDataRepository<ConnectivityReportModel>
+
+    @Binds
+    fun bindsAPKAutoUpdater(
+        apkAutoUpdater: APKAutoUpdaterDataSource
+    ): APKAutoUpdater
 }
