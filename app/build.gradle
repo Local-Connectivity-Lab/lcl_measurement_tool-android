@@ -16,8 +16,8 @@ android {
         applicationId "com.lcl.lclmeasurementtool"
         minSdkVersion 24
         targetSdkVersion 31
-        versionCode 2
-        versionName "1.0.4"
+        versionCode 3
+        versionName "1.0.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {
             annotationProcessorOptions {

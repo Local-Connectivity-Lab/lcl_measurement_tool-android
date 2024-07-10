@@ -52,51 +52,12 @@ class MainActivity2 : ComponentActivity() {
     @Inject
     lateinit var autoUpdater: APKAutoUpdater
 
-    private var apkDownloader: DownloadManager? = null
-
     private val viewModel: MainActivityViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-
-        ApkUtil.deleteOldApk(this, "${externalCacheDir?.path}/${APKAutoUpdaterDataSource.APKNAME}")
-        apkDownloader = DownloadManager.Builder(this).run {
-            smallIcon(R.mipmap.icon)
-            apkUrl(APKAutoUpdaterDataSource.APKURL)
-            apkName(APKAutoUpdaterDataSource.APKNAME)
-            showNotification(true)
-            showNewerToast(true)
-            enableLog(true)
-            apkVersionName("1.0.4")
-            forcedUpgrade(false)
-            build()
-        }
-
-        apkDownloader!!.download()
-
-        apkDownloader!!.download()
-//        CoroutineScope(Dispatchers.IO).launch {
-//            if (autoUpdater.canUpdate()) {
-//                apkDownloader = DownloadManager.Builder(this@MainActivity2).run {
-//                    apkUrl(APKAutoUpdaterDataSource.RELEASEURL)
-//                    apkName(APKAutoUpdaterDataSource.APKNAME)
-//                    showNotification(true)
-//                    showNewerToast(true)
-//                    enableLog(true)
-//                    apkVersionName(autoUpdater.latestRelease.tagName)
-//                    forcedUpgrade(autoUpdater.shouldForceUpdate)
-//                    build()
-//                }
-//
-//                apkDownloader!!.download()
-//            }
-//
-//            apkDownloader!!.download()
-//        }
-
-
         if (!hasPermission()) {
             XXPermissions.with(this)
                 .permission(Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION)
@@ -155,6 +116,34 @@ class MainActivity2 : ComponentActivity() {
                 }
             }
             LCLApp(windowSizeClass = calculateWindowSizeClass(activity = this), networkMonitor, simStateMonitor)
+        }
+
+        ApkUtil.deleteOldApk(this, "${externalCacheDir?.path}/${APKAutoUpdaterDataSource.APKNAME}")
+        val downloader = DownloadManager.Builder(this)
+        lifecycleScope.launch {
+            val canUpdate = autoUpdater.canUpdate()
+            Log.d(TAG, "can update $canUpdate")
+            if (canUpdate) {
+                val asset = autoUpdater.latestRelease.assets.firstOrNull { it.name == APKAutoUpdaterDataSource.APKNAME }
+                asset?.let {
+                    val apkName = it.name
+                    val apkVersion = autoUpdater.latestRelease.tagName
+                    val apkURL = it.browserDownloadUrl
+                    val apkDownloader = downloader.run {
+                        smallIcon(R.mipmap.icon)
+                        apkUrl(apkURL)
+                        apkName(apkName)
+                        showNotification(true)
+                        showNewerToast(true)
+                        enableLog(true)
+                        apkVersionName(apkVersion)
+                        forcedUpgrade(autoUpdater.shouldForceUpdate)
+                        build()
+                    }
+
+                    apkDownloader.download()
+                }
+            }
         }
     }
 
