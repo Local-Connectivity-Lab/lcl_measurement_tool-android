@@ -121,28 +121,26 @@ class MainActivity2 : ComponentActivity() {
         ApkUtil.deleteOldApk(this, "${externalCacheDir?.path}/${APKAutoUpdaterDataSource.APKNAME}")
         val downloader = DownloadManager.Builder(this)
         lifecycleScope.launch {
-            val canUpdate = autoUpdater.canUpdate()
-            Log.d(TAG, "can update $canUpdate")
-            if (canUpdate) {
-                val asset = autoUpdater.latestRelease.assets.firstOrNull { it.name == APKAutoUpdaterDataSource.APKNAME }
-                asset?.let {
-                    val apkName = it.name
-                    val apkVersion = autoUpdater.latestRelease.tagName
-                    val apkURL = it.browserDownloadUrl
-                    val apkDownloader = downloader.run {
-                        smallIcon(R.mipmap.icon)
-                        apkUrl(apkURL)
-                        apkName(apkName)
-                        showNotification(true)
-                        showNewerToast(true)
-                        enableLog(true)
-                        apkVersionName(apkVersion)
-                        forcedUpgrade(autoUpdater.shouldForceUpdate)
-                        build()
-                    }
-
-                    apkDownloader.download()
+            val updateInfo = autoUpdater.canUpdate() ?: return@launch
+            Log.d(TAG, "can update")
+            val asset = updateInfo.release.assets.firstOrNull { it.name == APKAutoUpdaterDataSource.APKNAME } ?: return@launch
+            asset.let {
+                val apkName = it.name
+                val apkVersion = updateInfo.release.tagName
+                val apkURL = it.browserDownloadUrl
+                val apkDownloader = downloader.run {
+                    smallIcon(R.mipmap.icon)
+                    apkUrl(apkURL)
+                    apkName(apkName)
+                    showNotification(true)
+                    showNewerToast(true)
+                    enableLog(true)
+                    apkVersionName(apkVersion)
+                    forcedUpgrade(updateInfo.shouldForceUpdate)
+                    build()
                 }
+
+                apkDownloader.download()
             }
         }
     }
