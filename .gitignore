@@ -55,5 +55,6 @@ captures/
 # Keystore files
 *.jks
 *.properties
+!version.properties
 # External native build objects
 .cxx/

@@ -8,15 +8,30 @@ plugins {
     id "kotlinx-serialization"
 }
 
+def getVersionCodeFromProperties() {
+    def propsFile = file('version.properties')
+    if (propsFile.exists()) {
+        def props = new Properties()
+        props.load(new FileInputStream(propsFile))
+
+        if (props['versionCode'] == null) {
+            throw new GradleException("versionCode not found in the version.properties")
+        }
+
+        return props['versionCode'].toInteger()
+    }
+    throw new GradleException("The version.properties file was not found.")
+}
+
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     buildToolsVersion "30.0.3"
     ndkVersion "23.1.7779620"
     defaultConfig {
         applicationId "com.lcl.lclmeasurementtool"
         minSdkVersion 24
-        targetSdkVersion 31
-        versionCode 2
+        targetSdkVersion 34
+        versionCode getVersionCodeFromProperties()
         versionName "1.0.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {
@@ -175,4 +190,101 @@ protobuf {
 
 kapt {
     correctErrorTypes true
+}
+
+def sortKeys(Properties properties) {
+    Map<String, String> sortedMap = new TreeMap(properties)
+
+    // Create a new Properties object and populate it from the sorted map.
+    Properties sortedProps = new Properties()
+    sortedProps.putAll(sortedMap)
+
+    return sortedProps
+}
+
+task bumpVersionCode {
+    doLast {
+        def versionFile = file("version.properties")
+        if (!versionFile.exists()) {
+            throw new GradleException("version.properties file not found.")
+        }
+
+        Properties properties = new Properties()
+        versionFile.withInputStream { stream -> properties.load(stream) }
+
+        if (!properties.containsKey("versionCode")) {
+            throw new GradleException("versionCode not found in the version.properties")
+        }
+
+        def versionCode = (properties["versionCode"]?.toInteger() ?: 0) + 1
+
+        properties["versionCode"] = versionCode.toString()
+
+        def sortedProperties = sortKeys(properties)
+        versionFile.withOutputStream { stream ->
+            sortedProperties.store(stream, null)
+        }
+
+        println "✅ Updated versionCode to: $versionCode"
+    }
+}
+
+def updateVersionProperties(closure) {
+    def propsFile = file('version.properties')
+    def props = new Properties()
+    if (propsFile.exists()) {
+        props.load(new FileInputStream(propsFile))
+    } else {
+        throw new GradleException("version.properties file not found.")
+    }
+
+    if (!props.containsKey("versionMajor") || !props.containsKey("versionMinor") || !props.containsKey("versionPatch")) {
+        throw new GradleException("version.properties is corrupted.")
+    }
+
+    // Pass the properties to the closure to be modified
+    closure(props)
+
+    // Save the updated properties
+    def sortedProps = sortKeys(props)
+    sortedProps.store(propsFile.newWriter(), null)
+}
+
+task bumpPatch {
+    doLast {
+        updateVersionProperties { props ->
+            def patch = props['versionPatch'].toInteger() + 1
+            def code = props['versionCode'].toInteger() + 1
+            props['versionPatch'] = patch.toString()
+            props['versionCode'] = code.toString()
+            println "✅ Version updated to: ${props['versionMajor']}.${props['versionMinor']}.$patch (Code $code)"
+        }
+    }
+}
+
+task bumpMinor {
+    doLast {
+        updateVersionProperties { props ->
+            def minor = props['versionMinor'].toInteger() + 1
+            def code = props['versionCode'].toInteger() + 1
+            props['versionMinor'] = minor.toString()
+            props['versionPatch'] = "0" // Reset patch version
+            props['versionCode'] = code.toString()
+            println "✅ Version updated to: ${props['versionMajor']}.$minor.0 (Code $code)"
+        }
+    }
+}
+
+task bumpMajor {
+    doLast {
+        updateVersionProperties { props ->
+            def major = props['versionMajor'].toInteger() + 1
+            def code = props['versionCode'].toInteger() + 1
+            props['versionMajor'] = major.toString()
+            props['versionMinor'] = "0" // Reset minor version
+            props['versionPatch'] = "0" // Reset patch version
+            props['versionCode'] = code.toString()
+            println "✅ Version updated to: $major.0.0 (Code $code)"
+        }
+    }
 }
