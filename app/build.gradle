@@ -23,6 +23,30 @@ def getVersionCodeFromProperties() {
     throw new GradleException("The version.properties file was not found.")
 }
 
+def getVersionNameFromProperties() {
+    def propsFile = file('version.properties')
+
+    if (!propsFile.exists()) {
+        throw new GradleException("'version.properties' file not found. Please create it.")
+    }
+
+    def props = new Properties()
+    props.load(new FileInputStream(propsFile))
+
+    def requiredKeys = ['versionMajor', 'versionMinor', 'versionPatch']
+    requiredKeys.each { key ->
+        if (!props.containsKey(key)) {
+            throw new GradleException("Required key '$key' is missing from version.properties.")
+        }
+    }
+
+    def major = props['versionMajor'].toInteger()
+    def minor = props['versionMinor'].toInteger()
+    def patch = props['versionPatch'].toInteger()
+
+    return "$major.$minor.$patch"
+}
+
 android {
     compileSdkVersion 34
     buildToolsVersion "30.0.3"
@@ -32,7 +56,7 @@ android {
         minSdkVersion 24
         targetSdkVersion 34
         versionCode getVersionCodeFromProperties()
-        versionName "1.0.3"
+        versionName getVersionNameFromProperties()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {
             annotationProcessorOptions {
