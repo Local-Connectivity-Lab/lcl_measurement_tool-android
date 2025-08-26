@@ -17,7 +17,9 @@ data class Result(
     @SerialName("machine")
     val machine: String,
     @SerialName("urls")
-    val urls: Urls
+    val urls: Urls,
+    @SerialName("hostname")
+    var hostname: String
 )
 
 @Serializable
