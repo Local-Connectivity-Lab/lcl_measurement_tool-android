@@ -37,13 +37,15 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
                 override fun onDownloadProgress(clientResponse: ClientResponse) {
                     val speed = DataConverter.convertToMbps(clientResponse)
                     Log.d(TAG, "client download is $speed")
-                    channel.trySend(MLabResult(speed, TestType.DOWNLOAD, null, MLabTestStatus.RUNNING))
+                    val measurement = clientResponse.measurement
+                    channel.trySend(MLabResult(speed, TestType.DOWNLOAD, null, MLabTestStatus.RUNNING, measurement?.tcpInfo))
                 }
 
                 override fun onUploadProgress(clientResponse: ClientResponse) {
                     val speed = DataConverter.convertToMbps(clientResponse)
                     Log.d(TAG, "client upload is $speed")
-                    channel.trySend(MLabResult(speed, TestType.UPLOAD, null, MLabTestStatus.RUNNING))
+                    val measurement = clientResponse.measurement
+                    channel.trySend(MLabResult(speed, TestType.UPLOAD, null, MLabTestStatus.RUNNING, measurement?.tcpInfo))
                 }
 
                 override fun onFinish(
@@ -53,7 +55,8 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
                 ) {
                     if (clientResponse != null) {
                         Log.d(TAG, "client finish test $testType")
-                        channel.trySend(MLabResult(DataConverter.convertToMbps(clientResponse), testType, null, MLabTestStatus.FINISHED))
+                        val measurement = clientResponse.measurement
+                        channel.trySend(MLabResult(DataConverter.convertToMbps(clientResponse), testType, null, MLabTestStatus.FINISHED, measurement?.tcpInfo))
                     } else {
                         channel.trySend(MLabResult(null, testType, error?.message, MLabTestStatus.ERROR))
                     }

@@ -7,13 +7,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.protobuf.ByteString
-import com.lcl.lclmeasurementtool.constants.NetworkConstants
 import com.lcl.lclmeasurementtool.features.mlab.MLabRunner
 import com.lcl.lclmeasurementtool.features.mlab.MLabTestStatus
-import com.lcl.lclmeasurementtool.features.ping.Ping
-import com.lcl.lclmeasurementtool.features.ping.PingError
-import com.lcl.lclmeasurementtool.features.ping.PingErrorCase
-import com.lcl.lclmeasurementtool.features.ping.PingResult
 import com.lcl.lclmeasurementtool.location.LocationService
 import com.lcl.lclmeasurementtool.model.datamodel.*
 import com.lcl.lclmeasurementtool.model.repository.ConnectivityRepository
@@ -69,11 +64,11 @@ class MainActivityViewModel @Inject constructor(
     // Network Testing
     private val _isMLabTestActive = MutableStateFlow(false)
 
-    private var _mLabPingResult = MutableStateFlow(PingResultState())
+    private var _mlabRttResult = MutableStateFlow(0.0)
     private var _mLabUploadResult = MutableStateFlow(ConnectivityTestResult())
     private var _mLabDownloadResult = MutableStateFlow(ConnectivityTestResult())
 
-    var mLabPingResult = _mLabPingResult.asStateFlow()
+    var mlabRttResult = _mlabRttResult.asStateFlow()
     var mlabUploadResult = _mLabUploadResult.asStateFlow()
     var mlabDownloadResult = _mLabDownloadResult.asStateFlow()
     val isMLabTestActive = _isMLabTestActive.asStateFlow()
@@ -250,33 +245,7 @@ class MainActivityViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000)
     )
 
-    private suspend fun runMLabPing() {
-        try {
-            Ping.cancellableStart(address = NetworkConstants.PING_TEST_ADDRESS, timeout = 1000)
-                .onStart {
-                    Log.d(TAG, "isActive = true")
-                    _isMLabTestActive.value = true
-                }
-                .onCompletion {
-                    if (it != null) {
-                        Log.d(TAG, "Error is ${it.message}")
-                        _isMLabTestActive.value = false
-                    }
-                }
-                .collect {
-                    _mLabPingResult.value = when(it.error.code) {
-                        PingErrorCase.OK ->  PingResultState.Success(it)
-                        else ->  {
-                            _isMLabTestActive.value = false
-                            PingResultState.Error(it.error)
-                        }
-                    }
-                }
-        } catch (e: IllegalArgumentException) {
-            _mLabPingResult.value = PingResultState.Error(PingError(PingErrorCase.OTHER, e.message))
-            Log.e(TAG, "Ping Config error")
-        }
-    }
+    // The runMLabPing method is removed as we now use ndt7's TCPInfo.RTT instead of custom ping
 
     fun cancelMLabTest() {
         Log.d(TAG, "cancellation: the test job is $mlabTestJob")
@@ -300,6 +269,12 @@ class MainActivityViewModel @Inject constructor(
                 .collect{
                     when(it.type) {
                         NDTTest.TestType.UPLOAD -> {
+                            // Extract RTT from TCPInfo if available during upload test
+                            it.tcpInfo?.rtt?.let { rtt ->
+                                _mlabRttResult.value = rtt.toDouble() / 1000.0 // Convert from microseconds to milliseconds
+                                Log.d(TAG, "RTT from Upload test: ${_mlabRttResult.value} ms")
+                            }
+                            
                             _mLabUploadResult.value = when(it.status) {
                                 MLabTestStatus.RUNNING -> { ConnectivityTestResult.Result(it.speed!!, Color.LightGray) }
 
@@ -312,6 +287,12 @@ class MainActivityViewModel @Inject constructor(
                             }
                         }
                         NDTTest.TestType.DOWNLOAD -> {
+                            // Extract RTT from TCPInfo if available during download test
+                            it.tcpInfo?.rtt?.let { rtt ->
+                                _mlabRttResult.value = rtt.toDouble() / 1000.0 // Convert from microseconds to milliseconds
+                                Log.d(TAG, "RTT from Download test: ${_mlabRttResult.value} ms")
+                            }
+                            
                             _mLabDownloadResult.value = when(it.status) {
                                 MLabTestStatus.RUNNING -> { ConnectivityTestResult.Result(it.speed!!, Color.LightGray) }
 
@@ -341,12 +322,7 @@ class MainActivityViewModel @Inject constructor(
             try {
                 resetMLabTestResult()
 
-                runMLabPing()
-                if (_mLabPingResult.value is PingResultState.Error) {
-                    this.cancel("Ping Test Failed")
-                }
-                ensureActive()
-
+                // Run ndt7 test (which includes RTT measurement)
                 getMLabTestResult()
                 if (_mLabUploadResult.value is ConnectivityTestResult.Error || _mLabDownloadResult.value is ConnectivityTestResult.Error) {
                     Log.d(TAG, "mlab test job is cancelled")
@@ -361,7 +337,7 @@ class MainActivityViewModel @Inject constructor(
                 ensureActive()
 
                 _isMLabTestActive.value = false
-                Log.d(TAG, "ping, upload, download are finished. isMLabTestActive.value=${isMLabTestActive.value}")
+                Log.d(TAG, "upload, download are finished. isMLabTestActive.value=${isMLabTestActive.value}")
                 val curTime = TimeUtil.getCurrentTime()
                 val cellID = signalStrengthMonitor.getCellID()
 
@@ -387,8 +363,8 @@ class MainActivityViewModel @Inject constructor(
                         it.second.deviceID,
                         (_mLabUploadResult.value as ConnectivityTestResult.Result).result.toDouble(),
                         (_mLabDownloadResult.value as ConnectivityTestResult.Result).result.toDouble(),
-                        (_mLabPingResult.value as PingResultState.Success).result.avg!!.toDouble(),
-                        (_mLabPingResult.value as PingResultState.Success).result.numLoss!!.toDouble(),
+                        _mlabRttResult.value, // Use RTT from ndt7 TCPInfo
+                        0.0, // No packet loss information available from ndt7, defaulting to 0
                     )
 
                     saveToDB(signalStrengthReportModel, connectivityReportModel)
@@ -446,7 +422,7 @@ class MainActivityViewModel @Inject constructor(
     }
 
     private fun resetMLabTestResult() {
-        _mLabPingResult.value = PingResultState.Error(PingError(PingErrorCase.OK, null))
+        _mlabRttResult.value = 0.0
         _mLabUploadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
         _mLabDownloadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
     }
@@ -462,9 +438,6 @@ open class ConnectivityTestResult {
     data class Error(val error: String): ConnectivityTestResult()
 }
 
-open class PingResultState {
-    data class Success(val result: PingResult): PingResultState()
-    data class Error(val error: PingError): PingResultState()
-}
+// PingResultState removed as we now use ndt7's TCPInfo.RTT instead
 
 data class SignalStrengthResult(val dbm: Int, val level: SignalStrengthLevelEnum)
