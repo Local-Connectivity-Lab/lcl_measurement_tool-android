@@ -252,49 +252,31 @@ class MainActivityViewModel @Inject constructor(
 
     private suspend fun runMLabPing() {
         try {
-            MLabRunner.runTest(NDTTest.TestType.DOWNLOAD_AND_UPLOAD)
+            Ping.cancellableStart(address = NetworkConstants.PING_TEST_ADDRESS, timeout = 1000)
                 .onStart {
-                    Log.d(TAG, "TCP RTT check started")
+                    Log.d(TAG, "isActive = true")
                     _isMLabTestActive.value = true
                 }
                 .onCompletion {
                     if (it != null) {
-                        Log.d(TAG, "Error during RTT check: ${it.message}")
-                    }
-                    _isMLabTestActive.value = false
-                }
-                .collect { result ->
-                    // Extract RTT (µs → ms)
-                    val rttMicros = result.tcpInfo?.minRTT ?: 0L
-                    val rttMs = rttMicros / 1000.0
-
-                    Log.d(TAG, "Observed TCP MinRTT = $rttMs ms")
-
-                    // Update your PingResultState
-                    if (rttMs > 0) {
-                        _mLabPingResult.value = PingResultState.Success(
-                            PingResult(
-                                avg = rttMs.toString(),
-                                min = null,
-                                max = null,
-                                mdev = null,
-                                numLoss = "0",  // TCP doesn’t report loss
-                                error = PingError(PingErrorCase.OK, null)
-                            )
-                        )
-                    } else {
-                        _mLabPingResult.value = PingResultState.Error(
-                            PingError(PingErrorCase.OTHER, "No RTT data available")
-                        )
+                        Log.d(TAG, "Error is ${it.message}")
+                        _isMLabTestActive.value = false
                     }
                 }
-        } catch (e: Exception) {
-            _mLabPingResult.value =
-                PingResultState.Error(PingError(PingErrorCase.OTHER, e.message))
-            Log.e(TAG, "TCP RTT error: $e")
+                .collect {
+                    _mLabPingResult.value = when(it.error.code) {
+                        PingErrorCase.OK ->  PingResultState.Success(it)
+                        else ->  {
+                            _isMLabTestActive.value = false
+                            PingResultState.Error(it.error)
+                        }
+                    }
+                }
+        } catch (e: IllegalArgumentException) {
+            _mLabPingResult.value = PingResultState.Error(PingError(PingErrorCase.OTHER, e.message))
+            Log.e(TAG, "Ping Config error")
         }
     }
-
 
     fun cancelMLabTest() {
         Log.d(TAG, "cancellation: the test job is $mlabTestJob")
