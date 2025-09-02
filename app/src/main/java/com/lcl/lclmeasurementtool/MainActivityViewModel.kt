@@ -20,7 +20,6 @@ import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
 import com.lcl.lclmeasurementtool.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
@@ -30,7 +29,6 @@ import net.measurementlab.ndt7.android.NDTTest
 import okhttp3.ResponseBody
 import retrofit2.HttpException
 import java.io.ByteArrayOutputStream
-import java.net.InetAddress
 import java.security.SecureRandom
 import java.security.interfaces.ECPrivateKey
 import java.security.interfaces.ECPublicKey
@@ -272,12 +270,9 @@ class MainActivityViewModel @Inject constructor(
                     when(it.type) {
                         NDTTest.TestType.UPLOAD -> {
                             // Extract RTT from TCPInfo if available during upload test
-                            if (it.tcpInfo?.rtt != null) {
-                                _mlabRttResult.value = it.tcpInfo.rtt.toDouble() / 1000.0 // Convert from microseconds to milliseconds
+                            it.tcpInfo?.rtt?.let { rtt ->
+                                _mlabRttResult.value = rtt.toDouble() / 1000.0 // Convert from microseconds to milliseconds
                                 Log.d(TAG, "RTT from Upload test: ${_mlabRttResult.value} ms")
-                            } else {
-                                // Fallback to a default RTT measurement
-                                estimateRttFromSpeedTest()
                             }
                             
                             _mLabUploadResult.value = when(it.status) {
@@ -293,12 +288,9 @@ class MainActivityViewModel @Inject constructor(
                         }
                         NDTTest.TestType.DOWNLOAD -> {
                             // Extract RTT from TCPInfo if available during download test
-                            if (it.tcpInfo?.rtt != null) {
-                                _mlabRttResult.value = it.tcpInfo.rtt.toDouble() / 1000.0 // Convert from microseconds to milliseconds
+                            it.tcpInfo?.rtt?.let { rtt ->
+                                _mlabRttResult.value = rtt.toDouble() / 1000.0 // Convert from microseconds to milliseconds
                                 Log.d(TAG, "RTT from Download test: ${_mlabRttResult.value} ms")
-                            } else {
-                                // Fallback to a default RTT measurement 
-                                estimateRttFromSpeedTest()
                             }
                             
                             _mLabDownloadResult.value = when(it.status) {
@@ -433,32 +425,6 @@ class MainActivityViewModel @Inject constructor(
         _mlabRttResult.value = 0.0
         _mLabUploadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
         _mLabDownloadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
-    }
-    
-    /**
-     * Estimates RTT using a ping to Google's DNS server as a fallback
-     * This is used when TCPInfo is not available from the ndt7 library
-     */
-    private fun estimateRttFromSpeedTest() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // Simple RTT calculation using java's InetAddress.isReachable
-                val start = System.currentTimeMillis()
-                val isReachable = InetAddress.getByName("8.8.8.8").isReachable(5000)
-                val rtt = System.currentTimeMillis() - start
-                
-                if (isReachable) {
-                    _mlabRttResult.value = rtt.toDouble()
-                    Log.d(TAG, "Fallback RTT measurement: ${_mlabRttResult.value} ms")
-                } else {
-                    Log.d(TAG, "Fallback RTT measurement failed")
-                    _mlabRttResult.value = 100.0 // Default value if measurement fails
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error in fallback RTT measurement", e)
-                _mlabRttResult.value = 100.0 // Default value if measurement fails
-            }
-        }
     }
 }
 
