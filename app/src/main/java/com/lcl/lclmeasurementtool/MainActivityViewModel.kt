@@ -64,7 +64,7 @@ class MainActivityViewModel @Inject constructor(
     // Network Testing
     private val _isMLabTestActive = MutableStateFlow(false)
 
-    private var _mlabRttResult = MutableStateFlow(0.0)
+    private var _mlabRttResult = MutableStateFlow(ConnectivityTestResult())
     private var _mLabUploadResult = MutableStateFlow(ConnectivityTestResult())
     private var _mLabDownloadResult = MutableStateFlow(ConnectivityTestResult())
 
@@ -271,8 +271,9 @@ class MainActivityViewModel @Inject constructor(
                         NDTTest.TestType.UPLOAD -> {
                             // Extract RTT from TCPInfo if available during upload test
                             it.tcpInfo?.rtt?.let { rtt ->
-                                _mlabRttResult.value = rtt.toDouble() / 1000.0 // Convert from microseconds to milliseconds
-                                Log.d(TAG, "RTT from Upload test: ${_mlabRttResult.value} ms")
+                                val rttMs = rtt.toDouble() / 1000.0 // microseconds → milliseconds
+                                _mlabRttResult.value = ConnectivityTestResult.Result(rttMs.toString(), Color.Black)
+                                Log.d(TAG, "RTT from Upload test: $rttMs ms")
                             }
                             
                             _mLabUploadResult.value = when(it.status) {
@@ -289,8 +290,9 @@ class MainActivityViewModel @Inject constructor(
                         NDTTest.TestType.DOWNLOAD -> {
                             // Extract RTT from TCPInfo if available during download test
                             it.tcpInfo?.rtt?.let { rtt ->
-                                _mlabRttResult.value = rtt.toDouble() / 1000.0 // Convert from microseconds to milliseconds
-                                Log.d(TAG, "RTT from Download test: ${_mlabRttResult.value} ms")
+                                val rttMs = rtt.toDouble() / 1000.0 // microseconds → milliseconds
+                                _mlabRttResult.value = ConnectivityTestResult.Result(rttMs.toString(), Color.Black)
+                                Log.d(TAG, "RTT from Upload test: $rttMs ms")
                             }
                             
                             _mLabDownloadResult.value = when(it.status) {
@@ -363,7 +365,7 @@ class MainActivityViewModel @Inject constructor(
                         it.second.deviceID,
                         (_mLabUploadResult.value as ConnectivityTestResult.Result).result.toDouble(),
                         (_mLabDownloadResult.value as ConnectivityTestResult.Result).result.toDouble(),
-                        _mlabRttResult.value, // Use RTT from ndt7 TCPInfo
+                        (_mlabRttResult.value as ConnectivityTestResult.Result).result.toDouble(),
                         0.0, // No packet loss information available from ndt7, defaulting to 0
                     )
 
@@ -422,7 +424,7 @@ class MainActivityViewModel @Inject constructor(
     }
 
     private fun resetMLabTestResult() {
-        _mlabRttResult.value = 0.0
+        _mlabRttResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
         _mLabUploadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
         _mLabDownloadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
     }

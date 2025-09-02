@@ -7,8 +7,7 @@ import kotlinx.serialization.Serializable
 data class ClientResponse(
     @SerialName("AppInfo") val appInfo: AppInfo,
     @SerialName("Origin") val origin: String = "client",
-    @SerialName("Test") val test: String,
-    @SerialName("Measurement") val measurement: Measurement? = null
+    @SerialName("Test") val test: String
 )
 
 @Serializable

@@ -81,5 +81,7 @@ data class TCPInfo(
     @SerialName("BytesRetrans") val bytesRetrans: Long?,
     @SerialName("DSackDups") val dSackDups: Long?,
     @SerialName("ReordSeen") val reordSeen: Long?,
+    @SerialName("RcvOooPack") val rcvOooPack: Long?,
+    @SerialName("SndWnd") val sndWnd: Long?,
     @SerialName("ElapsedTime") val elapsedTime: Long?
 )

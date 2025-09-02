@@ -147,7 +147,7 @@ private fun SignalStrengthCard(
 private fun ConnectivityCard(
     label: String,
     modifier: Modifier = Modifier,
-    rttValue: Double,
+    rttValue: ConnectivityTestResult,
     uploadResult: ConnectivityTestResult,
     downloadResult: ConnectivityTestResult,
 ) {
@@ -185,13 +185,20 @@ private fun ConnectivityCard(
 
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    // Format RTT to one decimal place
-                    val formattedRtt = if (rttValue > 0) String.format("%.1f", rttValue) else "0.0"
-                    
+                    val formattedRtt = when (rttValue) {
+                        is ConnectivityTestResult.Result -> {
+                            val numeric = rttValue.result.toDoubleOrNull() ?: 0.0
+                            if (numeric > 0) String.format("%.1f", numeric) else "0.0"
+                        }
+                        else -> {
+                            "Err" // or rttValue.error if you want to display the error message
+                        }
+                    }
+
                     DataEntry(icon = Rounded.NetworkPing, text = "$formattedRtt ms")
-                    // We no longer have packet loss data from ndt7, so we'll remove this or set it to 0
                     DataEntry(icon = Rounded.Cancel, text = "0 % loss")
                 }
+
             }
         }
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -216,14 +223,16 @@ fun DataEntry(icon: ImageVector, text: String) {
 fun ConnectivityCardPreview() {
 
     Column {
-        ConnectivityCard(label = "IperfRunner",
-            rttValue = 15.2,
+        ConnectivityCard(
+            label = "IperfRunner",
+            rttValue = ConnectivityTestResult.Result("1", Color.Red),
             uploadResult = ConnectivityTestResult.Result("1", Color.Blue),
             downloadResult = ConnectivityTestResult.Result("1", Color.Green)
         )
 
-        ConnectivityCard(label = "MLab",
-            rttValue = 23.7,
+        ConnectivityCard(
+            label = "MLab",
+            rttValue = ConnectivityTestResult.Result("1", Color.Red),
             uploadResult = ConnectivityTestResult.Result("1", Color.Blue),
             downloadResult = ConnectivityTestResult.Result("1", Color.Green)
         )
