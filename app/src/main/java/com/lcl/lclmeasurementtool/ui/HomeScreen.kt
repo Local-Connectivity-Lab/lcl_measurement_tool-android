@@ -191,7 +191,7 @@ private fun ConnectivityCard(
                             if (numeric > 0) String.format("%.1f", numeric) else "0.0"
                         }
                         else -> {
-                            "Err" // or rttValue.error if you want to display the error message
+                            "0.0" // or rttValue.error if you want to display the error message
                         }
                     }
 

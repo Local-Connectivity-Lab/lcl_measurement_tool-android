@@ -65,7 +65,7 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
 
                 override fun onMeasurementUploadProgress(measurement: Measurement) {
                     Log.d(TAG, "on measurement upload")
-                    channel.trySend(MLabResult(null, TestType.DOWNLOAD, null, MLabTestStatus.RUNNING, measurement.tcpInfo))
+//                    channel.trySend(MLabResult(null, TestType.UPLOAD, null, MLabTestStatus.RUNNING, measurement.tcpInfo))
                 }
 
                 override fun onFinish(

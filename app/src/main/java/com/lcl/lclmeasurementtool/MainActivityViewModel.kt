@@ -269,18 +269,10 @@ class MainActivityViewModel @Inject constructor(
                 .collect{
                     when(it.type) {
                         NDTTest.TestType.UPLOAD -> {
-                            // Extract RTT from TCPInfo if available during upload test
-                            it.tcpInfo?.rtt?.let { rtt ->
-                                val rttMs = rtt.toDouble() / 1000.0 // microseconds → milliseconds
-                                _mlabRttResult.value = ConnectivityTestResult.Result(rttMs.toString(), Color.Black)
-                                Log.d(TAG, "RTT from Upload test: $rttMs ms")
-                            }
-                            
                             _mLabUploadResult.value = when(it.status) {
                                 MLabTestStatus.RUNNING -> { ConnectivityTestResult.Result(it.speed!!, Color.LightGray) }
 
                                 MLabTestStatus.FINISHED -> { ConnectivityTestResult.Result(it.speed!!, Color.Black) }
-
                                 MLabTestStatus.ERROR -> {
                                     _isMLabTestActive.value = false
                                     ConnectivityTestResult.Error(it.errorMsg!!)
@@ -292,7 +284,7 @@ class MainActivityViewModel @Inject constructor(
                             it.tcpInfo?.rtt?.let { rtt ->
                                 val rttMs = rtt.toDouble() / 1000.0 // microseconds → milliseconds
                                 _mlabRttResult.value = ConnectivityTestResult.Result(rttMs.toString(), Color.Black)
-                                Log.d(TAG, "RTT from Upload test: $rttMs ms")
+                                Log.d(TAG, "RTT from Download test: $rttMs ms")
                             }
                             
                             _mLabDownloadResult.value = when(it.status) {
