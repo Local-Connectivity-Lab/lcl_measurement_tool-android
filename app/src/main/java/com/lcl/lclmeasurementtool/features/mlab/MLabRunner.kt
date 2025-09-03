@@ -54,8 +54,9 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
 
                 override fun onUploadProgress(clientResponse: ClientResponse) {
                     val speed = DataConverter.convertToMbps(clientResponse)
-                    Log.d(TAG, "client upload is $speed")
-                    channel.trySend(MLabResult(speed, TestType.UPLOAD, null, MLabTestStatus.RUNNING))
+                    if (speed != null && speed != "0.0") {
+                        channel.trySend(MLabResult(speed, TestType.UPLOAD, null, MLabTestStatus.RUNNING))
+                    }
                 }
 
                 override fun onMeasurementDownloadProgress(measurement: Measurement) {
@@ -65,7 +66,7 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
 
                 override fun onMeasurementUploadProgress(measurement: Measurement) {
                     Log.d(TAG, "on measurement upload")
-//                    channel.trySend(MLabResult(null, TestType.UPLOAD, null, MLabTestStatus.RUNNING, measurement.tcpInfo))
+                    channel.trySend(MLabResult(null, TestType.UPLOAD, null, MLabTestStatus.RUNNING, measurement.tcpInfo))
                 }
 
                 override fun onFinish(
@@ -74,13 +75,19 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
                     testType: TestType
                 ) {
                     if (clientResponse != null) {
-                        Log.d(TAG, "client finish test $testType")
-                        channel.trySend(MLabResult(DataConverter.convertToMbps(clientResponse), testType, null, MLabTestStatus.FINISHED))
+                        val speed = DataConverter.convertToMbps(clientResponse)
+                        Log.d(TAG, "client finish test $testType with speed $speed")
+                        channel.trySend(MLabResult(speed, testType, null, MLabTestStatus.FINISHED))
                     } else {
+                        Log.e(TAG, "Error during $testType test: ${error?.message}")
                         channel.trySend(MLabResult(null, testType, error?.message, MLabTestStatus.ERROR))
                     }
 
-                    if (testType == TestType.UPLOAD) channel.close()
+                    // Only close the channel after both download and upload tests are complete
+                    if (testType == TestType.UPLOAD || testType == TestType.DOWNLOAD_AND_UPLOAD) {
+                        Log.d(TAG, "Closing channel after $testType test")
+                        channel.close()
+                    }
                 }
             }
 
@@ -94,7 +101,7 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
             }
         }
 
-        private fun createHttpClient(connectTimeout: Long = 10, readTimeout: Long = 10, writeTimeout: Long = 10): OkHttpClient {
+        private fun createHttpClient(connectTimeout: Long = 30, readTimeout: Long = 30, writeTimeout: Long = 30): OkHttpClient {
             return OkHttpClient.Builder()
                 .connectTimeout(connectTimeout, TimeUnit.SECONDS)
                 .readTimeout(readTimeout, TimeUnit.SECONDS)

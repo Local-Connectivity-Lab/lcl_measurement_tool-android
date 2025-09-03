@@ -256,27 +256,43 @@ class MainActivityViewModel @Inject constructor(
 
     private suspend fun getMLabTestResult() {
         try {
+            Log.d(TAG, "Starting MLab test (DOWNLOAD_AND_UPLOAD)")
             MLabRunner.runTest(NDTTest.TestType.DOWNLOAD_AND_UPLOAD)
                 .onStart {
                     _isMLabTestActive.value = true
+                    Log.d(TAG, "MLab test started")
                 }
                 .onCompletion {
                     if (it != null) {
-                        Log.d(TAG, "Error is ${it.message}")
+                        Log.e(TAG, "Error in MLab test: ${it.message}", it)
                         _isMLabTestActive.value = false
+                    } else {
+                        Log.d(TAG, "MLab test completed normally")
                     }
                 }
                 .collect{
                     when(it.type) {
                         NDTTest.TestType.UPLOAD -> {
-                            _mLabUploadResult.value = when(it.status) {
-                                MLabTestStatus.RUNNING -> { ConnectivityTestResult.Result(it.speed!!, Color.LightGray) }
-
-                                MLabTestStatus.FINISHED -> { ConnectivityTestResult.Result(it.speed!!, Color.Black) }
-                                MLabTestStatus.ERROR -> {
-                                    _isMLabTestActive.value = false
-                                    ConnectivityTestResult.Error(it.errorMsg!!)
+                            if (it.speed != null) {
+                                Log.d(TAG, "Upload speed update: ${it.speed}, status: ${it.status}")
+                                _mLabUploadResult.value = when(it.status) {
+                                    MLabTestStatus.RUNNING -> { 
+                                        ConnectivityTestResult.Result(it.speed, Color.LightGray) 
+                                    }
+                                    MLabTestStatus.FINISHED -> { 
+                                        Log.d(TAG, "Upload test finished with speed: ${it.speed}")
+                                        ConnectivityTestResult.Result(it.speed, Color.Black) 
+                                    }
+                                    MLabTestStatus.ERROR -> {
+                                        Log.e(TAG, "Upload test error: ${it.errorMsg}")
+                                        _isMLabTestActive.value = false
+                                        ConnectivityTestResult.Error(it.errorMsg ?: "Unknown error")
+                                    }
                                 }
+                            } else if (it.status == MLabTestStatus.ERROR) {
+                                Log.e(TAG, "Upload test error with null speed: ${it.errorMsg}")
+                                _mLabUploadResult.value = ConnectivityTestResult.Error(it.errorMsg ?: "Unknown error")
+                                _isMLabTestActive.value = false
                             }
                         }
                         NDTTest.TestType.DOWNLOAD -> {
@@ -287,22 +303,36 @@ class MainActivityViewModel @Inject constructor(
                                 Log.d(TAG, "RTT from Download test: $rttMs ms")
                             }
                             
-                            _mLabDownloadResult.value = when(it.status) {
-                                MLabTestStatus.RUNNING -> { ConnectivityTestResult.Result(it.speed!!, Color.LightGray) }
-
-                                MLabTestStatus.FINISHED -> { ConnectivityTestResult.Result(it.speed!!, Color.Black) }
-
-                                MLabTestStatus.ERROR -> {
-                                    _isMLabTestActive.value = false
-                                    ConnectivityTestResult.Error(it.errorMsg!!)
+                            if (it.speed != null) {
+                                Log.d(TAG, "Download speed update: ${it.speed}, status: ${it.status}")
+                                _mLabDownloadResult.value = when(it.status) {
+                                    MLabTestStatus.RUNNING -> { 
+                                        ConnectivityTestResult.Result(it.speed, Color.LightGray) 
+                                    }
+                                    MLabTestStatus.FINISHED -> { 
+                                        Log.d(TAG, "Download test finished with speed: ${it.speed}")
+                                        ConnectivityTestResult.Result(it.speed, Color.Black) 
+                                    }
+                                    MLabTestStatus.ERROR -> {
+                                        Log.e(TAG, "Download test error: ${it.errorMsg}")
+                                        _isMLabTestActive.value = false
+                                        ConnectivityTestResult.Error(it.errorMsg ?: "Unknown error")
+                                    }
                                 }
+                            } else if (it.status == MLabTestStatus.ERROR) {
+                                Log.e(TAG, "Download test error with null speed: ${it.errorMsg}")
+                                _mLabDownloadResult.value = ConnectivityTestResult.Error(it.errorMsg ?: "Unknown error")
+                                _isMLabTestActive.value = false
                             }
                         }
-                        else -> { }
+                        else -> { 
+                            Log.d(TAG, "Other test type: ${it.type}, status: ${it.status}, speed: ${it.speed}")
+                        }
                     }
                 }
         } catch (e: Exception) {
-            Log.d(TAG, "catch $e")
+            Log.e(TAG, "Exception during MLab test", e)
+            _isMLabTestActive.value = false
         }
     }
 
@@ -416,9 +446,11 @@ class MainActivityViewModel @Inject constructor(
     }
 
     private fun resetMLabTestResult() {
+        Log.d(TAG, "Resetting MLab test results")
         _mlabRttResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
         _mLabUploadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
         _mLabDownloadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
+        _isMLabTestActive.value = false
     }
 }
 
