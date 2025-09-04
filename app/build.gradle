@@ -184,6 +184,7 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15to18:1.70'
     implementation 'org.apache.commons:commons-csv:1.9.0'
     implementation 'io.github.azhon:appupdate:4.3.2'
+    implementation 'androidx.documentfile:documentfile:1.0.1'
 
     // Analytics
     implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"

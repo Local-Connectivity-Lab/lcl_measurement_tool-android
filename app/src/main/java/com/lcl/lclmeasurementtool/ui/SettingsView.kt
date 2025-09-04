@@ -34,13 +34,33 @@ fun SettingsDialog(
     onDismiss: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
-
+    val context = LocalContext.current
     val showData = viewModel.shouldShowData.collectAsStateWithLifecycle()
+    
+    // Export functions that handle the result
+    val exportSignalStrength: () -> Unit = {
+        viewModel.exportSignalStrengthData { uri ->
+            uri?.let {
+                // Optionally show a share intent or handle the URI
+            }
+        }
+    }
+    
+    val exportConnectivity: () -> Unit = {
+        viewModel.exportConnectivityData { uri ->
+            uri?.let {
+                // Optionally show a share intent or handle the URI
+            }
+        }
+    }
+    
     SettingDialog(
         onDismiss = onDismiss,
         toggleShowData = viewModel::toggleShowData,
         logout = viewModel::logout,
-        showData = showData.value
+        showData = showData.value,
+        exportSignalStrength = exportSignalStrength,
+        exportConnectivity = exportConnectivity
     )
 }
 
@@ -49,7 +69,9 @@ fun SettingDialog(
     onDismiss: () -> Unit,
     toggleShowData: (Boolean) -> Unit,
     logout: () -> Unit,
-    showData: Boolean
+    showData: Boolean,
+    exportSignalStrength: () -> Unit = {},
+    exportConnectivity: () -> Unit = {}
 ) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -62,7 +84,13 @@ fun SettingDialog(
         text = {
             Divider()
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                SettingsPanel(onSelectShowData = {toggleShowData(!showData)}, onLogoutClicked = {logout()}, showData = showData)
+                SettingsPanel(
+                    onSelectShowData = {toggleShowData(!showData)}, 
+                    onLogoutClicked = {logout()}, 
+                    showData = showData,
+                    exportSignalStrength = exportSignalStrength,
+                    exportConnectivity = exportConnectivity
+                )
                 Divider(Modifier.padding(top = 8.dp))
                 LinksPanel()
                 VersionInfo()
@@ -85,7 +113,9 @@ fun SettingDialog(
 private fun SettingsPanel(
     onSelectShowData: (Boolean) -> Unit,
     onLogoutClicked: () -> Unit,
-    showData: Boolean
+    showData: Boolean,
+    exportSignalStrength: () -> Unit = {},
+    exportConnectivity: () -> Unit = {}
 ) {
     SettingsDialogSectionTitle(text = "General")
     Column(Modifier.fillMaxWidth(),
@@ -102,8 +132,8 @@ private fun SettingsPanel(
     SettingsDialogSectionTitle(text = "Data Management")
     Column(Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        ClickableRow(text = "Export Signal Strength Data", icon = Icons.Rounded.Download, onClick = {})
-        ClickableRow(text = "Export Speed Test Data", icon = Icons.Rounded.Download, onClick = {})
+        ClickableRow(text = "Export Signal Strength Data", icon = Icons.Rounded.Download, onClick = exportSignalStrength)
+        ClickableRow(text = "Export Speed Test Data", icon = Icons.Rounded.Download, onClick = exportConnectivity)
     }
     SettingsDialogSectionTitle(text = "Help")
     Column(Modifier.fillMaxWidth(),
@@ -207,7 +237,9 @@ private fun PreviewSettingsDialog() {
         onDismiss = {},
         toggleShowData = {},
         logout = {},
-        showData = false
+        showData = false,
+        exportSignalStrength = {},
+        exportConnectivity = {}
     )
 }
 //
