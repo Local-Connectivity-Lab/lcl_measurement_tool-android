@@ -38,22 +38,10 @@ fun SettingsDialog(
     val showData = viewModel.shouldShowData.collectAsStateWithLifecycle()
     
     // Export functions that handle the result
-    val exportSignalStrength: () -> Unit = {
-        viewModel.exportSignalStrengthData { uri ->
-            uri?.let {
-                // Optionally show a share intent or handle the URI
-            }
-        }
-    }
+    val exportSignalStrength = { viewModel.exportSignalStrengthData { _ -> } }
     
-    val exportConnectivity: () -> Unit = {
-        viewModel.exportConnectivityData { uri ->
-            uri?.let {
-                // Optionally show a share intent or handle the URI
-            }
-        }
-    }
-    
+    val exportConnectivity = { viewModel.exportConnectivityData { _ -> } }
+
     SettingDialog(
         onDismiss = onDismiss,
         toggleShowData = viewModel::toggleShowData,
