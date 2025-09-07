@@ -302,15 +302,6 @@ class MainActivityViewModel @Inject constructor(
                                 Log.d(TAG, "RTT from Download test: $rttMs ms")
                             }
                             
-                            // Log additional metrics if available
-                            it.minRttMs?.let { minRttMs ->
-                                Log.d(TAG, "Min RTT from Download test: $minRttMs ms")
-                            }
-                            
-                            it.packetLossPercent?.let { packetLoss ->
-                                Log.d(TAG, "Packet loss from Download test: $packetLoss%")
-                            }
-                            
                             if (it.speed != null) {
                                 Log.d(TAG, "Download speed update: ${it.speed}, status: ${it.status}")
                                 _mLabDownloadResult.value = when(it.status) {

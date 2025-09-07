@@ -7,9 +7,7 @@ data class MLabResult(
     val type: NDTTest.TestType,
     val errorMsg: String?,
     val status: MLabTestStatus,
-    val rttMs: Double? = null,
-    val minRttMs: Double? = null,
-    val packetLossPercent: Double? = null
+    val rttMs: Double? = null
 )
 
 enum class MLabTestStatus {
