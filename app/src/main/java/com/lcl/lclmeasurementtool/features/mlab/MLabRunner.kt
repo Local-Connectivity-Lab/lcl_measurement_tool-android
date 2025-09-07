@@ -49,24 +49,42 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
                 override fun onDownloadProgress(clientResponse: ClientResponse) {
                     val speed = DataConverter.convertToMbps(clientResponse)
                     Log.d(TAG, "client download is $speed")
-                    channel.trySend(MLabResult(speed, TestType.DOWNLOAD, null, MLabTestStatus.RUNNING))
+                    channel.trySend(MLabResult(speed, TestType.DOWNLOAD, null, MLabTestStatus.RUNNING, null, null, null))
                 }
 
                 override fun onUploadProgress(clientResponse: ClientResponse) {
                     val speed = DataConverter.convertToMbps(clientResponse)
                     if (speed != null && speed != "0.0") {
-                        channel.trySend(MLabResult(speed, TestType.UPLOAD, null, MLabTestStatus.RUNNING))
+                        channel.trySend(MLabResult(speed, TestType.UPLOAD, null, MLabTestStatus.RUNNING, null, null, null))
                     }
                 }
 
                 override fun onMeasurementDownloadProgress(measurement: Measurement) {
                     Log.d(TAG, "on measurement download")
-                    channel.trySend(MLabResult(null, TestType.DOWNLOAD, null, MLabTestStatus.RUNNING, measurement.tcpInfo))
+                    val tcpInfo = measurement.tcpInfo
+                    val rttMs = tcpInfo?.rtt?.toDouble()?.div(1000.0) // Convert microseconds to milliseconds
+                    val minRttMs = tcpInfo?.minRtt?.toDouble()?.div(1000.0) // Convert microseconds to milliseconds
+                    
+                    // Calculate packet loss percentage if possible
+                    val packetLossPercent = if (tcpInfo?.segsOut != null && tcpInfo.totalRetrans != null && tcpInfo.segsOut > 0) {
+                        (tcpInfo.totalRetrans.toDouble() / tcpInfo.segsOut.toDouble()) * 100.0
+                    } else null
+                    
+                    channel.trySend(MLabResult(null, TestType.DOWNLOAD, null, MLabTestStatus.RUNNING, rttMs, minRttMs, packetLossPercent))
                 }
 
                 override fun onMeasurementUploadProgress(measurement: Measurement) {
                     Log.d(TAG, "on measurement upload")
-                    channel.trySend(MLabResult(null, TestType.UPLOAD, null, MLabTestStatus.RUNNING, measurement.tcpInfo))
+                    val tcpInfo = measurement.tcpInfo
+                    val rttMs = tcpInfo?.rtt?.toDouble()?.div(1000.0) // Convert microseconds to milliseconds
+                    val minRttMs = tcpInfo?.minRtt?.toDouble()?.div(1000.0) // Convert microseconds to milliseconds
+                    
+                    // Calculate packet loss percentage if possible
+                    val packetLossPercent = if (tcpInfo?.segsOut != null && tcpInfo.totalRetrans != null && tcpInfo.segsOut > 0) {
+                        (tcpInfo.totalRetrans.toDouble() / tcpInfo.segsOut.toDouble()) * 100.0
+                    } else null
+                    
+                    channel.trySend(MLabResult(null, TestType.UPLOAD, null, MLabTestStatus.RUNNING, rttMs, minRttMs, packetLossPercent))
                 }
 
                 override fun onFinish(
@@ -77,10 +95,10 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
                     if (clientResponse != null) {
                         val speed = DataConverter.convertToMbps(clientResponse)
                         Log.d(TAG, "client finish test $testType with speed $speed")
-                        channel.trySend(MLabResult(speed, testType, null, MLabTestStatus.FINISHED))
+                        channel.trySend(MLabResult(speed, testType, null, MLabTestStatus.FINISHED, null, null, null))
                     } else {
                         Log.e(TAG, "Error during $testType test: ${error?.message}")
-                        channel.trySend(MLabResult(null, testType, error?.message, MLabTestStatus.ERROR))
+                        channel.trySend(MLabResult(null, testType, error?.message, MLabTestStatus.ERROR, null, null, null))
                     }
 
                     // Only close the channel after both download and upload tests are complete

@@ -296,11 +296,19 @@ class MainActivityViewModel @Inject constructor(
                             }
                         }
                         NDTTest.TestType.DOWNLOAD -> {
-                            // Extract RTT from TCPInfo if available during download test
-                            it.tcpInfo?.rtt?.let { rtt ->
-                                val rttMs = rtt.toDouble() / 1000.0 // microseconds → milliseconds
+                            // Use RTT directly from MLabResult if available
+                            it.rttMs?.let { rttMs ->
                                 _mlabRttResult.value = ConnectivityTestResult.Result(rttMs.toString(), Color.Black)
                                 Log.d(TAG, "RTT from Download test: $rttMs ms")
+                            }
+                            
+                            // Log additional metrics if available
+                            it.minRttMs?.let { minRttMs ->
+                                Log.d(TAG, "Min RTT from Download test: $minRttMs ms")
+                            }
+                            
+                            it.packetLossPercent?.let { packetLoss ->
+                                Log.d(TAG, "Packet loss from Download test: $packetLoss%")
                             }
                             
                             if (it.speed != null) {
