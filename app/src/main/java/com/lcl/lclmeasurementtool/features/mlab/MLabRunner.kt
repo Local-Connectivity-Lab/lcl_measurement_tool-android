@@ -66,8 +66,12 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
                     val minRttMs = tcpInfo?.minRtt?.toDouble()?.div(1000.0) // Convert microseconds to milliseconds
                     
                     // Calculate packet loss percentage if possible
-                    val packetLossPercent = if (tcpInfo?.segsOut != null && tcpInfo.totalRetrans != null && tcpInfo.segsOut > 0) {
-                        (tcpInfo.totalRetrans.toDouble() / tcpInfo.segsOut.toDouble()) * 100.0
+                    val packetLossPercent = if (tcpInfo != null) {
+                        val segsOut = tcpInfo.segsOut
+                        val totalRetrans = tcpInfo.totalRetrans
+                        if (segsOut != null && totalRetrans != null && segsOut > 0) {
+                            (totalRetrans.toDouble() / segsOut.toDouble()) * 100.0
+                        } else null
                     } else null
                     
                     channel.trySend(MLabResult(null, TestType.DOWNLOAD, null, MLabTestStatus.RUNNING, rttMs, minRttMs, packetLossPercent))
@@ -80,8 +84,12 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
                     val minRttMs = tcpInfo?.minRtt?.toDouble()?.div(1000.0) // Convert microseconds to milliseconds
                     
                     // Calculate packet loss percentage if possible
-                    val packetLossPercent = if (tcpInfo?.segsOut != null && tcpInfo.totalRetrans != null && tcpInfo.segsOut > 0) {
-                        (tcpInfo.totalRetrans.toDouble() / tcpInfo.segsOut.toDouble()) * 100.0
+                    val packetLossPercent = if (tcpInfo != null) {
+                        val segsOut = tcpInfo.segsOut
+                        val totalRetrans = tcpInfo.totalRetrans
+                        if (segsOut != null && totalRetrans != null && segsOut > 0) {
+                            (totalRetrans.toDouble() / segsOut.toDouble()) * 100.0
+                        } else null
                     } else null
                     
                     channel.trySend(MLabResult(null, TestType.UPLOAD, null, MLabTestStatus.RUNNING, rttMs, minRttMs, packetLossPercent))
