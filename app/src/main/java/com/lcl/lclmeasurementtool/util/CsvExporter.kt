@@ -97,19 +97,13 @@ object CsvExporter {
                 put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                 put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "text/csv")
                 
-                // For API 29+, use the Downloads collection
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Download")
-                    put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
-                }
+                // Using Downloads collection (available since our min SDK is 33)
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Download")
+                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
             }
             
-            // Choose the right content URI based on Android version
-            val contentUri = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
-            } else {
-                android.provider.MediaStore.Files.getContentUri("external")
-            }
+            // Use Downloads collection content URI (available since our min SDK is 33)
+            val contentUri = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
             
             val uri = context.contentResolver.insert(contentUri, contentValues)
             
@@ -119,12 +113,10 @@ object CsvExporter {
                     outputStream.flush()
                 }
                 
-                // For API 29+, update IS_PENDING to 0
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    contentValues.clear()
-                    contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
-                    context.contentResolver.update(uri, contentValues, null, null)
-                }
+                // Update IS_PENDING to 0 after writing is complete
+                contentValues.clear()
+                contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
+                context.contentResolver.update(uri, contentValues, null, null)
             }
             
             uri
