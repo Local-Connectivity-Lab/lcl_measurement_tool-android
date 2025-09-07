@@ -2,6 +2,7 @@ package com.lcl.lclmeasurementtool.util
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
@@ -121,7 +122,7 @@ object CsvExporter {
             
             uri
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("CsvExporter", "Error saving file with MediaStore approach: ${e.message}", e)
             
             // Use a simpler fallback method if the MediaStore approach fails
             try {
@@ -138,7 +139,7 @@ object CsvExporter {
                     file
                 )
             } catch (e2: Exception) {
-                e2.printStackTrace()
+                Log.e("CsvExporter", "Error saving file with fallback method: ${e2.message}", e2)
                 null
             }
         }
