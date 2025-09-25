@@ -1,9 +1,10 @@
 package com.lcl.lclmeasurementtool
-
+import android.app.Application
 import android.os.Build
 import android.telephony.CellSignalStrength
 import android.util.Log
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
@@ -39,13 +40,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
+    application: Application,
     private val userDataRepository: UserDataRepository,
     private val networkApi: NetworkApiRepository,
     private val locationService: LocationService,
     private val signalStrengthMonitor: SignalStrengthMonitor,
     private val connectivityRepository: ConnectivityRepository,
     private val signalStrengthRepository: SignalStrengthRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     companion object {
         const val TAG = "MainActivityViewModel"
