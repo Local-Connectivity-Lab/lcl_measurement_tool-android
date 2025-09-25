@@ -42,18 +42,36 @@ class UploadWorker @AssistedInject constructor(
                         b
                     }
                 ).all { it }
+
                 if (syncSuccessfully) {
                     Log.d(TAG, "upload successfully")
-                    return@withContext Result.success()
+                    Result.success()
                 } else {
-                    Log.d(TAG, "upload failed. some sync work failed")
-                    return@withContext Result.failure()
+                    handleRetryOrFallback("upload failed. some sync work failed")
                 }
             } catch (e: Exception) {
-                Log.d(TAG, "upload failed. exception is $e")
-                Result.failure()
+                handleRetryOrFallback("upload failed. exception is $e")
             }
         }
+    private fun handleRetryOrFallback(message: String): Result {
+        Log.d(TAG, message)
+
+        return if (runAttemptCount < 3) {
+            Log.d(TAG, "Retry attempt $runAttemptCount with exponential backoff")
+            Result.retry()
+        } else {
+            Log.d(TAG, "Max retries reached, scheduling periodic work")
+
+            val periodicWork = periodicSyncWork()
+            WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+                "UploadWorkerPeriodic",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                periodicWork
+            )
+
+            Result.failure()
+        }
+    }
 
     companion object {
         fun periodicSyncWork() =
@@ -64,7 +82,15 @@ class UploadWorker @AssistedInject constructor(
             .setInputData(UploadWorker::class.delegatedData())
             .build()
 
+        fun oneTimeSyncWork() =
+            OneTimeWorkRequestBuilder<DelegatingWorker>()
+                .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(10))
+                .setInputData(UploadWorker::class.delegatedData())
+                .build()
+
         const val TAG = "UploadWorker"
     }
+    
 
 }
