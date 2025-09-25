@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.google.protobuf.ByteString
 import com.lcl.lclmeasurementtool.features.mlab.MLabRunner
 import com.lcl.lclmeasurementtool.features.mlab.MLabTestStatus
@@ -28,6 +29,8 @@ import kotlinx.serialization.json.Json
 import net.measurementlab.ndt7.android.NDTTest
 import okhttp3.ResponseBody
 import retrofit2.HttpException
+import retrofit2.Response
+import com.lcl.lclmeasurementtool.sync.UploadWorker
 import java.io.ByteArrayOutputStream
 import java.security.SecureRandom
 import java.security.interfaces.ECPrivateKey
@@ -431,16 +434,25 @@ class MainActivityViewModel @Inject constructor(
             return
 
         } catch (e: HttpException) {
-            // TODO: retry
+            // Use WorkManager to retry uploads
             if (e.code() in 400..499) {
-                Log.d(TAG, "client error")
+                Log.e(TAG, "UPLOAD DEBUG: Client error ${e.code()}, enqueueing retry mechanism")
+                WorkManager.getInstance(getApplication()).enqueue(
+                    UploadWorker.oneTimeSyncWork()
+                )
             }
 
             if (e.code() in 500..599) {
-                Log.d(TAG, "server error")
+                Log.e(TAG, "UPLOAD DEBUG: Server error ${e.code()}, enqueueing retry mechanism")
+                WorkManager.getInstance(getApplication()).enqueue(
+                    UploadWorker.oneTimeSyncWork()
+                )
             }
         } catch (e: Exception) {
-            Log.d(TAG, "unknown exception occurred when uploading data. $e")
+            Log.e(TAG, "UPLOAD DEBUG: Exception during upload: ${e.message}, enqueueing retry mechanism")
+            WorkManager.getInstance(getApplication()).enqueue(
+                UploadWorker.oneTimeSyncWork()
+            )
         }
     }
 
