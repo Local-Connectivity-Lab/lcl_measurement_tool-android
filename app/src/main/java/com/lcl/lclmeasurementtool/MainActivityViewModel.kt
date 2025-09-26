@@ -407,10 +407,10 @@ class MainActivityViewModel @Inject constructor(
     }
 
     private suspend fun report(reportModel: BaseMeasureDataModel, userData: UserData) {
-        if (BuildConfig.FLAVOR != "full") {
-            Log.d(TAG, "Only with ProductFlavor *full* will the data be reported to the remote server")
-            return
-        }
+//        if (BuildConfig.FLAVOR != "full") {
+//            Log.d(TAG, "Only with ProductFlavor *full* will the data be reported to the remote server")
+//            return
+//        }
 
         try {
             val reportString = prepareReportData(reportModel, userData)

@@ -29,29 +29,40 @@ class UploadWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result =
         withContext(ioDispatcher) {
-            try {
-                val syncSuccessfully = awaitAll(
-                    async {
-                        val b = signalStrengthRepository.sync()
-                        Log.d(TAG, "signal strength repository finish sync")
-                        b
-                    },
-                    async {
-                        val b = connectivityRepository.sync()
-                        Log.d(TAG, "connectivity repository finish sync")
-                        b
+            if (runAttemptCount < 5) {
+                try {
+                    val syncSuccessfully = awaitAll(
+                        async {
+                            val b = signalStrengthRepository.sync()
+                            Log.d(TAG, "signal strength repository finish sync")
+                            b
+                        },
+                        async {
+                            val b = connectivityRepository.sync()
+                            Log.d(TAG, "connectivity repository finish sync")
+                            b
+                        }
+                    ).all { it }
+                    if (syncSuccessfully) {
+                        Log.d(TAG, "upload successfully")
+                        return@withContext Result.success()
+                    } else {
+                        Log.d(TAG, "upload failed. some sync work failed")
+                        return@withContext Result.failure()
                     }
-                ).all { it }
-                if (syncSuccessfully) {
-                    Log.d(TAG, "upload successfully")
-                    return@withContext Result.success()
-                } else {
-                    Log.d(TAG, "upload failed. some sync work failed")
+                } catch (e: java.io.IOException) {
+                    Log.d(TAG, "upload failed with $e, will retry")
+                    return@withContext Result.retry()
+                } catch (e: retrofit2.HttpException) {
+                    Log.d(TAG, "upload failed with $e, will retry")
+                    return@withContext Result.retry()
+                } catch (e: Exception) {
+                    Log.d(TAG, "upload failed with unexpected $e")
                     return@withContext Result.failure()
                 }
-            } catch (e: Exception) {
-                Log.d(TAG, "upload failed. exception is $e")
-                Result.failure()
+            } else {
+                Log.d(TAG, "Maximum retry attempts (5) reached. Giving up :(")
+                return@withContext Result.failure()
             }
         }
 
