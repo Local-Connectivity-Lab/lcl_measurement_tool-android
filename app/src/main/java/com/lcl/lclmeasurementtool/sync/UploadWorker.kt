@@ -29,47 +29,42 @@ class UploadWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result =
         withContext(ioDispatcher) {
-            try {
-                val syncSuccessfully = awaitAll(
-                    async {
-                        val b = signalStrengthRepository.sync()
-                        Log.d(TAG, "signal strength repository finish sync")
-                        b
-                    },
-                    async {
-                        val b = connectivityRepository.sync()
-                        Log.d(TAG, "connectivity repository finish sync")
-                        b
+            if (runAttemptCount < 5) {
+                try {
+                    val syncSuccessfully = awaitAll(
+                        async {
+                            val b = signalStrengthRepository.sync()
+                            Log.d(TAG, "signal strength repository finish sync")
+                            b
+                        },
+                        async {
+                            val b = connectivityRepository.sync()
+                            Log.d(TAG, "connectivity repository finish sync")
+                            b
+                        }
+                    ).all { it }
+                    if (syncSuccessfully) {
+                        Log.d(TAG, "upload successfully")
+                        return@withContext Result.success()
+                    } else {
+                        Log.d(TAG, "upload failed. some sync work failed")
+                        return@withContext Result.failure()
                     }
-                ).all { it }
-
-                if (syncSuccessfully) {
-                    Log.d(TAG, "upload successfully")
-                    Result.success()
-                } else {
-                    handleRetryOrFallback("upload failed. some sync work failed")
+                } catch (e: java.io.IOException) {
+                    Log.d(TAG, "upload failed with $e, will retry")
+                    return@withContext Result.retry()
+                } catch (e: retrofit2.HttpException) {
+                    Log.d(TAG, "upload failed with $e, will retry")
+                    return@withContext Result.retry()
+                } catch (e: Exception) {
+                    Log.d(TAG, "upload failed with unexpected $e")
+                    return@withContext Result.failure()
                 }
-            } catch (e: Exception) {
-                handleRetryOrFallback("upload failed. exception is $e")
+            } else {
+                Log.d(TAG, "Maximum retry attempts (5) reached. Giving up :(")
+                return@withContext Result.failure()
             }
         }
-    private fun handleRetryOrFallback(message: String): Result {
-        Log.d(TAG, message)
-
-        return if (runAttemptCount < 3) {
-            Log.d(TAG, "Retry attempt $runAttemptCount")
-            Result.retry()
-        } else {
-            Log.d(TAG, "Max retries reached, scheduling periodic work")
-            val periodicWork = periodicSyncWork()
-            WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-                "UploadWorkerPeriodic",
-                ExistingPeriodicWorkPolicy.UPDATE,
-                periodicWork
-            )
-            Result.failure()
-        }
-    }
 
     companion object {
         fun periodicSyncWork() =
