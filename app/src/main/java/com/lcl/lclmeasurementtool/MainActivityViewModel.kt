@@ -436,25 +436,16 @@ class MainActivityViewModel @Inject constructor(
             return
 
         } catch (e: HttpException) {
-            // Use WorkManager to retry uploads
+            // TODO: retry
             if (e.code() in 400..499) {
-                Log.e(TAG, "UPLOAD DEBUG: Client error ${e.code()}, enqueueing retry mechanism")
-                WorkManager.getInstance(getApplication()).enqueue(
-                    UploadWorker.oneTimeSyncWork()
-                )
+                Log.d(TAG, "client error")
             }
 
             if (e.code() in 500..599) {
-                Log.e(TAG, "UPLOAD DEBUG: Server error ${e.code()}, enqueueing retry mechanism")
-                WorkManager.getInstance(getApplication()).enqueue(
-                    UploadWorker.oneTimeSyncWork()
-                )
+                Log.d(TAG, "server error")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "UPLOAD DEBUG: Exception during upload: ${e.message}, enqueueing retry mechanism")
-            WorkManager.getInstance(getApplication()).enqueue(
-                UploadWorker.oneTimeSyncWork()
-            )
+            Log.d(TAG, "unknown exception occurred when uploading data. $e")
         }
     }
 
