@@ -29,6 +29,12 @@ class UploadWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result =
         withContext(ioDispatcher) {
+            // Force error for testing retry mechanism
+            if (FORCE_ERROR_FOR_TESTING && runAttemptCount < 3) {
+                Log.d(TAG, "Forcing error for testing (attempt $runAttemptCount)")
+                throw java.io.IOException("Forced error for testing retry mechanism")
+            }
+            
             if (runAttemptCount < 5) {
                 try {
                     val syncSuccessfully = awaitAll(
@@ -56,6 +62,15 @@ class UploadWorker @AssistedInject constructor(
                 } catch (e: retrofit2.HttpException) {
                     Log.d(TAG, "upload failed with $e, will retry")
                     return@withContext Result.retry()
+                } catch (e: java.security.spec.InvalidKeySpecException) {
+                    Log.e(TAG, "upload failed with InvalidKeySpecException: $e - likely due to missing or invalid keys. User may need to re-authenticate.")
+                    return@withContext Result.failure()
+                } catch (e: java.security.InvalidKeyException) {
+                    Log.e(TAG, "upload failed with InvalidKeyException: $e - likely due to corrupted keys. User may need to re-authenticate.")
+                    return@withContext Result.failure()
+                } catch (e: IllegalStateException) {
+                    Log.e(TAG, "upload failed with IllegalStateException: $e - authentication or key validation failed.")
+                    return@withContext Result.failure()
                 } catch (e: Exception) {
                     Log.d(TAG, "upload failed with unexpected $e")
                     return@withContext Result.failure()
@@ -67,6 +82,8 @@ class UploadWorker @AssistedInject constructor(
         }
 
     companion object {
+        private const val FORCE_ERROR_FOR_TESTING = false // Set to false after testing
+        
         fun periodicSyncWork() =
             PeriodicWorkRequestBuilder<DelegatingWorker>(4, TimeUnit.HOURS)
             .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
