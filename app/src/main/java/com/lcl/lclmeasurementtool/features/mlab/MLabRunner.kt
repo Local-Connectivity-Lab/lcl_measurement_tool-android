@@ -59,7 +59,7 @@ class MLabRunner(httpClient: OkHttpClient, private val callback: MLabCallback): 
                     val speed = DataConverter.convertToMbps(clientResponse)
                     val speedValue = speed?.toFloatOrNull() ?: 0f
                     Log.d(TAG, "client upload is $speed")
-                    if (speedValue > 0.1f) {
+                    if (speedValue > 0f) {
                         channel.trySend(MLabResult(speed, TestType.UPLOAD, null, MLabTestStatus.RUNNING, null))
                     }
                 }

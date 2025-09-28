@@ -29,12 +29,6 @@ class UploadWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result =
         withContext(ioDispatcher) {
-            // Force error for testing retry mechanism
-            if (FORCE_ERROR_FOR_TESTING && runAttemptCount < 3) {
-                Log.d(TAG, "Forcing error for testing (attempt $runAttemptCount)")
-                throw java.io.IOException("Forced error for testing retry mechanism")
-            }
-            
             if (runAttemptCount < 5) {
                 try {
                     val syncSuccessfully = awaitAll(
@@ -82,7 +76,6 @@ class UploadWorker @AssistedInject constructor(
         }
 
     companion object {
-        private const val FORCE_ERROR_FOR_TESTING = false // Set to false after testing
         
         fun periodicSyncWork() =
             PeriodicWorkRequestBuilder<DelegatingWorker>(4, TimeUnit.HOURS)

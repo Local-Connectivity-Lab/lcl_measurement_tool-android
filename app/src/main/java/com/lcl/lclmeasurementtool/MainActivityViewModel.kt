@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
+import androidx.work.ExistingWorkPolicy
 import com.google.protobuf.ByteString
 import com.lcl.lclmeasurementtool.features.mlab.MLabRunner
 import com.lcl.lclmeasurementtool.features.mlab.MLabTestStatus
@@ -412,13 +413,18 @@ class MainActivityViewModel @Inject constructor(
     }
 
     private suspend fun report(reportModel: BaseMeasureDataModel, userData: UserData) {
-//        if (BuildConfig.FLAVOR != "full") {
-//            Log.d(TAG, "Only with ProductFlavor *full* will the data be reported to the remote server")
-//            return
-//        }
+        if (BuildConfig.FLAVOR != "full") {
+            Log.d(TAG, "Only with ProductFlavor *full* will the data be reported to the remote server")
+            return
+        }
 
         try {
-            val reportString = prepareReportData(reportModel, userData)
+            val reportString = if (userData.skT.isEmpty || userData.hPKR.isEmpty) {
+                Log.d(TAG, "Using no-auth reporting due to missing cryptographic keys (demo mode or incomplete authentication)")
+                prepareReportDataNoAuth(reportModel)
+            } else {
+                prepareReportData(reportModel, userData)
+            }
             val response: ResponseBody = if (reportModel is SignalStrengthReportModel) {
                 networkApi.uploadSignalStrength(reportString)
             } else {
@@ -436,15 +442,33 @@ class MainActivityViewModel @Inject constructor(
             return
 
         } catch (e: HttpException) {
-            // TODO: retry
+            // Use WorkManager to retry uploads with unique work to prevent duplicates
             if (e.code() in 400..499) {
+                Log.e(TAG, "UPLOAD DEBUG: Client error ${e.code()}, enqueueing retry mechanism")
+                WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+                    "upload_retry_work",
+                    ExistingWorkPolicy.KEEP, // Don't enqueue if already exists
+                    UploadWorker.oneTimeSyncWork()
+                )
                 Log.d(TAG, "client error")
             }
 
             if (e.code() in 500..599) {
+                Log.e(TAG, "UPLOAD DEBUG: Server error ${e.code()}, enqueueing retry mechanism")
+                WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+                    "upload_retry_work",
+                    ExistingWorkPolicy.KEEP, // Don't enqueue if already exists
+                    UploadWorker.oneTimeSyncWork()
+                )
                 Log.d(TAG, "server error")
             }
         } catch (e: Exception) {
+            Log.e(TAG, "UPLOAD DEBUG: Exception during upload: ${e.message}, enqueueing retry mechanism")
+            WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+                "upload_retry_work",
+                ExistingWorkPolicy.KEEP, // Don't enqueue if already exists
+                UploadWorker.oneTimeSyncWork()
+            )
             Log.d(TAG, "unknown exception occurred when uploading data. $e")
         }
     }

@@ -36,7 +36,6 @@ class SettingsViewModel @Inject constructor(
             initialValue = false
         )
 
-    // Holds the URI of the exported file after a successful export
     private var _exportedFileUri: Uri? = null
     val exportedFileUri get() = _exportedFileUri
 
@@ -53,70 +52,53 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
-     * Export signal strength data to a CSV file
+     * Unified export function for signal strength or connectivity data
      */
-    fun exportSignalStrengthData(onComplete: (Uri?) -> Unit) {
+    fun exportData(type: ExportType, onComplete: (Uri?) -> Unit) {
         viewModelScope.launch {
             try {
-                val signalData = signalStrengthRepository.getAll().first()
-                if (signalData.isEmpty()) {
-                    showToast("No signal strength data to export")
-                    onComplete(null)
-                    return@launch
+                val uri: Uri?
+                when (type) {
+                    ExportType.SIGNAL -> {
+                        val signalData = signalStrengthRepository.getAll().first()
+                        if (signalData.isEmpty()) {
+                            showToast("No signal strength data to export")
+                            onComplete(null)
+                            return@launch
+                        }
+                        uri = CsvExporter.exportSignalStrengthToCsv(getApplication(), signalData)
+                        if (uri != null) {
+                            showToast("Signal strength data exported successfully")
+                            shareFile(uri, "Signal Strength Data", "text/csv")
+                        } else {
+                            showToast("Failed to export signal strength data")
+                        }
+                    }
+                    ExportType.CONNECTIVITY -> {
+                        val connectivityData = connectivityRepository.getAll().first()
+                        if (connectivityData.isEmpty()) {
+                            showToast("No connectivity data to export")
+                            onComplete(null)
+                            return@launch
+                        }
+                        uri = CsvExporter.exportConnectivityToCsv(getApplication(), connectivityData)
+                        if (uri != null) {
+                            showToast("Connectivity data exported successfully")
+                            shareFile(uri, "Speed Test Data", "text/csv")
+                        } else {
+                            showToast("Failed to export connectivity data")
+                        }
+                    }
                 }
-
-                val uri = CsvExporter.exportSignalStrengthToCsv(getApplication(), signalData)
                 _exportedFileUri = uri
-                
-                if (uri != null) {
-                    showToast("Signal strength data exported successfully")
-                    shareFile(uri, "Signal Strength Data", "text/csv")
-                } else {
-                    showToast("Failed to export signal strength data")
-                }
-                
                 onComplete(uri)
             } catch (e: Exception) {
-                showToast("Error exporting signal strength data: ${e.message}")
+                showToast("Error exporting data: ${e.message}")
                 onComplete(null)
             }
         }
     }
 
-    /**
-     * Export connectivity data to a CSV file
-     */
-    fun exportConnectivityData(onComplete: (Uri?) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val connectivityData = connectivityRepository.getAll().first()
-                if (connectivityData.isEmpty()) {
-                    showToast("No connectivity data to export")
-                    onComplete(null)
-                    return@launch
-                }
-                
-                val uri = CsvExporter.exportConnectivityToCsv(getApplication(), connectivityData)
-                _exportedFileUri = uri
-                
-                if (uri != null) {
-                    showToast("Connectivity data exported successfully")
-                    shareFile(uri, "Speed Test Data", "text/csv")
-                } else {
-                    showToast("Failed to export connectivity data")
-                }
-                
-                onComplete(uri)
-            } catch (e: Exception) {
-                showToast("Error exporting connectivity data: ${e.message}")
-                onComplete(null)
-            }
-        }
-    }
-    
-    /**
-     * Share a file using Android's share functionality
-     */
     private fun shareFile(uri: Uri, subject: String, mimeType: String) {
         val context = getApplication<Application>()
         val shareIntent = Intent().apply {
@@ -127,7 +109,7 @@ class SettingsViewModel @Inject constructor(
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        
+
         val chooserIntent = Intent.createChooser(shareIntent, "Share $subject")
         chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(chooserIntent)
@@ -136,4 +118,9 @@ class SettingsViewModel @Inject constructor(
     private fun showToast(message: String) {
         Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show()
     }
+}
+
+enum class ExportType {
+    SIGNAL,
+    CONNECTIVITY
 }

@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lcl.lclmeasurementtool.BuildConfig
 import com.lcl.lclmeasurementtool.R
+import com.lcl.lclmeasurementtool.model.viewmodels.ExportType
 import com.lcl.lclmeasurementtool.model.viewmodels.SettingsViewModel
 
 @Composable
@@ -38,9 +39,9 @@ fun SettingsDialog(
     val showData = viewModel.shouldShowData.collectAsStateWithLifecycle()
     
     // Export functions that handle the result
-    val exportSignalStrength = { viewModel.exportSignalStrengthData { _ -> } }
+    val exportSignalStrength = { viewModel.exportData(ExportType.SIGNAL) { _ -> } }
     
-    val exportConnectivity = { viewModel.exportConnectivityData { _ -> } }
+    val exportConnectivity = { viewModel.exportData(ExportType.CONNECTIVITY) { _ -> } }
 
     SettingDialog(
         onDismiss = onDismiss,
