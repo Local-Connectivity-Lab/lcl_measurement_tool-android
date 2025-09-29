@@ -31,7 +31,8 @@ class ConnectivityRepository @Inject constructor(
             .flowOn(Dispatchers.IO)
             .combine(userDataRepository.userData) { connectivity, preference ->
                 Log.d(TAG, "upload worker will upload $connectivity")
-                val reportString = if (BuildConfig.FLAVOR != "full") {
+                val reportString = if (preference.skT.isEmpty || preference.hPKR.isEmpty) {
+                    Log.d(TAG, "Using no-auth reporting due to missing cryptographic keys (demo mode or incomplete authentication)")
                     prepareReportDataNoAuth(connectivity)
                 } else {
                     prepareReportData(connectivity, preference)

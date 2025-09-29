@@ -6,6 +6,7 @@ import com.lcl.lclmeasurementtool.model.datamodel.UserData
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+@Throws(IllegalStateException::class)
 fun prepareReportData(measureDataModel: BaseMeasureDataModel, userData: UserData): String {
     // Validate that required keys are present
     if (userData.skT.isEmpty || userData.hPKR.isEmpty) {

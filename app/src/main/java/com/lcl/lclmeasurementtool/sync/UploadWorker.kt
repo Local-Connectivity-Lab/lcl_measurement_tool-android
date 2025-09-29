@@ -1,7 +1,11 @@
 package com.lcl.lclmeasurementtool.sync
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.lcl.lclmeasurementtool.datastore.Dispatcher
@@ -25,7 +29,7 @@ class UploadWorker @AssistedInject constructor(
     private val signalStrengthRepository: SignalStrengthRepository,
     private val connectivityRepository: ConnectivityRepository,
     @Dispatcher(LCLDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
-): CoroutineWorker(context, workerParameters), Synchronizer {
+) : CoroutineWorker(context, workerParameters), Synchronizer {
 
     override suspend fun doWork(): Result =
         withContext(ioDispatcher) {
@@ -57,13 +61,15 @@ class UploadWorker @AssistedInject constructor(
                     Log.d(TAG, "upload failed with $e, will retry")
                     return@withContext Result.retry()
                 } catch (e: java.security.spec.InvalidKeySpecException) {
-                    Log.e(TAG, "upload failed with InvalidKeySpecException: $e - likely due to missing or invalid keys. User may need to re-authenticate.")
+                    Log.e(TAG, "InvalidKeySpecException: $e")
+                    showInvalidKeyNotification("Upload failed: invalid keys. Please re-authenticate.")
                     return@withContext Result.failure()
                 } catch (e: java.security.InvalidKeyException) {
-                    Log.e(TAG, "upload failed with InvalidKeyException: $e - likely due to corrupted keys. User may need to re-authenticate.")
+                    Log.e(TAG, "InvalidKeyException: $e")
+                    showInvalidKeyNotification("Upload failed: corrupted keys. Please re-authenticate.")
                     return@withContext Result.failure()
                 } catch (e: IllegalStateException) {
-                    Log.e(TAG, "upload failed with IllegalStateException: $e - authentication or key validation failed.")
+                    Log.e(TAG, "IllegalStateException: $e")
                     return@withContext Result.failure()
                 } catch (e: Exception) {
                     Log.d(TAG, "upload failed with unexpected $e")
@@ -75,25 +81,47 @@ class UploadWorker @AssistedInject constructor(
             }
         }
 
+    private fun showInvalidKeyNotification(message: String) {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val channelId = "upload_errors"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Upload Errors",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.stat_notify_error)
+            .setContentTitle("Upload Failed")
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true) // disappears when user swipes it away
+            .build()
+
+        notificationManager.notify(1001, notification)
+    }
+
     companion object {
-        
         fun periodicSyncWork() =
             PeriodicWorkRequestBuilder<DelegatingWorker>(4, TimeUnit.HOURS)
-            .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-            .setInitialDelay(5, TimeUnit.MINUTES)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(10))
-            .setInputData(UploadWorker::class.delegatedData())
-            .build()
+                .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+                .setInitialDelay(5, TimeUnit.MINUTES)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(10))
+                .setInputData(UploadWorker::class.delegatedData())
+                .build()
 
         fun oneTimeSyncWork() =
             OneTimeWorkRequestBuilder<DelegatingWorker>()
-            .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(5))
-            .setInputData(UploadWorker::class.delegatedData())
-            .build()
+                .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(5))
+                .setInputData(UploadWorker::class.delegatedData())
+                .build()
 
         const val TAG = "UploadWorker"
     }
-    
-
 }
