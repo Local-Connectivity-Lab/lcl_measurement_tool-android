@@ -62,11 +62,9 @@ class UploadWorker @AssistedInject constructor(
                     return@withContext Result.retry()
                 } catch (e: java.security.spec.InvalidKeySpecException) {
                     Log.e(TAG, "InvalidKeySpecException: $e")
-                    showInvalidKeyNotification("Upload failed: invalid keys. Please re-authenticate.")
                     return@withContext Result.failure()
                 } catch (e: java.security.InvalidKeyException) {
                     Log.e(TAG, "InvalidKeyException: $e")
-                    showInvalidKeyNotification("Upload failed: corrupted keys. Please re-authenticate.")
                     return@withContext Result.failure()
                 } catch (e: IllegalStateException) {
                     Log.e(TAG, "IllegalStateException: $e")
@@ -80,31 +78,6 @@ class UploadWorker @AssistedInject constructor(
                 return@withContext Result.failure()
             }
         }
-
-    private fun showInvalidKeyNotification(message: String) {
-        val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        val channelId = "upload_errors"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Upload Errors",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentTitle("Upload Failed")
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true) // disappears when user swipes it away
-            .build()
-
-        notificationManager.notify(1001, notification)
-    }
 
     companion object {
         fun periodicSyncWork() =
