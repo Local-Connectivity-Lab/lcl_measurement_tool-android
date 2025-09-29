@@ -24,3 +24,8 @@ fun prepareReportData(measureDataModel: BaseMeasureDataModel, userData: UserData
     val report = MeasurementReportModel(Hex.encodeHexString(sig_m), Hex.encodeHexString(userData.hPKR.toByteArray()), Hex.encodeHexString(serialized), userData.showData)
     return Json.encodeToString(report)
 }
+
+// Bypass function for local server testing - sends data directly without authentication
+fun prepareReportDataNoAuth(measureDataModel: BaseMeasureDataModel): String {
+    return Json.encodeToString(measureDataModel)
+}
