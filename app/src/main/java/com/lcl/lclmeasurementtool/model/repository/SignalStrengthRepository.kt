@@ -30,12 +30,7 @@ class SignalStrengthRepository @Inject constructor(
             .flowOn(Dispatchers.IO)
             .combine(userDataRepository.userData) { signalStrength, preference ->
                 Log.d(TAG, "upload worker will upload $signalStrength")
-                val reportString = if (preference.skT.isEmpty || preference.hPKR.isEmpty) {
-                    Log.d(TAG, "Using no-auth reporting due to missing cryptographic keys (demo mode or incomplete authentication)")
-                    prepareReportDataNoAuth(signalStrength)
-                } else {
-                    prepareReportData(signalStrength, preference)
-                }
+                val reportString = prepareReportData(signalStrength, preference)
                 networkApi.uploadSignalStrength(reportString)
             }
             .catch {

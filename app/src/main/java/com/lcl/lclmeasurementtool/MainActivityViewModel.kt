@@ -419,12 +419,7 @@ class MainActivityViewModel @Inject constructor(
         }
 
         try {
-            val reportString = if (userData.skT.isEmpty || userData.hPKR.isEmpty) {
-                Log.d(TAG, "Using no-auth reporting due to missing cryptographic keys (demo mode or incomplete authentication)")
-                prepareReportDataNoAuth(reportModel)
-            } else {
-                prepareReportData(reportModel, userData)
-            }
+            val reportString = prepareReportData(reportModel, userData)
             val response: ResponseBody = if (reportModel is SignalStrengthReportModel) {
                 networkApi.uploadSignalStrength(reportString)
             } else {
