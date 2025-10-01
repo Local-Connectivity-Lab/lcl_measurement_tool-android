@@ -31,7 +31,11 @@ class ConnectivityRepository @Inject constructor(
             .flowOn(Dispatchers.IO)
             .combine(userDataRepository.userData) { connectivity, preference ->
                 Log.d(TAG, "upload worker will upload $connectivity")
-                val reportString = prepareReportData(connectivity, preference)
+                val reportString = if (BuildConfig.BUILD_TYPE == "release") {
+                    prepareReportData(connectivity, preference)
+                } else {
+                    prepareReportDataNoAuth(connectivity)
+                }
                 networkApi.uploadConnectivity(reportString)
             }
             .catch {

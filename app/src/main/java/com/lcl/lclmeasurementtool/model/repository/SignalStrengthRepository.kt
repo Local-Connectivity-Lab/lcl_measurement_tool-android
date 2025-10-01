@@ -30,7 +30,11 @@ class SignalStrengthRepository @Inject constructor(
             .flowOn(Dispatchers.IO)
             .combine(userDataRepository.userData) { signalStrength, preference ->
                 Log.d(TAG, "upload worker will upload $signalStrength")
-                val reportString = prepareReportData(signalStrength, preference)
+                val reportString = if (BuildConfig.BUILD_TYPE == "release") {
+                    prepareReportData(signalStrength, preference)
+                } else {
+                    prepareReportDataNoAuth(signalStrength)
+                }
                 networkApi.uploadSignalStrength(reportString)
             }
             .catch {

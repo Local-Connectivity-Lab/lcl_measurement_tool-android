@@ -413,13 +413,27 @@ class MainActivityViewModel @Inject constructor(
     }
 
     private suspend fun report(reportModel: BaseMeasureDataModel, userData: UserData) {
+        // Local function to call work manager to retry upload
+        fun callWorkManager(tag: String) {
+            Log.d(TAG, "UPLOAD DEBUG: $tag, enqueueing retry mechanism")
+            WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+                "upload_retry_work",
+                ExistingWorkPolicy.KEEP, // Don't enqueue if already exists
+                UploadWorker.oneTimeSyncWork()
+            )
+        }
+
         if (BuildConfig.FLAVOR != "full") {
             Log.d(TAG, "Only with ProductFlavor *full* will the data be reported to the remote server")
             return
         }
 
         try {
-            val reportString = prepareReportData(reportModel, userData)
+            val reportString = if (BuildConfig.BUILD_TYPE == "release") {
+                prepareReportData(reportModel, userData)
+            } else {
+                prepareReportDataNoAuth(reportModel)
+            }
             val response: ResponseBody = if (reportModel is SignalStrengthReportModel) {
                 networkApi.uploadSignalStrength(reportString)
             } else {
@@ -439,32 +453,15 @@ class MainActivityViewModel @Inject constructor(
         } catch (e: HttpException) {
             // Use WorkManager to retry uploads with unique work to prevent duplicates
             if (e.code() in 400..499) {
-                Log.e(TAG, "UPLOAD DEBUG: Client error ${e.code()}, enqueueing retry mechanism")
-                WorkManager.getInstance(getApplication()).enqueueUniqueWork(
-                    "upload_retry_work",
-                    ExistingWorkPolicy.KEEP, // Don't enqueue if already exists
-                    UploadWorker.oneTimeSyncWork()
-                )
-                Log.d(TAG, "client error")
+                callWorkManager("client error")
             }
 
             if (e.code() in 500..599) {
-                Log.e(TAG, "UPLOAD DEBUG: Server error ${e.code()}, enqueueing retry mechanism")
-                WorkManager.getInstance(getApplication()).enqueueUniqueWork(
-                    "upload_retry_work",
-                    ExistingWorkPolicy.KEEP, // Don't enqueue if already exists
-                    UploadWorker.oneTimeSyncWork()
-                )
-                Log.d(TAG, "server error")
+                callWorkManager("server error")
+                
             }
         } catch (e: Exception) {
-            Log.e(TAG, "UPLOAD DEBUG: Exception during upload: ${e.message}, enqueueing retry mechanism")
-            WorkManager.getInstance(getApplication()).enqueueUniqueWork(
-                "upload_retry_work",
-                ExistingWorkPolicy.KEEP, // Don't enqueue if already exists
-                UploadWorker.oneTimeSyncWork()
-            )
-            Log.d(TAG, "unknown exception occurred when uploading data. $e")
+            callWorkManager(e.message ?: "unknown error")
         }
     }
 

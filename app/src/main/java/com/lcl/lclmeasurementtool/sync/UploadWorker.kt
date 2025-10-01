@@ -33,7 +33,7 @@ class UploadWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result =
         withContext(ioDispatcher) {
-            if (runAttemptCount < 5) {
+            if (runAttemptCount < ATTEMPTS) {
                 try {
                     val syncSuccessfully = awaitAll(
                         async {
@@ -60,6 +60,7 @@ class UploadWorker @AssistedInject constructor(
                 } catch (e: retrofit2.HttpException) {
                     Log.d(TAG, "upload failed with $e, will retry")
                     return@withContext Result.retry()
+                // TODO: implement notifications for invalid keys
                 } catch (e: java.security.spec.InvalidKeySpecException) {
                     Log.e(TAG, "InvalidKeySpecException: $e")
                     return@withContext Result.failure()
@@ -96,5 +97,9 @@ class UploadWorker @AssistedInject constructor(
                 .build()
 
         const val TAG = "UploadWorker"
+
+        const val ATTEMPTS = 5
     }
+
+
 }
