@@ -184,6 +184,7 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15to18:1.70'
     implementation 'org.apache.commons:commons-csv:1.9.0'
     implementation 'io.github.azhon:appupdate:4.3.2'
+    implementation 'androidx.documentfile:documentfile:1.0.1'
 
     // Analytics
     implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
@@ -191,6 +192,14 @@ dependencies {
 
     // Testing
     testImplementation 'junit:junit:4.+'
+    testImplementation 'androidx.work:work-testing:2.8.1'
+    testImplementation 'io.mockk:mockk:1.13.5'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
+    androidTestImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.work:work-testing:2.8.1'
+    androidTestImplementation 'io.mockk:mockk:1.13.5'
+    androidTestImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
+    androidTestImplementation 'org.robolectric:robolectric:4.9'
 }
 
 protobuf {

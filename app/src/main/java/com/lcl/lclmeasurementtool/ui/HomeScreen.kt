@@ -30,10 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lcl.lclmeasurementtool.BuildConfig
 import com.lcl.lclmeasurementtool.ConnectivityTestResult
 import com.lcl.lclmeasurementtool.MainActivityViewModel
-import com.lcl.lclmeasurementtool.PingResultState
 import com.lcl.lclmeasurementtool.SignalStrengthResult
-import com.lcl.lclmeasurementtool.features.ping.PingError
-import com.lcl.lclmeasurementtool.features.ping.PingErrorCase
 import kotlinx.coroutines.cancel
 
 @Composable
@@ -48,7 +45,7 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
     val snackbarHostState = remember { SnackbarHostState() }
 
     val isMLabTestActive = mainActivityViewModel.isMLabTestActive.collectAsStateWithLifecycle()
-    val mlabPingResult = mainActivityViewModel.mLabPingResult.collectAsStateWithLifecycle()
+    val mlabRttResult = mainActivityViewModel.mlabRttResult.collectAsStateWithLifecycle()
     val mlabUploadResult = mainActivityViewModel.mlabUploadResult.collectAsStateWithLifecycle()
     val mlabDownloadResult = mainActivityViewModel.mlabDownloadResult.collectAsStateWithLifecycle()
     val signalStrength = mainActivityViewModel.signalStrengthResult.collectAsStateWithLifecycle()
@@ -64,7 +61,7 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
             ConnectivityCard(
                 label = "MLab",
                 modifier = modifier,
-                pingResult = mlabPingResult.value,
+                rttValue = mlabRttResult.value,
                 uploadResult = mlabUploadResult.value,
                 downloadResult = mlabDownloadResult.value
             )
@@ -150,7 +147,7 @@ private fun SignalStrengthCard(
 private fun ConnectivityCard(
     label: String,
     modifier: Modifier = Modifier,
-    pingResult: PingResultState,
+    rttValue: ConnectivityTestResult,
     uploadResult: ConnectivityTestResult,
     downloadResult: ConnectivityTestResult,
 ) {
@@ -188,26 +185,20 @@ private fun ConnectivityCard(
 
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    var pingNum = "0"
-                    var pingLoss = "0"
-                    when(pingResult) {
-                        is PingResultState.Success -> {
-                            pingNum = pingResult.result.avg!!
-                            pingLoss = pingResult.result.numLoss!!
+                    val formattedRtt = when (rttValue) {
+                        is ConnectivityTestResult.Result -> {
+                            val numeric = rttValue.result.toDoubleOrNull() ?: 0.0
+                            if (numeric > 0) String.format("%.1f", numeric) else "0.0"
                         }
-                        is PingResultState.Error -> {
-                            pingNum = "0"
-                            pingLoss = "0"
-                            if (pingResult.error.code != PingErrorCase.OK) {
-                                Log.d("HOMEScreen", pingResult.error.message ?: "Error occurred")
-                                // TODO: show error message
-                            }
+                        else -> {
+                            "0.0" // or rttValue.error if you want to display the error message
                         }
                     }
 
-                    DataEntry(icon = Rounded.NetworkPing, text = "$pingNum ms")
-                    DataEntry(icon = Rounded.Cancel, text = "$pingLoss % loss")
+                    DataEntry(icon = Rounded.NetworkPing, text = "$formattedRtt ms")
+                    DataEntry(icon = Rounded.Cancel, text = "0 % loss")
                 }
+
             }
         }
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -232,14 +223,16 @@ fun DataEntry(icon: ImageVector, text: String) {
 fun ConnectivityCardPreview() {
 
     Column {
-        ConnectivityCard(label = "IperfRunner",
-            pingResult = PingResultState.Error(PingError(PingErrorCase.OK, null)),
+        ConnectivityCard(
+            label = "IperfRunner",
+            rttValue = ConnectivityTestResult.Result("1", Color.Red),
             uploadResult = ConnectivityTestResult.Result("1", Color.Blue),
             downloadResult = ConnectivityTestResult.Result("1", Color.Green)
         )
 
-        ConnectivityCard(label = "MLab",
-            pingResult = PingResultState.Error(PingError(PingErrorCase.OK, null)),
+        ConnectivityCard(
+            label = "MLab",
+            rttValue = ConnectivityTestResult.Result("1", Color.Red),
             uploadResult = ConnectivityTestResult.Result("1", Color.Blue),
             downloadResult = ConnectivityTestResult.Result("1", Color.Green)
         )
