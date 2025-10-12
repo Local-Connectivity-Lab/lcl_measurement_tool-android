@@ -6,7 +6,7 @@ env:
 
 on:
   push:
-    branches: [AnanyaDev]
+    branches: [main]
 
 jobs:
   build:
