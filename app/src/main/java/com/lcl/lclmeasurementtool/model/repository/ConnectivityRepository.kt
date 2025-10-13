@@ -1,6 +1,7 @@
 package com.lcl.lclmeasurementtool.model.repository
 
 import android.util.Log
+import com.lcl.lclmeasurementtool.BuildConfig
 import com.lcl.lclmeasurementtool.database.dao.ConnectivityDao
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.util.Synchronizer

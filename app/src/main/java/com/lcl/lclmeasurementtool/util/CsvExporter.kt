@@ -2,6 +2,7 @@ package com.lcl.lclmeasurementtool.util
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
@@ -93,55 +94,51 @@ object CsvExporter {
      */
     private fun saveToFile(context: Context, fileName: String, content: String): Uri? {
         return try {
-            // Use ContentValues and ContentResolver to create a file
-            val contentValues = android.content.ContentValues().apply {
-                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-                
-                // Using Downloads collection (available since our min SDK is 33)
-                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Download")
-                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
-            }
-            
-            // Use Downloads collection content URI (available since our min SDK is 33)
-            val contentUri = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
-            
-            val uri = context.contentResolver.insert(contentUri, contentValues)
-            
-            uri?.let {
-                context.contentResolver.openOutputStream(it)?.use { outputStream ->
-                    outputStream.write(content.toByteArray())
-                    outputStream.flush()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // MediaStore Downloads collection is available on API 29+
+                val contentValues = android.content.ContentValues().apply {
+                    put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+                    put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
+                    put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
                 }
-                
-                // Update IS_PENDING to 0 after writing is complete
-                contentValues.clear()
-                contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
-                context.contentResolver.update(uri, contentValues, null, null)
-            }
-            
-            uri
-        } catch (e: Exception) {
-            Log.e("CsvExporter", "Error saving file with MediaStore approach: ${e.message}", e)
-            
-            // Use a simpler fallback method if the MediaStore approach fails
-            try {
+
+                val contentUri = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
+                val uri = context.contentResolver.insert(contentUri, contentValues)
+
+                uri?.let {
+                    context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                        outputStream.write(content.toByteArray())
+                        outputStream.flush()
+                    }
+                    // Mark file as not pending
+                    contentValues.clear()
+                    contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
+                    context.contentResolver.update(it, contentValues, null, null)
+                }
+                uri
+            } else {
+                // Pre-Q fallback: write to app-specific external files directory
                 val downloadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
-                val file = java.io.File(downloadsDir, fileName)
-                
-                java.io.FileWriter(file).use { writer ->
-                    writer.write(content)
+                if (downloadsDir != null && !downloadsDir.exists()) {
+                    downloadsDir.mkdirs()
                 }
-                
+                val file = java.io.File(downloadsDir, fileName)
+                java.io.FileOutputStream(file).use { fos ->
+                    fos.write(content.toByteArray())
+                    fos.flush()
+                }
+
+                // Return a content URI via FileProvider
                 androidx.core.content.FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.fileprovider",
                     file
                 )
-            } catch (e2: Exception) {
-                Log.e("CsvExporter", "Error saving file with fallback method: ${e2.message}", e2)
-                null
             }
+        } catch (e: Exception) {
+            Log.e("CsvExporter", "Error saving file: ${e.message}", e)
+            null
         }
     }
     

@@ -9,6 +9,7 @@ import com.lcl.lclmeasurementtool.util.prepareReportDataNoAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import com.lcl.lclmeasurementtool.BuildConfig
 
 class SignalStrengthRepository @Inject constructor(
     private val signalStrengthDao: SignalStrengthDao,

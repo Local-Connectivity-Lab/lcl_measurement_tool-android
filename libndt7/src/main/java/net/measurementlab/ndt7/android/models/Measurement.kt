@@ -15,7 +15,8 @@ data class Measurement(
 data class ConnectionInfo(
     @SerialName("Client") val client: String,
     @SerialName("Server") val server: String,
-    @SerialName("UUID") val uuid: String
+    @SerialName("UUID") val uuid: String,
+    @SerialName("StartTime") val startTime: String
 )
 
 @Serializable
