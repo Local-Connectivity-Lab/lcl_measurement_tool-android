@@ -1,15 +1,13 @@
 package com.lcl.lclmeasurementtool.networking
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lcl.lclmeasurementtool.constants.NetworkConstants
 import com.lcl.lclmeasurementtool.model.datamodel.Site
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -37,13 +35,11 @@ private interface NetworkAPI {
 
 @Singleton
 class RetrofitLCLNetwork {
-    private val json = Json { ignoreUnknownKeys = true }
-    
     private val networkApi: NetworkAPI by lazy {
         Retrofit.Builder()
             .client(OkHttpClient())
             .addConverterFactory(ScalarsConverterFactory.create())
-            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(NetworkConstants.URL)
             .build().create(NetworkAPI::class.java)
     }
