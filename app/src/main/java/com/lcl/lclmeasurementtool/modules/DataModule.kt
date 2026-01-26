@@ -58,4 +58,9 @@ interface DataModule {
     fun bindsConnectivityRepository(
         measurementRepository: ConnectivityRepository
     ): HistoryDataRepository<ConnectivityReportModel>
+
+    @Binds
+    fun bindsSiteRepository(
+        lclSiteRepository: LCLSiteRepository
+    ): SiteRepository
 }

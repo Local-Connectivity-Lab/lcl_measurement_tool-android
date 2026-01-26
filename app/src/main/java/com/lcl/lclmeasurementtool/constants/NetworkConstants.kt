@@ -3,7 +3,7 @@ package com.lcl.lclmeasurementtool.constants
 class NetworkConstants {
 
     companion object {
-        const val URL = "https://coverage.seattlecommunitynetwork.org/api/"
+        const val URL = "http://localhost:3000/api/"
         const val REGISTRATION_ENDPOINT = "register"
         const val SIGNAL_ENDPOINT = "report_signal"
         const val CONNECTIVITY_ENDPOINT = "report_measurement"
