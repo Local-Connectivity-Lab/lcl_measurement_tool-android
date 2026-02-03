@@ -17,7 +17,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.viewbinding.BuildConfig
+import com.lcl.lclmeasurementtool.BuildConfig
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.kongzue.dialogx.dialogs.MessageDialog
@@ -73,7 +73,7 @@ class MainActivity2 : ComponentActivity() {
                                     intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                                     val uri = Uri.fromParts(
                                         "package",
-                                        BuildConfig.LIBRARY_PACKAGE_NAME, null
+                                        BuildConfig.APPLICATION_ID, null
                                     )
                                     intent.data = uri
                                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK

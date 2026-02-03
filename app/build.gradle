@@ -4,8 +4,12 @@ plugins {
     id 'kotlin-kapt'
     id 'kotlin-android'
     id 'com.google.dagger.hilt.android'
-    id "com.google.protobuf" version "0.8.17"
+    id "com.google.protobuf" version "0.9.4"
     id "kotlinx-serialization"
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 def getVersionCodeFromProperties() {
@@ -48,13 +52,14 @@ def getVersionNameFromProperties() {
 }
 
 android {
-    compileSdkVersion 34
+    namespace "com.lcl.lclmeasurementtool"
+    compileSdkVersion 35
     buildToolsVersion "30.0.3"
     ndkVersion "23.1.7779620"
     defaultConfig {
         applicationId "com.lcl.lclmeasurementtool"
         minSdkVersion 24
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode getVersionCodeFromProperties()
         versionName getVersionNameFromProperties()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -103,13 +108,14 @@ android {
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildFeatures {
         viewBinding true
         compose true
+        buildConfig true
     }
 
     composeOptions {
@@ -117,7 +123,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 }
 
@@ -223,6 +229,10 @@ protobuf {
 
 kapt {
     correctErrorTypes true
+    javacOptions {
+        option("-source", "17")
+        option("-target", "17")
+    }
 }
 
 def sortKeys(Properties properties) {
