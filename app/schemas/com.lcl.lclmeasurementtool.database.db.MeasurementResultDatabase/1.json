@@ -1,0 +1,96 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "3ad023af9d91c278a478a29f4427c6ac",
+    "entities": [
+      {
+        "tableName": "connectivity_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`time_stamp` TEXT NOT NULL, `ping` REAL NOT NULL, `upload` REAL NOT NULL, `download` REAL NOT NULL, `location` TEXT NOT NULL, PRIMARY KEY(`time_stamp`))",
+        "fields": [
+          {
+            "fieldPath": "timestamp",
+            "columnName": "time_stamp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ping",
+            "columnName": "ping",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "upload",
+            "columnName": "upload",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "download",
+            "columnName": "download",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location",
+            "columnName": "location",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "time_stamp"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "signal_strength_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`time_stamp` TEXT NOT NULL, `signal_strength` INTEGER NOT NULL, `signal_strength_level` INTEGER NOT NULL, `location` TEXT NOT NULL, PRIMARY KEY(`time_stamp`))",
+        "fields": [
+          {
+            "fieldPath": "timestamp",
+            "columnName": "time_stamp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "signalStrength",
+            "columnName": "signal_strength",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "signal_strength_level",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location",
+            "columnName": "location",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "time_stamp"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3ad023af9d91c278a478a29f4427c6ac')"
+    ]
+  }
+}

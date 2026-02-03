@@ -1,0 +1,150 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "0c7a8a929af48ae178cd610468177570",
+    "entities": [
+      {
+        "tableName": "signal_strength_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `time_stamp` TEXT NOT NULL, `cellId` TEXT NOT NULL, `deviceId` TEXT NOT NULL, `signal_strength` INTEGER NOT NULL, `signal_strength_level` INTEGER NOT NULL, `reported` INTEGER NOT NULL, PRIMARY KEY(`time_stamp`))",
+        "fields": [
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "time_stamp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cellId",
+            "columnName": "cellId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceId",
+            "columnName": "deviceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dbm",
+            "columnName": "signal_strength",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "levelCode",
+            "columnName": "signal_strength_level",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reported",
+            "columnName": "reported",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "time_stamp"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "connectivity_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `time_stamp` TEXT NOT NULL, `cellId` TEXT NOT NULL, `deviceId` TEXT NOT NULL, `upload_speed` REAL NOT NULL, `download_speed` REAL NOT NULL, `ping` REAL NOT NULL, `package_loss` REAL NOT NULL, `reported` INTEGER NOT NULL, PRIMARY KEY(`time_stamp`))",
+        "fields": [
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "time_stamp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cellId",
+            "columnName": "cellId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceId",
+            "columnName": "deviceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uploadSpeed",
+            "columnName": "upload_speed",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downloadSpeed",
+            "columnName": "download_speed",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ping",
+            "columnName": "ping",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packetLoss",
+            "columnName": "package_loss",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reported",
+            "columnName": "reported",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "time_stamp"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0c7a8a929af48ae178cd610468177570')"
+    ]
+  }
+}
