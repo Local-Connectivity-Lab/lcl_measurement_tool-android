@@ -5,9 +5,11 @@ import com.lcl.lclmeasurementtool.database.dao.SignalStrengthDao
 import com.lcl.lclmeasurementtool.model.datamodel.SignalStrengthReportModel
 import com.lcl.lclmeasurementtool.util.Synchronizer
 import com.lcl.lclmeasurementtool.util.prepareReportData
+import com.lcl.lclmeasurementtool.util.prepareReportDataNoAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import com.lcl.lclmeasurementtool.BuildConfig
 
 class SignalStrengthRepository @Inject constructor(
     private val signalStrengthDao: SignalStrengthDao,
@@ -29,7 +31,11 @@ class SignalStrengthRepository @Inject constructor(
             .flowOn(Dispatchers.IO)
             .combine(userDataRepository.userData) { signalStrength, preference ->
                 Log.d(TAG, "upload worker will upload $signalStrength")
-                val reportString = prepareReportData(signalStrength, preference)
+                val reportString = if (BuildConfig.BUILD_TYPE == "release") {
+                    prepareReportData(signalStrength, preference)
+                } else {
+                    prepareReportDataNoAuth(signalStrength)
+                }
                 networkApi.uploadSignalStrength(reportString)
             }
             .catch {

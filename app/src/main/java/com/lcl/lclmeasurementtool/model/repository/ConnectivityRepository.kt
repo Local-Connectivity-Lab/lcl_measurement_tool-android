@@ -1,10 +1,12 @@
 package com.lcl.lclmeasurementtool.model.repository
 
 import android.util.Log
+import com.lcl.lclmeasurementtool.BuildConfig
 import com.lcl.lclmeasurementtool.database.dao.ConnectivityDao
 import com.lcl.lclmeasurementtool.model.datamodel.ConnectivityReportModel
 import com.lcl.lclmeasurementtool.util.Synchronizer
 import com.lcl.lclmeasurementtool.util.prepareReportData
+import com.lcl.lclmeasurementtool.util.prepareReportDataNoAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -30,7 +32,11 @@ class ConnectivityRepository @Inject constructor(
             .flowOn(Dispatchers.IO)
             .combine(userDataRepository.userData) { connectivity, preference ->
                 Log.d(TAG, "upload worker will upload $connectivity")
-                val reportString = prepareReportData(connectivity, preference)
+                val reportString = if (BuildConfig.BUILD_TYPE == "release") {
+                    prepareReportData(connectivity, preference)
+                } else {
+                    prepareReportDataNoAuth(connectivity)
+                }
                 networkApi.uploadConnectivity(reportString)
             }
             .catch {

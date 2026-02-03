@@ -55,7 +55,7 @@ class MainActivity2 : ComponentActivity() {
 
         if (!hasPermission()) {
             XXPermissions.with(this)
-                .permission(Permission.CAMERA, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_FINE_LOCATION)
+                .permission(Permission.CAMERA, Permission.READ_MEDIA_AUDIO, Permission.READ_MEDIA_VIDEO, Permission.READ_MEDIA_IMAGES, Permission.ACCESS_FINE_LOCATION)
                 .request { _, allGranted ->
                     run {
                         if (!allGranted) {

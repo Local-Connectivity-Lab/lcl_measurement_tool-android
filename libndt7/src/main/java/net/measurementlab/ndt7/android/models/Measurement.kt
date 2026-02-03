@@ -15,7 +15,8 @@ data class Measurement(
 data class ConnectionInfo(
     @SerialName("Client") val client: String,
     @SerialName("Server") val server: String,
-    @SerialName("UUID") val uuid: String
+    @SerialName("UUID") val uuid: String,
+    @SerialName("StartTime") val startTime: String
 )
 
 @Serializable
@@ -81,5 +82,7 @@ data class TCPInfo(
     @SerialName("BytesRetrans") val bytesRetrans: Long?,
     @SerialName("DSackDups") val dSackDups: Long?,
     @SerialName("ReordSeen") val reordSeen: Long?,
+    @SerialName("RcvOooPack") val rcvOooPack: Long?,
+    @SerialName("SndWnd") val sndWnd: Long?,
     @SerialName("ElapsedTime") val elapsedTime: Long?
 )

@@ -1,7 +1,11 @@
 package com.lcl.lclmeasurementtool.sync
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.lcl.lclmeasurementtool.datastore.Dispatcher
@@ -25,46 +29,77 @@ class UploadWorker @AssistedInject constructor(
     private val signalStrengthRepository: SignalStrengthRepository,
     private val connectivityRepository: ConnectivityRepository,
     @Dispatcher(LCLDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
-): CoroutineWorker(context, workerParameters), Synchronizer {
+) : CoroutineWorker(context, workerParameters), Synchronizer {
 
     override suspend fun doWork(): Result =
         withContext(ioDispatcher) {
-            try {
-                val syncSuccessfully = awaitAll(
-                    async {
-                        val b = signalStrengthRepository.sync()
-                        Log.d(TAG, "signal strength repository finish sync")
-                        b
-                    },
-                    async {
-                        val b = connectivityRepository.sync()
-                        Log.d(TAG, "connectivity repository finish sync")
-                        b
+            if (runAttemptCount < ATTEMPTS) {
+                try {
+                    val syncSuccessfully = awaitAll(
+                        async {
+                            val b = signalStrengthRepository.sync()
+                            Log.d(TAG, "signal strength repository finish sync")
+                            b
+                        },
+                        async {
+                            val b = connectivityRepository.sync()
+                            Log.d(TAG, "connectivity repository finish sync")
+                            b
+                        }
+                    ).all { it }
+                    if (syncSuccessfully) {
+                        Log.d(TAG, "upload successfully")
+                        return@withContext Result.success()
+                    } else {
+                        Log.d(TAG, "upload failed. some sync work failed")
+                        return@withContext Result.failure()
                     }
-                ).all { it }
-                if (syncSuccessfully) {
-                    Log.d(TAG, "upload successfully")
-                    return@withContext Result.success()
-                } else {
-                    Log.d(TAG, "upload failed. some sync work failed")
+                } catch (e: java.io.IOException) {
+                    Log.d(TAG, "upload failed with $e, will retry")
+                    return@withContext Result.retry()
+                } catch (e: retrofit2.HttpException) {
+                    Log.d(TAG, "upload failed with $e, will retry")
+                    return@withContext Result.retry()
+                // TODO: implement notifications for invalid keys
+                } catch (e: java.security.spec.InvalidKeySpecException) {
+                    Log.e(TAG, "InvalidKeySpecException: $e")
+                    return@withContext Result.failure()
+                } catch (e: java.security.InvalidKeyException) {
+                    Log.e(TAG, "InvalidKeyException: $e")
+                    return@withContext Result.failure()
+                } catch (e: IllegalStateException) {
+                    Log.e(TAG, "IllegalStateException: $e")
+                    return@withContext Result.failure()
+                } catch (e: Exception) {
+                    Log.d(TAG, "upload failed with unexpected $e")
                     return@withContext Result.failure()
                 }
-            } catch (e: Exception) {
-                Log.d(TAG, "upload failed. exception is $e")
-                Result.failure()
+            } else {
+                Log.d(TAG, "Maximum retry attempts (5) reached. Giving up :(")
+                return@withContext Result.failure()
             }
         }
 
     companion object {
         fun periodicSyncWork() =
             PeriodicWorkRequestBuilder<DelegatingWorker>(4, TimeUnit.HOURS)
-            .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-            .setInitialDelay(5, TimeUnit.MINUTES)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(10))
-            .setInputData(UploadWorker::class.delegatedData())
-            .build()
+                .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+                .setInitialDelay(5, TimeUnit.MINUTES)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(10))
+                .setInputData(UploadWorker::class.delegatedData())
+                .build()
+
+        fun oneTimeSyncWork() =
+            OneTimeWorkRequestBuilder<DelegatingWorker>()
+                .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(5))
+                .setInputData(UploadWorker::class.delegatedData())
+                .build()
 
         const val TAG = "UploadWorker"
+
+        const val ATTEMPTS = 5
     }
+
 
 }
