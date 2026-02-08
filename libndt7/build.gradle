@@ -9,8 +9,8 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 31
+        minSdkVersion 29
+        targetSdkVersion 35
         versionCode 8
         versionName "0.2.1"
         consumerProguardFiles "proguard-rules.pro"

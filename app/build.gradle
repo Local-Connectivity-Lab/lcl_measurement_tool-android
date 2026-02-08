@@ -58,7 +58,7 @@ android {
     ndkVersion "23.1.7779620"
     defaultConfig {
         applicationId "com.lcl.lclmeasurementtool"
-        minSdkVersion 24
+        minSdkVersion 29
         targetSdkVersion 35
         versionCode getVersionCodeFromProperties()
         versionName getVersionNameFromProperties()
