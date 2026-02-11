@@ -17,6 +17,7 @@ import com.lcl.lclmeasurementtool.model.datamodel.*
 import com.lcl.lclmeasurementtool.model.repository.ConnectivityRepository
 import com.lcl.lclmeasurementtool.model.repository.NetworkApiRepository
 import com.lcl.lclmeasurementtool.model.repository.SignalStrengthRepository
+import com.lcl.lclmeasurementtool.model.repository.SiteRepository
 import com.lcl.lclmeasurementtool.model.repository.UserDataRepository
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthLevelEnum
 import com.lcl.lclmeasurementtool.telephony.SignalStrengthMonitor
@@ -47,11 +48,27 @@ class MainActivityViewModel @Inject constructor(
     private val locationService: LocationService,
     private val signalStrengthMonitor: SignalStrengthMonitor,
     private val connectivityRepository: ConnectivityRepository,
-    private val signalStrengthRepository: SignalStrengthRepository
+    private val signalStrengthRepository: SignalStrengthRepository,
+    private val siteRepository: SiteRepository
 ) : AndroidViewModel(application) {
 
     companion object {
         const val TAG = "MainActivityViewModel"
+    }
+
+    // Cache for sites fetched from API
+    private var cachedSites: List<Site> = emptyList()
+    
+    init {
+        // Fetch sites when ViewModel is created
+        viewModelScope.launch {
+            try {
+                cachedSites = siteRepository.getSites()
+                Log.d(TAG, "Fetched ${cachedSites.size} sites from API")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to fetch sites: ${e.message}", e)
+            }
+        }
     }
 
     // UI
@@ -368,12 +385,20 @@ class MainActivityViewModel @Inject constructor(
                 _isMLabTestActive.value = false
                 Log.d(TAG, "upload, download are finished. isMLabTestActive.value=${isMLabTestActive.value}")
                 val curTime = TimeUtil.getCurrentTime()
-                val cellID = signalStrengthMonitor.getCellID()
 
                 // add data to db + report to remote server
                 locationService.lastLocation().combine(userDataRepository.userData) { location, userPreference ->
                     Pair(location, userPreference)
                 }.collect {
+                    // Try to get cell ID from site, fall back to device cell ID
+                    val cellID = signalStrengthMonitor.getCellIDFromSite(
+                        it.first.latitude,
+                        it.first.longitude,
+                        cachedSites
+                    ) ?: signalStrengthMonitor.getCellID()
+                    
+                    Log.d(TAG, "Using cell ID: $cellID for location (${it.first.latitude}, ${it.first.longitude})")
+                    
                     val signalStrengthReportModel = SignalStrengthReportModel(
                         it.first.latitude,
                         it.first.longitude,
