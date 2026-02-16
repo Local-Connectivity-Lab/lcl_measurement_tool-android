@@ -84,6 +84,8 @@ class SignalStrengthDataSource @Inject constructor(
         return null
     }
 
+    // Calculates the great circle distance between two points given their latitude and longitude
+
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val earthRadius = 6371.0 // km
         val dLat = Math.toRadians(lat2 - lat1)
