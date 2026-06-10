@@ -51,12 +51,6 @@ def getVersionNameFromProperties() {
     return "$major.$minor.$patch"
 }
 
-def isAppleSiliconMac() {
-    def osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT)
-    def osArch = System.getProperty("os.arch", "").toLowerCase(Locale.ROOT)
-    return osName.contains("mac") && (osArch == "aarch64" || osArch == "arm64")
-}
-
 android {
     namespace "com.lcl.lclmeasurementtool"
     compileSdkVersion 35
@@ -216,9 +210,7 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = isAppleSiliconMac() ?
-                "com.google.protobuf:protoc:3.21.12" :
-                "com.google.protobuf:protoc:3.14.0"
+        artifact = "com.google.protobuf:protoc:3.21.12"
     }
 
     // Generates the java Protobuf-lite code for the Protobufs in this project. See
