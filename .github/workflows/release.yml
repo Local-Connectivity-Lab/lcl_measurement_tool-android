@@ -1,14 +1,13 @@
-name: LCL Measurement Tool CI
+name: Release Prep
 
 env:
   main_project_module: app
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,12 +34,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      - name: Build full release APK
         uses: gradle/gradle-build-action@v3
         with:
-          arguments: app:build
+          arguments: assembleFullRelease
 
-      - name: Run Tests
-        uses: gradle/gradle-build-action@v3
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
         with:
-          arguments: app:testDemoDebugUnitTest
+          name: full-release-apk
+          path: app/build/outputs/apk/full/release/app-full-release.apk
