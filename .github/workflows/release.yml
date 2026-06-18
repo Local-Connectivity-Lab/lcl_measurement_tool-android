@@ -5,6 +5,12 @@ env:
 
 on:
   workflow_dispatch:
+    inputs:
+      upload_to_play:
+        description: Upload the signed bundle to Google Play internal testing
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   release:
@@ -34,8 +40,42 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Decode Android keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+
+      - name: Write Play service account key
+        if: ${{ inputs.upload_to_play }}
+        env:
+          PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          from pathlib import Path
+
+          secret = os.environ["PLAY_STORE_JSON_KEY"]
+          output_path = Path(os.environ["RUNNER_TEMP"]) / "play-account.json"
+
+          try:
+              decoded = base64.b64decode(secret, validate=True).decode("utf-8")
+              json.loads(decoded)
+              output_path.write_text(decoded, encoding="utf-8")
+          except Exception:
+              json.loads(secret)
+              output_path.write_text(secret, encoding="utf-8")
+          PY
+
       - name: Build full release AAB
         uses: gradle/gradle-build-action@v3
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release-keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         with:
           arguments: bundleFullRelease
 
@@ -44,3 +84,15 @@ jobs:
         with:
           name: full-release-aab
           path: app/build/outputs/bundle/fullRelease/app-full-release.aab
+
+      - name: Upload signed bundle to Google Play internal testing
+        if: ${{ inputs.upload_to_play }}
+        uses: gradle/gradle-build-action@v3
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release-keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_STORE_JSON_PATH: ${{ runner.temp }}/play-account.json
+        with:
+          arguments: publishFullReleaseBundle
