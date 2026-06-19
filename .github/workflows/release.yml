@@ -44,30 +44,14 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+          base64 --decode <<< "$ANDROID_KEYSTORE_BASE64" > "$RUNNER_TEMP/release-keystore.jks"
 
       - name: Write Play service account key
         if: ${{ inputs.upload_to_play }}
         env:
           PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
         run: |
-          python - <<'PY'
-          import base64
-          import json
-          import os
-          from pathlib import Path
-
-          secret = os.environ["PLAY_STORE_JSON_KEY"]
-          output_path = Path(os.environ["RUNNER_TEMP"]) / "play-account.json"
-
-          try:
-              decoded = base64.b64decode(secret, validate=True).decode("utf-8")
-              json.loads(decoded)
-              output_path.write_text(decoded, encoding="utf-8")
-          except Exception:
-              json.loads(secret)
-              output_path.write_text(secret, encoding="utf-8")
-          PY
+          cat > "$RUNNER_TEMP/play-account.json" <<< "$PLAY_STORE_JSON_KEY"
 
       - name: Build full release AAB
         uses: gradle/gradle-build-action@v3
