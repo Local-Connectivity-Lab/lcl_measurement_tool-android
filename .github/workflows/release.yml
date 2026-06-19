@@ -6,6 +6,10 @@ env:
 on:
   workflow_dispatch:
     inputs:
+      android_run_id:
+        description: GitHub Actions run ID from android.yml containing the full-release-aab artifact
+        required: true
+        type: string
       upload_to_play:
         description: Upload the signed bundle to Google Play internal testing
         required: true
@@ -40,11 +44,21 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Decode Android keystore
+      - name: Download release AAB artifact
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          base64 --decode <<< "$ANDROID_KEYSTORE_BASE64" > "$RUNNER_TEMP/release-keystore.jks"
+          mkdir -p "$RUNNER_TEMP/release-artifact"
+          gh run download "${{ inputs.android_run_id }}" \
+            --name full-release-aab \
+            --dir "$RUNNER_TEMP/release-artifact"
+          artifact_path=$(find "$RUNNER_TEMP/release-artifact" -name '*.aab' -type f | head -n 1)
+          if [ -z "$artifact_path" ]; then
+            echo "Could not find downloaded .aab artifact" >&2
+            exit 1
+          fi
+          echo "RELEASE_AAB_PATH=$artifact_path" >> "$GITHUB_ENV"
+          echo "RELEASE_AAB_DIR=$(dirname "$artifact_path")" >> "$GITHUB_ENV"
 
       - name: Write Play service account key
         if: ${{ inputs.upload_to_play }}
@@ -53,30 +67,16 @@ jobs:
         run: |
           cat > "$RUNNER_TEMP/play-account.json" <<< "$PLAY_STORE_JSON_KEY"
 
-      - name: Build full release AAB
-        uses: gradle/gradle-build-action@v3
-        env:
-          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release-keystore.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        with:
-          arguments: bundleFullRelease
-
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: full-release-aab
-          path: app/build/outputs/bundle/fullRelease/app-full-release.aab
+          path: ${{ env.RELEASE_AAB_PATH }}
 
       - name: Upload signed bundle to Google Play internal testing
         if: ${{ inputs.upload_to_play }}
         uses: gradle/gradle-build-action@v3
         env:
-          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release-keystore.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           PLAY_STORE_JSON_PATH: ${{ runner.temp }}/play-account.json
         with:
-          arguments: publishFullReleaseBundle
+          arguments: publishFullReleaseBundle --artifact-dir ${{ env.RELEASE_AAB_DIR }}
