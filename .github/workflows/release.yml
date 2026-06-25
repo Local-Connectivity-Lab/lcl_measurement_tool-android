@@ -61,7 +61,7 @@ jobs:
           echo "RELEASE_AAB_DIR=$(dirname "$artifact_path")" >> "$GITHUB_ENV"
 
       - name: Write Play service account key
-        if: ${{ inputs.upload_to_play }}
+        if: ${{ inputs.upload_to_play && github.ref == 'refs/heads/main' }}
         env:
           PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
         run: |
@@ -74,7 +74,7 @@ jobs:
           path: ${{ env.RELEASE_AAB_PATH }}
 
       - name: Upload signed bundle to Google Play internal testing
-        if: ${{ inputs.upload_to_play }}
+        if: ${{ inputs.upload_to_play && github.ref == 'refs/heads/main' }}
         uses: gradle/gradle-build-action@v3
         env:
           PLAY_STORE_JSON_PATH: ${{ runner.temp }}/play-account.json
