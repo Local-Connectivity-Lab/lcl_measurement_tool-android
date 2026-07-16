@@ -12,8 +12,6 @@ import kotlin.math.sqrt
 class PingUtil {
     companion object {
         const val TAG = "PING"
-        private const val DEFAULT_UDP_PORT = 31337
-
         suspend fun doPing(address: String, times: Int, timeout: Long) : PingResult {
             return withContext(Dispatchers.IO) {
                 try {
@@ -123,7 +121,9 @@ class PingUtil {
                 return UdpTarget(host = host, port = port)
             }
 
-            return UdpTarget(host = trimmed, port = DEFAULT_UDP_PORT)
+            throw IllegalArgumentException(
+                "Address must include an explicit port, e.g. host:port or [ipv6]:port"
+            )
         }
 
         private data class UdpTarget(val host: String, val port: Int)
