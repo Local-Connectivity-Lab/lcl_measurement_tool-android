@@ -17,7 +17,7 @@ class PingUtil {
                 try {
                     val target = parseUdpTarget(address)
                     val requestId = UUID.randomUUID().mostSignificantBits xor UUID.randomUUID().leastSignificantBits
-                    val client = UdpPingClient()
+                    val client: PingClient = UdpPingClient()
                     val rtts = mutableListOf<Double>()
                     var lost = 0
                     var firstError: String? = null

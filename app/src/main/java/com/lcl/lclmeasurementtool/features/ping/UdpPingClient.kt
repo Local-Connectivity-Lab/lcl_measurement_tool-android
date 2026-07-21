@@ -16,8 +16,8 @@ sealed interface UdpPingAttemptResult {
 class UdpPingClient(
     private val codec: UdpPingCodec = UdpPingCodec(),
     private val receiveBufferSize: Int = 1024,
-) {
-    fun pingOnce(
+) : PingClient {
+    override fun pingOnce(
         host: String,
         port: Int,
         timeoutMs: Long,
