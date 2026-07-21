@@ -6,6 +6,8 @@ import java.net.DatagramSocket
 import java.net.InetSocketAddress
 import java.net.SocketTimeoutException
 import kotlin.math.max
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 sealed interface UdpPingAttemptResult {
     data class Success(val rttMs: Double, val response: UdpPingPacket) : UdpPingAttemptResult
@@ -17,13 +19,13 @@ class UdpPingClient(
     private val codec: UdpPingCodec = UdpPingCodec(),
     private val receiveBufferSize: Int = 1024,
 ) : PingClient {
-    override fun pingOnce(
+    override suspend fun pingOnce(
         host: String,
         port: Int,
         timeoutMs: Long,
         requestId: Long,
         sequence: Int,
-    ): UdpPingAttemptResult {
+    ): UdpPingAttemptResult = withContext(Dispatchers.IO) {
         val timeoutIntMs = max(1L, timeoutMs).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val packet = UdpPingPacket(
             requestId = requestId,
@@ -33,7 +35,7 @@ class UdpPingClient(
         val payload = codec.encodeRequest(packet)
         val remoteAddress = InetSocketAddress(host, port)
 
-        return try {
+        try {
             DatagramSocket().use { socket ->
                 socket.soTimeout = timeoutIntMs
                 val sendPacket = DatagramPacket(payload, payload.size, remoteAddress)
@@ -48,7 +50,7 @@ class UdpPingClient(
                 val responseBytes = receivePacket.data.copyOf(receivePacket.length)
                 val responsePacket = codec.decodeResponse(responseBytes)
                 if (responsePacket.requestId != requestId || responsePacket.sequence != sequence) {
-                    return UdpPingAttemptResult.Error(
+                    return@withContext UdpPingAttemptResult.Error(
                         message = "Mismatched response id/sequence: ${responsePacket.requestId}/${responsePacket.sequence}",
                     )
                 }
