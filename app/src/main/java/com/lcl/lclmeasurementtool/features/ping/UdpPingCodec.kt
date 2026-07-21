@@ -10,6 +10,13 @@ class UdpPingCodec {
         val VERSION: UByte = 1u
     }
 
+    /**
+     * Encode a ping request packet to bytes.
+     *
+     * @param packet the packet to encode
+     * @return the encoded packet as a byte array
+     * @throws IllegalArgumentException if packet magic or version is invalid
+     */
     fun encodeRequest(packet: UdpPingPacket): ByteArray {
         require(packet.magic == MAGIC) { "Unexpected magic: ${packet.magic}" }
         require(packet.version == VERSION) { "Unsupported version: ${packet.version}" }
@@ -23,6 +30,16 @@ class UdpPingCodec {
         }.array()
     }
 
+    /**
+     * Decode a ping response packet from bytes.
+     *
+     * Reconstructs a [UdpPingPacket] from a byte array, validating the magic number
+     * and version. Server-provided timestamps (receive/send) are optional.
+     *
+     * @param data the encoded packet bytes
+     * @return the decoded packet
+     * @throws IllegalArgumentException if packet is too small, has invalid magic, or unsupported version
+     */
     fun decodeResponse(data: ByteArray): UdpPingPacket {
         require(data.size >= HEADER_SIZE) {
             "UDP ping packet too small: ${data.size} < $HEADER_SIZE"
