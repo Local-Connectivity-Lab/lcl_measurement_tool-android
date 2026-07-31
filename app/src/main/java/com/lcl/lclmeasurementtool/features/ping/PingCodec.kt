@@ -3,7 +3,7 @@ package com.lcl.lclmeasurementtool.features.ping
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class UdpPingCodec {
+class PingCodec {
     companion object {
         const val MAGIC: Int = 0x4C434C50 // "LCLP"
         const val HEADER_SIZE: Int = 4 + 1 + 8 + 4 + 8
@@ -17,7 +17,7 @@ class UdpPingCodec {
      * @return the encoded packet as a byte array
      * @throws IllegalArgumentException if packet magic or version is invalid
      */
-    fun encodeRequest(packet: UdpPingPacket): ByteArray {
+    fun encodeRequest(packet: PingPacket): ByteArray {
         require(packet.magic == MAGIC) { "Unexpected magic: ${packet.magic}" }
         require(packet.version == VERSION) { "Unsupported version: ${packet.version}" }
 
@@ -33,16 +33,16 @@ class UdpPingCodec {
     /**
      * Decode a ping response packet from bytes.
      *
-     * Reconstructs a [UdpPingPacket] from a byte array, validating the magic number
+     * Reconstructs a [PingPacket] from a byte array, validating the magic number
      * and version. Server-provided timestamps (receive/send) are optional.
      *
      * @param data the encoded packet bytes
      * @return the decoded packet
      * @throws IllegalArgumentException if packet is too small, has invalid magic, or unsupported version
      */
-    fun decodeResponse(data: ByteArray): UdpPingPacket {
+    fun decodeResponse(data: ByteArray): PingPacket {
         require(data.size >= HEADER_SIZE) {
-            "UDP ping packet too small: ${data.size} < $HEADER_SIZE"
+            "Ping packet too small: ${data.size} < $HEADER_SIZE"
         }
 
         val buffer = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN)
@@ -58,7 +58,7 @@ class UdpPingCodec {
         val serverReceiveTimestamp = if (buffer.remaining() >= Long.SIZE_BYTES) buffer.long else null
         val serverSendTimestamp = if (buffer.remaining() >= Long.SIZE_BYTES) buffer.long else null
 
-        return UdpPingPacket(
+        return PingPacket(
             magic = magic,
             version = version,
             requestId = requestId,

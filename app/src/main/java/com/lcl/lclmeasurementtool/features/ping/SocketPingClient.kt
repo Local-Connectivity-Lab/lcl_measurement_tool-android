@@ -9,14 +9,14 @@ import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-sealed interface UdpPingAttemptResult {
-    data class Success(val rttMs: Double, val response: UdpPingPacket) : UdpPingAttemptResult
-    object Timeout : UdpPingAttemptResult
-    data class Error(val message: String, val cause: Throwable? = null) : UdpPingAttemptResult
+sealed interface PingAttemptResult {
+    data class Success(val rttMs: Double, val response: PingPacket) : PingAttemptResult
+    object Timeout : PingAttemptResult
+    data class Error(val message: String, val cause: Throwable? = null) : PingAttemptResult
 }
 
-class UdpPingClient(
-    private val codec: UdpPingCodec = UdpPingCodec(),
+class SocketPingClient(
+    private val codec: PingCodec = PingCodec(),
     private val receiveBufferSize: Int = 1024,
 ) : PingClient {
     override suspend fun pingOnce(
@@ -25,9 +25,9 @@ class UdpPingClient(
         timeoutMs: Long,
         requestId: Long,
         sequence: Int,
-    ): UdpPingAttemptResult = withContext(Dispatchers.IO) {
+    ): PingAttemptResult = withContext(Dispatchers.IO) {
         val timeoutIntMs = max(1L, timeoutMs).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        val packet = UdpPingPacket(
+        val packet = PingPacket(
             requestId = requestId,
             sequence = sequence,
             clientSendTimestamp = System.currentTimeMillis(),
@@ -50,22 +50,22 @@ class UdpPingClient(
                 val responseBytes = receivePacket.data.copyOf(receivePacket.length)
                 val responsePacket = codec.decodeResponse(responseBytes)
                 if (responsePacket.requestId != requestId || responsePacket.sequence != sequence) {
-                    return@withContext UdpPingAttemptResult.Error(
+                    return@withContext PingAttemptResult.Error(
                         message = "Mismatched response id/sequence: ${responsePacket.requestId}/${responsePacket.sequence}",
                     )
                 }
 
-                UdpPingAttemptResult.Success(
+                PingAttemptResult.Success(
                     rttMs = (recvAtNs - sendStartedAtNs) / 1_000_000.0,
                     response = responsePacket,
                 )
             }
         } catch (_: SocketTimeoutException) {
-            UdpPingAttemptResult.Timeout
+            PingAttemptResult.Timeout
         } catch (e: IllegalArgumentException) {
-            UdpPingAttemptResult.Error(message = e.message ?: "Invalid UDP ping packet", cause = e)
+            PingAttemptResult.Error(message = e.message ?: "Invalid ping packet", cause = e)
         } catch (e: IOException) {
-            UdpPingAttemptResult.Error(message = e.message ?: "UDP socket I/O error", cause = e)
+            PingAttemptResult.Error(message = e.message ?: "Socket I/O error", cause = e)
         }
     }
 }

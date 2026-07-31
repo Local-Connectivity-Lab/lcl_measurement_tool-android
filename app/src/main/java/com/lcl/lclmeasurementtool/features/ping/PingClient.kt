@@ -7,5 +7,5 @@ interface PingClient {
         timeoutMs: Long,
         requestId: Long,
         sequence: Int,
-    ): UdpPingAttemptResult
+    ): PingAttemptResult
 }

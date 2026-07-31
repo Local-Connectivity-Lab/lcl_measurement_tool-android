@@ -5,32 +5,33 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.Locale
-import java.util.UUID
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class PingUtil {
     companion object {
         const val TAG = "PING"
+
         suspend fun doPing(address: String, times: Int, timeout: Long) : PingResult {
             return withContext(Dispatchers.IO) {
                 try {
-                    val target = parseUdpTarget(address)
-                    val requestId = UUID.randomUUID().mostSignificantBits xor UUID.randomUUID().leastSignificantBits
-                    val client: PingClient = UdpPingClient()
+                    val target = parsePingTarget(address)
+                    val requestId = Random.nextLong()
+                    val client: PingClient = SocketPingClient()
                     val rtts = mutableListOf<Double>()
                     var lost = 0
                     var firstError: String? = null
 
                     Log.d(TAG, "============")
-                    Log.d(TAG, "UDP ping starts: ${target.host}:${target.port}")
+                    Log.d(TAG, "Ping starts: ${target.host}:${target.port}")
                     Log.d(TAG, "============")
 
                     if (times <= 0) {
                         return@withContext PingResult(
                             error = PingError(
                                 code = PingErrorCase.IO,
-                                message = "UDP ping requires times > 0",
+                                message = "Ping requires times > 0",
                             ),
                         )
                     }
@@ -43,13 +44,13 @@ class PingUtil {
                             requestId = requestId,
                             sequence = sequence,
                         )) {
-                            is UdpPingAttemptResult.Success -> {
+                            is PingAttemptResult.Success -> {
                                 rtts += attemptResult.rttMs
                             }
-                            UdpPingAttemptResult.Timeout -> {
+                            PingAttemptResult.Timeout -> {
                                 lost += 1
                             }
-                            is UdpPingAttemptResult.Error -> {
+                            is PingAttemptResult.Error -> {
                                 lost += 1
                                 if (firstError == null) {
                                     firstError = attemptResult.message
@@ -62,7 +63,7 @@ class PingUtil {
                         return@withContext PingResult(
                             error = PingError(
                                 code = PingErrorCase.IO,
-                                message = firstError ?: "UDP ping timed out for all attempts",
+                                message = firstError ?: "Ping timed out for all attempts",
                             ),
                         )
                     }
@@ -94,7 +95,7 @@ class PingUtil {
 
         private fun formatMs(value: Double): String = String.format(Locale.US, "%.3f", value)
 
-        private fun parseUdpTarget(address: String): UdpTarget {
+        private fun parsePingTarget(address: String): PingTarget {
             val trimmed = address.trim()
             require(trimmed.isNotEmpty()) { "Address cannot be empty" }
 
@@ -107,7 +108,7 @@ class PingUtil {
                 val port = trimmed.substring(closingBracket + 2).toIntOrNull()
                     ?: throw IllegalArgumentException("Invalid port in address: $address")
                 require(port in 1..65535) { "Port out of range: $port" }
-                return UdpTarget(host = host, port = port)
+                return PingTarget(host = host, port = port)
             }
 
             val colonCount = trimmed.count { it == ':' }
@@ -118,7 +119,7 @@ class PingUtil {
                     ?: throw IllegalArgumentException("Invalid port in address: $address")
                 require(host.isNotBlank()) { "Host cannot be blank" }
                 require(port in 1..65535) { "Port out of range: $port" }
-                return UdpTarget(host = host, port = port)
+                return PingTarget(host = host, port = port)
             }
 
             throw IllegalArgumentException(
@@ -126,6 +127,6 @@ class PingUtil {
             )
         }
 
-        private data class UdpTarget(val host: String, val port: Int)
+        private data class PingTarget(val host: String, val port: Int)
     }
 }

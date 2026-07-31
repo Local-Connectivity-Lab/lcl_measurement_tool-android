@@ -1,8 +1,8 @@
 package com.lcl.lclmeasurementtool.features.ping
 
-data class UdpPingPacket(
-    val magic: Int = UdpPingCodec.MAGIC,
-    val version: UByte = UdpPingCodec.VERSION,
+data class PingPacket(
+    val magic: Int = PingCodec.MAGIC,
+    val version: UByte = PingCodec.VERSION,
     val requestId: Long,
     val sequence: Int,
     val clientSendTimestamp: Long,

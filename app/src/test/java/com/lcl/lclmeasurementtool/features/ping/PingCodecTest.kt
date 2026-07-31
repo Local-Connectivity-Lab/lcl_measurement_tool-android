@@ -6,12 +6,12 @@ import org.junit.Test
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class UdpPingCodecTest {
-    private val codec = UdpPingCodec()
+class PingCodecTest {
+    private val codec = PingCodec()
 
     @Test
     fun decodeResponse_roundTripWithOptionalTimestamps_returnsExpectedPacket() {
-        val expected = UdpPingPacket(
+        val expected = PingPacket(
             requestId = 1234L,
             sequence = 7,
             clientSendTimestamp = 5678L,
@@ -19,7 +19,7 @@ class UdpPingCodecTest {
             serverSendTimestamp = 7890L,
         )
 
-        val encoded = ByteBuffer.allocate(UdpPingCodec.HEADER_SIZE + 16).order(ByteOrder.BIG_ENDIAN).apply {
+        val encoded = ByteBuffer.allocate(PingCodec.HEADER_SIZE + 16).order(ByteOrder.BIG_ENDIAN).apply {
             putInt(expected.magic)
             put(expected.version.toByte())
             putLong(expected.requestId)
@@ -41,9 +41,9 @@ class UdpPingCodecTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun decodeResponse_invalidMagic_throws() {
-        val encoded = ByteBuffer.allocate(UdpPingCodec.HEADER_SIZE).order(ByteOrder.BIG_ENDIAN).apply {
+        val encoded = ByteBuffer.allocate(PingCodec.HEADER_SIZE).order(ByteOrder.BIG_ENDIAN).apply {
             putInt(0xDEADBEEF.toInt())
-            put(UdpPingCodec.VERSION.toByte())
+            put(PingCodec.VERSION.toByte())
             putLong(1L)
             putInt(1)
             putLong(1L)
@@ -54,8 +54,8 @@ class UdpPingCodecTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun decodeResponse_invalidVersion_throws() {
-        val encoded = ByteBuffer.allocate(UdpPingCodec.HEADER_SIZE).order(ByteOrder.BIG_ENDIAN).apply {
-            putInt(UdpPingCodec.MAGIC)
+        val encoded = ByteBuffer.allocate(PingCodec.HEADER_SIZE).order(ByteOrder.BIG_ENDIAN).apply {
+            putInt(PingCodec.MAGIC)
             put(99.toByte())
             putLong(1L)
             putInt(1)
@@ -67,13 +67,13 @@ class UdpPingCodecTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun decodeResponse_tooSmall_throws() {
-        codec.decodeResponse(ByteArray(UdpPingCodec.HEADER_SIZE - 1))
+        codec.decodeResponse(ByteArray(PingCodec.HEADER_SIZE - 1))
     }
 
     @Test
     fun decodeResponse_withoutServerTimestamps_setsNullServerTimestamps() {
         val encoded = codec.encodeRequest(
-            UdpPingPacket(
+            PingPacket(
                 requestId = 99L,
                 sequence = 10,
                 clientSendTimestamp = 777L,
