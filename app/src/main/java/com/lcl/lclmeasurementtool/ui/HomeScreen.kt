@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons.Filled
 import androidx.compose.material.icons.Icons.Rounded
 import androidx.compose.material.icons.filled.NetworkCheck
@@ -21,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,6 +32,14 @@ import com.lcl.lclmeasurementtool.ConnectivityTestResult
 import com.lcl.lclmeasurementtool.MainActivityViewModel
 import com.lcl.lclmeasurementtool.SignalStrengthResult
 import kotlinx.coroutines.cancel
+
+private val DashboardSurface = Color(0xFFF5F7FB)
+private val DashboardTile = Color(0xFFFFFFFF)
+private val DashboardBorder = Color(0xFFE3E8F3)
+private val DashboardTextMuted = Color(0xFF677085)
+private val DashboardTextStrong = Color(0xFF1C2434)
+private val DashboardLive = Color(0xFF1FA56A)
+private val DashboardPending = Color(0xFF7A8090)
 
 @Composable
 fun HomeRoute(isOffline: Boolean, mainActivityViewModel: MainActivityViewModel) {
@@ -51,7 +59,6 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
     val pingPacketLoss = mainActivityViewModel.pingPacketLoss.collectAsStateWithLifecycle()
     val pingRttResult = mainActivityViewModel.pingRttResult.collectAsStateWithLifecycle()
     val signalStrength = mainActivityViewModel.signalStrengthResult.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -117,25 +124,28 @@ private fun SignalStrengthCard(
 
     val (dbm, level) = signalStrengthResult
 
-    Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+    Card(
+        colors = CardDefaults.cardColors(DashboardSurface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, DashboardBorder),
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 10.dp)
             .fillMaxWidth()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier.padding(20.dp)
+            modifier = modifier.padding(horizontal = 16.dp, vertical = 18.dp)
         ) {
 
             Icon(modifier = modifier,
                 imageVector = Filled.SignalCellularAlt,
                 contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = "Signal Strength:", fontSize = fontSize)
+            Text(text = "Signal Strength:", fontSize = fontSize, color = DashboardTextStrong)
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "$dbm", fontWeight = FontWeight.Bold, fontSize = fontSize)
+            Text(text = "$dbm", fontWeight = FontWeight.Bold, fontSize = fontSize, color = DashboardTextStrong)
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "dBm", fontSize = fontSize)
+            Text(text = "dBm", fontSize = fontSize, color = DashboardTextMuted)
             Spacer(modifier = Modifier.width(20.dp))
             Box(modifier = Modifier
                 .size(10.dp)
@@ -157,61 +167,159 @@ private fun ConnectivityCard(
     packetLoss: String = "-- %",
     pingRtt: String = "-- ms",
 ) {
-    Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
+    val uploadText = when (uploadResult) {
+        is ConnectivityTestResult.Result -> "${uploadResult.result} Mbps"
+        else -> "--"
+    }
+    val downloadText = when (downloadResult) {
+        is ConnectivityTestResult.Result -> "${downloadResult.result} Mbps"
+        else -> "--"
+    }
+    val mlabRttText = when (rttValue) {
+        is ConnectivityTestResult.Result -> {
+            val numeric = rttValue.result.toDoubleOrNull() ?: 0.0
+            if (numeric > 0) "${String.format("%.1f", numeric)} ms" else "--"
+        }
+        else -> "--"
+    }
+    val hasLivePing = pingRtt != "-- ms" && packetLoss != "-- %"
+
+    Card(
+        colors = CardDefaults.cardColors(DashboardSurface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, DashboardBorder),
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 10.dp)
             .fillMaxWidth()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp)
+        Column(
+            modifier = modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-
-            Icon(modifier = modifier.padding(end = 12.dp),
-                imageVector = Filled.NetworkCheck,
-                contentDescription = null)
-            Column {
-                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    when (uploadResult) {
-                        is ConnectivityTestResult.Result -> {
-                            DataEntry(icon = Rounded.CloudUpload, text = "${uploadResult.result} Mbps")
-                        }
-                        else -> DataEntry(icon = Rounded.CloudUpload, text = "0.0 Mbps")
-                    }
-
-
-                    when (downloadResult) {
-                        is ConnectivityTestResult.Result -> {
-                            DataEntry(icon = Rounded.CloudDownload, text = "${downloadResult.result} Mbps")
-                        }
-                        else -> {
-                            DataEntry(icon = Rounded.CloudDownload, text = "0.0 Mbps")
-                        }
-                    }
-
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Filled.NetworkCheck,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Mobile Connectivity",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = DashboardTextStrong
+                    )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    val formattedRtt = when (rttValue) {
-                        is ConnectivityTestResult.Result -> {
-                            val numeric = rttValue.result.toDoubleOrNull() ?: 0.0
-                            if (numeric > 0) String.format("%.1f", numeric) else "0.0"
-                        }
-                        else -> {
-                            "0.0" // or rttValue.error if you want to display the error message
-                        }
-                    }
-
-                    DataEntry(icon = Rounded.NetworkPing, text = "$formattedRtt ms")
-                    DataEntry(icon = Rounded.Cancel, text = packetLoss)
-                    DataEntry(icon = Rounded.NetworkPing, text = pingRtt)
+                Surface(
+                    shape = RoundedCornerShape(999.dp),
+                    color = if (hasLivePing) DashboardLive.copy(alpha = 0.16f) else DashboardPending.copy(alpha = 0.16f)
+                ) {
+                    Text(
+                        text = if (hasLivePing) "Live" else "Pending",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (hasLivePing) DashboardLive else DashboardPending,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                    )
                 }
-
             }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                DashboardMetricTile(
+                    icon = Rounded.CloudDownload,
+                    label = "Download",
+                    value = downloadText,
+                    modifier = Modifier.weight(1f)
+                )
+                DashboardMetricTile(
+                    icon = Rounded.CloudUpload,
+                    label = "Upload",
+                    value = uploadText,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                DashboardMetricTile(
+                    icon = Rounded.NetworkPing,
+                    label = "MLab Latency",
+                    value = mlabRttText,
+                    modifier = Modifier.weight(1f)
+                )
+                DashboardMetricTile(
+                    icon = Rounded.Cancel,
+                    label = "Packet Loss",
+                    value = packetLoss,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                DashboardMetricTile(
+                    icon = Rounded.NetworkPing,
+                    label = "Custom Ping",
+                    value = pingRtt,
+                    modifier = Modifier.fillMaxWidth(0.49f),
+                )
+            }
+
+            Text(
+                text = "Powered by $label",
+                fontWeight = FontWeight.Thin,
+                fontSize = 10.sp,
+                color = DashboardTextMuted,
+                modifier = Modifier
+                .align(Alignment.End)
+                .padding(end = 10.dp, bottom = 4.dp)
+            )
         }
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Powered by $label", fontWeight = FontWeight.Thin, fontSize = 10.sp, modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 10.dp, bottom = 4.dp))
+    }
+}
+
+@Composable
+private fun DashboardMetricTile(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        colors = CardDefaults.cardColors(DashboardTile),
+        border = androidx.compose.foundation.BorderStroke(1.dp, DashboardBorder),
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = DashboardTextMuted
+                )
+            }
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = DashboardTextStrong
+            )
         }
     }
 }
