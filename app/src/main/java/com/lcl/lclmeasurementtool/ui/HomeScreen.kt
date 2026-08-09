@@ -48,8 +48,6 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
     val mlabRttResult = mainActivityViewModel.mlabRttResult.collectAsStateWithLifecycle()
     val mlabUploadResult = mainActivityViewModel.mlabUploadResult.collectAsStateWithLifecycle()
     val mlabDownloadResult = mainActivityViewModel.mlabDownloadResult.collectAsStateWithLifecycle()
-    val pingPacketLoss = mainActivityViewModel.pingPacketLoss.collectAsStateWithLifecycle()
-    val pingRttResult = mainActivityViewModel.pingRttResult.collectAsStateWithLifecycle()
     val signalStrength = mainActivityViewModel.signalStrengthResult.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -61,8 +59,6 @@ fun HomeScreen(modifier: Modifier = Modifier, isOffline: Boolean, mainActivityVi
         ) {
             SignalStrengthCard(modifier = modifier, signalStrengthResult = signalStrength.value)
             ConnectivityCard(
-                packetLoss = pingPacketLoss.value,
-                pingRtt = pingRttResult.value,
                 label = "MLab",
                 modifier = modifier,
                 rttValue = mlabRttResult.value,
@@ -154,8 +150,6 @@ private fun ConnectivityCard(
     rttValue: ConnectivityTestResult,
     uploadResult: ConnectivityTestResult,
     downloadResult: ConnectivityTestResult,
-    packetLoss: String = "-- %",
-    pingRtt: String = "-- ms",
 ) {
     Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
@@ -202,8 +196,7 @@ private fun ConnectivityCard(
                     }
 
                     DataEntry(icon = Rounded.NetworkPing, text = "$formattedRtt ms")
-                    DataEntry(icon = Rounded.Cancel, text = packetLoss)
-                    DataEntry(icon = Rounded.NetworkPing, text = pingRtt)
+                    DataEntry(icon = Rounded.Cancel, text = "0 % loss")
                 }
 
             }

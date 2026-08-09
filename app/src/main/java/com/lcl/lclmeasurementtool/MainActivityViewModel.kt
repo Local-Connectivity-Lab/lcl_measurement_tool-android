@@ -33,9 +33,6 @@ import net.measurementlab.ndt7.android.NDTTest
 import okhttp3.ResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
-import com.lcl.lclmeasurementtool.constants.PingConstants
-import com.lcl.lclmeasurementtool.features.ping.Ping
-import com.lcl.lclmeasurementtool.features.ping.PingErrorCase
 import com.lcl.lclmeasurementtool.sync.UploadWorker
 import java.io.ByteArrayOutputStream
 import java.security.SecureRandom
@@ -93,11 +90,6 @@ class MainActivityViewModel @Inject constructor(
     private var _mlabRttResult = MutableStateFlow(ConnectivityTestResult())
     private var _mLabUploadResult = MutableStateFlow(ConnectivityTestResult())
     private var _mLabDownloadResult = MutableStateFlow(ConnectivityTestResult())
-
-    private val _pingPacketLoss = MutableStateFlow("-- %")
-    private val _pingRttResult = MutableStateFlow("-- ms")
-    val pingPacketLoss = _pingPacketLoss.asStateFlow()
-    val pingRttResult = _pingRttResult.asStateFlow()
 
     var mlabRttResult = _mlabRttResult.asStateFlow()
     var mlabUploadResult = _mLabUploadResult.asStateFlow()
@@ -296,7 +288,7 @@ class MainActivityViewModel @Inject constructor(
                 .onCompletion {
                     if (it != null) {
                         Log.e(TAG, "Error in MLab test: ${it.message}", it)
-                                        _isMLabTestActive.value = false
+                        _isMLabTestActive.value = false
                     } else {
                         Log.d(TAG, "MLab test completed normally")
                     }
@@ -323,7 +315,7 @@ class MainActivityViewModel @Inject constructor(
                             } else if (it.status == MLabTestStatus.ERROR) {
                                 Log.e(TAG, "Upload test error with null speed: ${it.errorMsg}")
                                 _mLabUploadResult.value = ConnectivityTestResult.Error(it.errorMsg ?: "Unknown error")
-                                        _isMLabTestActive.value = false
+                                _isMLabTestActive.value = false
                             }
                         }
                         NDTTest.TestType.DOWNLOAD -> {
@@ -352,7 +344,7 @@ class MainActivityViewModel @Inject constructor(
                             } else if (it.status == MLabTestStatus.ERROR) {
                                 Log.e(TAG, "Download test error with null speed: ${it.errorMsg}")
                                 _mLabDownloadResult.value = ConnectivityTestResult.Error(it.errorMsg ?: "Unknown error")
-                                        _isMLabTestActive.value = false
+                                _isMLabTestActive.value = false
                             }
                         }
                         else -> { 
@@ -362,7 +354,7 @@ class MainActivityViewModel @Inject constructor(
                 }
         } catch (e: Exception) {
             Log.e(TAG, "Exception during MLab test", e)
-                                        _isMLabTestActive.value = false
+            _isMLabTestActive.value = false
         }
     }
 
@@ -389,22 +381,6 @@ class MainActivityViewModel @Inject constructor(
                 }
 
                 ensureActive()
-
-                // Run ping alongside MLab to get packet loss
-                val pingResult = try {
-                    Ping.start(
-                        address = PingConstants.PING_SERVER_ADDRESS,
-                        times = PingConstants.PING_TIMES,
-                        timeout = PingConstants.PING_TIMEOUT_MS,
-                    )
-                } catch (e: Exception) { null }
-                if (pingResult != null && pingResult.error.code == PingErrorCase.OK) {
-                    _pingRttResult.value = "${pingResult.avg ?: "--"} ms"
-                    _pingPacketLoss.value = "${pingResult.numLoss ?: "--"} %"
-                } else {
-                    _pingRttResult.value = "-- ms"
-                    _pingPacketLoss.value = "-- %"
-                }
 
                 _isMLabTestActive.value = false
                 Log.d(TAG, "upload, download are finished. isMLabTestActive.value=${isMLabTestActive.value}")
@@ -442,7 +418,7 @@ class MainActivityViewModel @Inject constructor(
                         (_mLabUploadResult.value as ConnectivityTestResult.Result).result.toDouble(),
                         (_mLabDownloadResult.value as ConnectivityTestResult.Result).result.toDouble(),
                         (_mlabRttResult.value as ConnectivityTestResult.Result).result.toDouble(),
-                        _pingPacketLoss.value.replace(" %", "").toDoubleOrNull() ?: 0.0,
+                        0.0, // No packet loss information available from ndt7, defaulting to 0
                     )
 
                     saveToDB(signalStrengthReportModel, connectivityReportModel)
@@ -519,8 +495,6 @@ class MainActivityViewModel @Inject constructor(
         _mlabRttResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
         _mLabUploadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
         _mLabDownloadResult.value = ConnectivityTestResult.Result("0.0", Color.LightGray)
-        _pingPacketLoss.value = "-- %"
-        _pingRttResult.value = "-- ms"
         _isMLabTestActive.value = false
     }
 }
