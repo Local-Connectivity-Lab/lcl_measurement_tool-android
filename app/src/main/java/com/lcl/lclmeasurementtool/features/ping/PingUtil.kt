@@ -44,13 +44,13 @@ class PingUtil {
                             requestId = requestId,
                             sequence = sequence,
                         )) {
-                            is PingAttemptResult.Success -> {
+                            is PingClient.PingResult.Success -> {
                                 rtts += attemptResult.rttMs
                             }
-                            PingAttemptResult.Timeout -> {
+                            PingClient.PingResult.Timeout -> {
                                 lost += 1
                             }
-                            is PingAttemptResult.Error -> {
+                            is PingClient.PingResult.Error -> {
                                 lost += 1
                                 if (firstError == null) {
                                     firstError = attemptResult.message

@@ -9,12 +9,6 @@ import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-sealed interface PingAttemptResult {
-    data class Success(val rttMs: Double, val response: PingPacket) : PingAttemptResult
-    object Timeout : PingAttemptResult
-    data class Error(val message: String, val cause: Throwable? = null) : PingAttemptResult
-}
-
 class SocketPingClient(
     private val codec: PingCodec = PingCodec(),
     private val receiveBufferSize: Int = 1024,
@@ -25,7 +19,7 @@ class SocketPingClient(
         timeoutMs: Long,
         requestId: Long,
         sequence: Int,
-    ): PingAttemptResult = withContext(Dispatchers.IO) {
+    ): PingClient.PingResult = withContext(Dispatchers.IO) {
         val timeoutIntMs = max(1L, timeoutMs).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val packet = PingPacket(
             requestId = requestId,
@@ -50,22 +44,22 @@ class SocketPingClient(
                 val responseBytes = receivePacket.data.copyOf(receivePacket.length)
                 val responsePacket = codec.decodeResponse(responseBytes)
                 if (responsePacket.requestId != requestId || responsePacket.sequence != sequence) {
-                    return@withContext PingAttemptResult.Error(
+                    return@withContext PingClient.PingResult.Error(
                         message = "Mismatched response id/sequence: ${responsePacket.requestId}/${responsePacket.sequence}",
                     )
                 }
 
-                PingAttemptResult.Success(
+                PingClient.PingResult.Success(
                     rttMs = (recvAtNs - sendStartedAtNs) / 1_000_000.0,
                     response = responsePacket,
                 )
             }
         } catch (_: SocketTimeoutException) {
-            PingAttemptResult.Timeout
+            PingClient.PingResult.Timeout
         } catch (e: IllegalArgumentException) {
-            PingAttemptResult.Error(message = e.message ?: "Invalid ping packet", cause = e)
+            PingClient.PingResult.Error(message = e.message ?: "Invalid ping packet", cause = e)
         } catch (e: IOException) {
-            PingAttemptResult.Error(message = e.message ?: "Socket I/O error", cause = e)
+            PingClient.PingResult.Error(message = e.message ?: "Socket I/O error", cause = e)
         }
     }
 }
