@@ -3,73 +3,130 @@ package com.lcl.lclmeasurementtool.features.ping
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStreamReader
+import java.util.Locale
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
+import kotlin.random.Random
 
 class PingUtil {
     companion object {
         const val TAG = "PING"
 
         suspend fun doPing(address: String, times: Int, timeout: Long) : PingResult {
-            val runtime: Runtime = Runtime.getRuntime()
+            return withContext(Dispatchers.IO) {
+                try {
+                    val target = parsePingTarget(address)
+                    val requestId = Random.nextLong()
+                    val client: PingClient = SocketPingClient()
+                    val rtts = mutableListOf<Double>()
+                    var lost = 0
+                    var firstError: String? = null
 
-            // execute ping command
-            val command = "/system/bin/ping -c $times -W $timeout $address"
+                    Log.d(TAG, "============")
+                    Log.d(TAG, "Ping starts: ${target.host}:${target.port}")
+                    Log.d(TAG, "============")
 
-            try {
-                val process = withContext(Dispatchers.IO) {
-                    runtime.exec(command)
-                }
-                Log.d(TAG, "============")
-                Log.d(TAG, "Ping starts: $address")
-                Log.d(TAG, "============")
-                val exitCode = withContext(Dispatchers.IO) {
-                    process.waitFor()
-                }
-                Log.d(TAG, "exit code is: $exitCode")
+                    if (times <= 0) {
+                        return@withContext PingResult(
+                            error = PingError(
+                                code = PingErrorCase.IO,
+                                message = "Ping requires times > 0",
+                            ),
+                        )
+                    }
 
-                val pingResult: PingResult
-
-                when(exitCode) {
-                    0 -> {
-                        val reader = BufferedReader(InputStreamReader(process.inputStream))
-                        val line: String = reader.use {
-                            it.readText().trimIndent()
+                    repeat(times) { sequence ->
+                        when (val attemptResult = client.pingOnce(
+                            host = target.host,
+                            port = target.port,
+                            timeoutMs = timeout,
+                            requestId = requestId,
+                            sequence = sequence,
+                        )) {
+                            is PingClient.PingResult.Success -> {
+                                rtts += attemptResult.rttMs
+                            }
+                            PingClient.PingResult.Timeout -> {
+                                lost += 1
+                            }
+                            is PingClient.PingResult.Error -> {
+                                lost += 1
+                                if (firstError == null) {
+                                    firstError = attemptResult.message
+                                }
+                            }
                         }
-                        Log.d(TAG, "result:\n$line")
+                    }
 
-                        val regex = "(\\d+)% packet loss.+rtt.+= (\\d*.?\\d+)/(\\d*.?\\d+)/(\\d*.?\\d+)/(\\d*.?\\d+)".toRegex(
-                            setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
-                        )
-                        val match = regex.find(line)!!
-                        val (numLoss, min, avg, max, mdev) = match.destructured
-                        Log.d(TAG, "$numLoss, $min, $avg, $max, $mdev")
-                        pingResult = PingResult(
-                            numLoss = numLoss,
-                            min = min,
-                            avg = avg,
-                            max = max,
-                            mdev = mdev,
-                            error = PingError(code = PingErrorCase.OK)
+                    if (rtts.isEmpty()) {
+                        return@withContext PingResult(
+                            error = PingError(
+                                code = PingErrorCase.IO,
+                                message = firstError ?: "Ping timed out for all attempts",
+                            ),
                         )
                     }
-                    else -> {
-                        val err = process.errorStream.bufferedReader().use { it.readText() }
-                        pingResult = PingResult(error = PingError(code = PingErrorCase.IO, message = err))
-                        Log.d(TAG, "error: $err")
-                    }
+
+                    val minRtt = rtts.minOrNull() ?: 0.0
+                    val avgRtt = rtts.average()
+                    val maxRtt = rtts.maxOrNull() ?: 0.0
+                    val variance = rtts.map { (it - avgRtt) * (it - avgRtt) }.average()
+                    val mdev = sqrt(variance)
+                    val packetLossPercent = ((lost.toDouble() / times.toDouble()) * 100.0).roundToInt()
+
+                    PingResult(
+                        numLoss = packetLossPercent.toString(),
+                        min = formatMs(minRtt),
+                        avg = formatMs(avgRtt),
+                        max = formatMs(maxRtt),
+                        mdev = formatMs(mdev),
+                        error = PingError(code = PingErrorCase.OK),
+                    )
+                } catch (e: IOException) {
+                    PingResult(error = PingError(PingErrorCase.IO, e.message))
+                } catch (e: IllegalArgumentException) {
+                    PingResult(error = PingError(PingErrorCase.PARSING, e.message))
+                } catch (e: Exception) {
+                    PingResult(error = PingError(PingErrorCase.OTHER, e.message))
                 }
-
-                process.destroy()
-                return pingResult
-            } catch (e: IOException) {
-                return PingResult(error = PingError(PingErrorCase.IO, e.message))
-            } catch (e: IndexOutOfBoundsException) {
-                return PingResult(error = PingError(PingErrorCase.PARSING, e.message))
-            } catch (e: Exception) {
-                return PingResult(error = PingError(PingErrorCase.OTHER, e.message))
             }
         }
+
+        private fun formatMs(value: Double): String = String.format(Locale.US, "%.3f", value)
+
+        private fun parsePingTarget(address: String): PingTarget {
+            val trimmed = address.trim()
+            require(trimmed.isNotEmpty()) { "Address cannot be empty" }
+
+            if (trimmed.startsWith("[") && trimmed.contains("]:")) {
+                val closingBracket = trimmed.indexOf(']')
+                require(closingBracket > 1 && closingBracket + 2 < trimmed.length) {
+                    "Invalid host:port format: $address"
+                }
+                val host = trimmed.substring(1, closingBracket)
+                val port = trimmed.substring(closingBracket + 2).toIntOrNull()
+                    ?: throw IllegalArgumentException("Invalid port in address: $address")
+                require(port in 1..65535) { "Port out of range: $port" }
+                return PingTarget(host = host, port = port)
+            }
+
+            val colonCount = trimmed.count { it == ':' }
+            if (colonCount == 1) {
+                val split = trimmed.split(':', limit = 2)
+                val host = split[0]
+                val port = split[1].toIntOrNull()
+                    ?: throw IllegalArgumentException("Invalid port in address: $address")
+                require(host.isNotBlank()) { "Host cannot be blank" }
+                require(port in 1..65535) { "Port out of range: $port" }
+                return PingTarget(host = host, port = port)
+            }
+
+            throw IllegalArgumentException(
+                "Address must include an explicit port, e.g. host:port or [ipv6]:port"
+            )
+        }
+
+        private data class PingTarget(val host: String, val port: Int)
     }
 }
