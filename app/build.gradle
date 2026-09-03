@@ -5,6 +5,7 @@ plugins {
     id 'kotlin-android'
     id 'com.google.dagger.hilt.android'
     id "com.google.protobuf" version "0.9.4"
+    id "com.github.triplet.play" version "3.12.1"
     id "kotlinx-serialization"
 }
 
@@ -51,6 +52,27 @@ def getVersionNameFromProperties() {
     return "$major.$minor.$patch"
 }
 
+def releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+def releaseKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+def releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+def releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+def playStoreJsonPath = System.getenv("PLAY_STORE_JSON_PATH")
+
+def releaseSigningValues = [
+        releaseKeystorePath,
+        releaseKeystorePassword,
+        releaseKeyAlias,
+        releaseKeyPassword
+]
+def hasAnyReleaseSigningEnv = releaseSigningValues.any { it != null }
+def hasAllReleaseSigningEnv = releaseSigningValues.every { it != null }
+
+if (hasAnyReleaseSigningEnv && !hasAllReleaseSigningEnv) {
+    throw new GradleException(
+            "ANDROID_KEYSTORE_PATH, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, and ANDROID_KEY_PASSWORD must all be set together."
+    )
+}
+
 android {
     namespace "com.lcl.lclmeasurementtool"
     compileSdkVersion 35
@@ -92,10 +114,24 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            if (hasAllReleaseSigningEnv) {
+                storeFile file(releaseKeystorePath)
+                storePassword releaseKeystorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasAllReleaseSigningEnv) {
+                signingConfig signingConfigs.release
+            }
         }
 
         debug {
@@ -124,6 +160,13 @@ android {
 
     kotlinOptions {
         jvmTarget = '17'
+    }
+}
+
+play {
+    track.set("internal")
+    if (playStoreJsonPath != null) {
+        serviceAccountCredentials.set(file(playStoreJsonPath))
     }
 }
 
